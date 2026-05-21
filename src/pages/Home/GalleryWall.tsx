@@ -177,17 +177,16 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
                 {item.type}
               </motion.span>
             </div>
-            <motion.div
-              className={styles.back}
-              animate={phase === 'end' ? { scale: 0, x: '50vw', y: '50vh' } : { scale: 1, x: 0, y: 0 }}
-              transition={
-                phase === 'end'
-                  ? { duration: 0.4, ease: [0.7, 0, 0.3, 1] }
-                  : { delay: gatherDelay, duration: 1, ease: [0.7, 0, 0.3, 1] }
-              }
-            >
-              <span />
-            </motion.div>
+            <div className={styles.back}>
+              <motion.span
+                animate={phase === 'end' ? { scale: 0 } : { scale: [1, 1, 0] }}
+                transition={
+                  phase === 'end'
+                    ? { duration: 0.4, ease: [0.7, 0, 0.3, 1] }
+                    : { delay: gatherDelay, duration: 1, ease: [0.7, 0, 0.3, 1] }
+                }
+              />
+            </div>
           </motion.div>
         </motion.div>
       ))}
