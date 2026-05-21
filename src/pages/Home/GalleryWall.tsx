@@ -1,15 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { motion } from 'framer-motion';
+import { galleryManifest } from './galleryManifest';
+import type { GalleryManifestItem } from './galleryManifest';
 import styles from './GalleryWall.module.css';
 
-type ImageType = 'real' | 'fake';
 type Phase = 'intro' | 'end';
-
-interface ManifestItem {
-  file: string;
-  type: ImageType;
-}
 
 interface GalleryWallProps {
   phase: Phase;
@@ -17,19 +13,11 @@ interface GalleryWallProps {
 }
 
 const GRID_COLUMNS = 8;
-const FALLBACK_COUNT = 56;
 const GALLERY_PATH = '/samples';
 
 function seeded(index: number, salt: number) {
   const x = Math.sin(index * 78.233 + salt * 37.719) * 43758.5453;
   return x - Math.floor(x);
-}
-
-function createFallbackItems(): ManifestItem[] {
-  return Array.from({ length: FALLBACK_COUNT }, (_, index) => ({
-    file: `${String(index + 1).padStart(2, '0')}.jpg`,
-    type: index % 2 === 0 ? 'real' : 'fake',
-  }));
 }
 
 function getColumns() {
@@ -40,8 +28,8 @@ function getColumns() {
 }
 
 export function GalleryWall({ phase, onReady }: GalleryWallProps) {
-  const [items, setItems] = useState<ManifestItem[]>(createFallbackItems);
-  const [hasImages, setHasImages] = useState(false);
+  const [items, setItems] = useState<GalleryManifestItem[]>(galleryManifest);
+  const [hasImages, setHasImages] = useState(true);
   const [readySent, setReadySent] = useState(false);
 
   useEffect(() => {
@@ -50,19 +38,21 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
     fetch(`${GALLERY_PATH}/manifest.json`)
       .then((response) => {
         if (!response.ok) throw new Error('manifest missing');
-        return response.json() as Promise<ManifestItem[]>;
+        return response.json() as Promise<GalleryManifestItem[]>;
       })
       .then((manifest) => {
         if (cancelled) return;
         const limit = (navigator.hardwareConcurrency ?? 8) <= 4 ? 48 : 60;
         const normalized = manifest.slice(0, limit);
-        setItems(normalized.length ? normalized : createFallbackItems());
-        setHasImages(Boolean(normalized.length));
+        if (normalized.length) {
+          setItems(normalized);
+          setHasImages(true);
+        }
       })
       .catch(() => {
         if (cancelled) return;
-        setItems(createFallbackItems());
-        setHasImages(false);
+        setItems(galleryManifest);
+        setHasImages(true);
       });
 
     return () => {

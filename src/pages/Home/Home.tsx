@@ -10,7 +10,9 @@ type Phase = 'intro' | 'end';
 
 export function Home() {
   const [phase, setPhase] = useState<Phase>(() =>
-    sessionStorage.getItem('home-visited') ? 'end' : 'intro',
+    new URLSearchParams(window.location.search).get('replay') === '1' || !sessionStorage.getItem('home-visited')
+      ? 'intro'
+      : 'end',
   );
   const [imagesReady, setImagesReady] = useState(false);
 
