@@ -12,7 +12,9 @@ interface GalleryWallProps {
   onReady: () => void;
 }
 
-const GRID_COLUMNS = 8;
+const GRID_COLUMNS = 9;
+const GRID_ROWS = 6;
+const GRID_SIZE = GRID_COLUMNS * GRID_ROWS;
 const GALLERY_PATH = '/samples';
 
 function seeded(index: number, salt: number) {
@@ -20,15 +22,8 @@ function seeded(index: number, salt: number) {
   return x - Math.floor(x);
 }
 
-function getColumns() {
-  if (typeof window === 'undefined') return GRID_COLUMNS;
-  if (window.innerWidth < 1280) return 6;
-  if (window.innerWidth < 1440) return 7;
-  return 8;
-}
-
 export function GalleryWall({ phase, onReady }: GalleryWallProps) {
-  const [items, setItems] = useState<GalleryManifestItem[]>(galleryManifest);
+  const [items, setItems] = useState<GalleryManifestItem[]>(galleryManifest.slice(0, GRID_SIZE));
   const [hasImages, setHasImages] = useState(true);
   const [readySent, setReadySent] = useState(false);
 
@@ -42,8 +37,7 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
       })
       .then((manifest) => {
         if (cancelled) return;
-        const limit = (navigator.hardwareConcurrency ?? 8) <= 4 ? 48 : 60;
-        const normalized = manifest.slice(0, limit);
+        const normalized = manifest.slice(0, GRID_SIZE);
         if (normalized.length) {
           setItems(normalized);
           setHasImages(true);
@@ -51,7 +45,7 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
       })
       .catch(() => {
         if (cancelled) return;
-        setItems(galleryManifest);
+        setItems(galleryManifest.slice(0, GRID_SIZE));
         setHasImages(true);
       });
 
@@ -92,8 +86,8 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
     };
   }, [hasImages, items, onReady]);
 
-  const columns = getColumns();
-  const rows = Math.ceil(items.length / columns);
+  const columns = GRID_COLUMNS;
+  const rows = GRID_ROWS;
   const centerRow = (rows - 1) / 2;
   const centerCol = (columns - 1) / 2;
 
@@ -129,7 +123,7 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
   return (
     <motion.div
       className={styles.wall}
-      style={{ '--columns': columns } as CSSProperties}
+      style={{ '--columns': columns, '--rows': rows } as CSSProperties}
       initial={{ opacity: 0 }}
       animate={{ opacity: phase === 'end' ? 0 : readySent ? 1 : 0 }}
       transition={{ duration: phase === 'end' ? 0.4 : 0.3 }}
