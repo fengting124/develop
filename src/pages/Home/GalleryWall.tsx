@@ -108,7 +108,7 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
         const rotate = -4 + seeded(index, 9) * 8;
         const distance = Math.hypot(row - centerRow, col - centerCol);
         const flipDelay = 4 + distance * 0.08;
-        const gatherDelay = 5.2 + seeded(index, 14) * 0.18;
+        const gatherDelay = 4.75 + seeded(index, 14) * 0.12;
         const tint = 33 + Math.round(seeded(index, 21) * 28);
 
         return {
@@ -177,16 +177,15 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
                 {item.type}
               </motion.span>
             </div>
-            <div className={styles.back}>
-              <motion.span
-                animate={phase === 'end' ? { scale: 0 } : { scale: [1, 1, 0] }}
-                transition={
-                  phase === 'end'
-                    ? { duration: 0.4, ease: [0.7, 0, 0.3, 1] }
-                    : { delay: gatherDelay, duration: 1, ease: [0.7, 0, 0.3, 1] }
-                }
-              />
-            </div>
+            <motion.div
+              className={styles.back}
+              animate={phase === 'end' ? { opacity: 0 } : { opacity: [1, 1, 0] }}
+              transition={
+                phase === 'end'
+                  ? { duration: 0.25, ease: [0.7, 0, 0.3, 1] }
+                  : { delay: gatherDelay, duration: 0.8, ease: [0.7, 0, 0.3, 1] }
+              }
+            />
           </motion.div>
         </motion.div>
       ))}

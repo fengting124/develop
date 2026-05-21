@@ -81,17 +81,9 @@
 }
 
 .back {
-  display: grid;
-  place-items: center;
   background: var(--ink-deep);
   transform: rotateY(180deg);
-  will-change: transform;
-}
-
-.back span {
-  width: 4px;
-  height: 4px;
-  background: var(--accent);
+  will-change: opacity;
 }
 
 @media (max-width: 1439px) {
