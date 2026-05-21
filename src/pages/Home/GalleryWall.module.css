@@ -1,0 +1,107 @@
+.wall {
+  --columns: 8;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 0;
+  perspective: 1200px;
+  background: var(--ink-deep);
+  overflow: hidden;
+}
+
+.cell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  will-change: transform, opacity;
+}
+
+.flipper {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.face,
+.back {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+
+.face img,
+.placeholder {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  filter: saturate(0.78) contrast(1.08);
+}
+
+.placeholder {
+  background: var(--ink-2);
+}
+
+.face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 23, 20, 0.08);
+}
+
+.stamp {
+  position: absolute;
+  left: 20%;
+  top: 39%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 60%;
+  height: 22%;
+  color: white;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-variant: small-caps;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.fake {
+  background: rgba(200, 65, 46, 0.92);
+}
+
+.real {
+  background: rgba(45, 106, 79, 0.92);
+}
+
+.back {
+  display: grid;
+  place-items: center;
+  background: var(--ink-deep);
+  transform: rotateY(180deg);
+  will-change: transform;
+}
+
+.back span {
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+}
+
+@media (max-width: 1439px) {
+  .wall {
+    --columns: 7;
+  }
+}
+
+@media (max-width: 1279px) {
+  .wall {
+    --columns: 6;
+  }
+}

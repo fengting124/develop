@@ -1,0 +1,218 @@
+[
+    {
+        "file": "01.jpg",
+        "type": "real"
+    },
+    {
+        "file": "02.jpg",
+        "type": "real"
+    },
+    {
+        "file": "03.jpg",
+        "type": "real"
+    },
+    {
+        "file": "04.jpg",
+        "type": "real"
+    },
+    {
+        "file": "05.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "06.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "07.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "08.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "09.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "10.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "11.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "12.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "13.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "14.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "15.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "16.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "17.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "18.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "19.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "20.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "21.jpg",
+        "type": "real"
+    },
+    {
+        "file": "22.jpg",
+        "type": "real"
+    },
+    {
+        "file": "23.jpg",
+        "type": "real"
+    },
+    {
+        "file": "24.jpg",
+        "type": "real"
+    },
+    {
+        "file": "25.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "26.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "27.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "28.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "29.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "30.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "31.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "32.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "33.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "34.jpg",
+        "type": "real"
+    },
+    {
+        "file": "35.jpg",
+        "type": "real"
+    },
+    {
+        "file": "36.jpg",
+        "type": "real"
+    },
+    {
+        "file": "37.jpg",
+        "type": "real"
+    },
+    {
+        "file": "38.jpg",
+        "type": "real"
+    },
+    {
+        "file": "39.jpg",
+        "type": "real"
+    },
+    {
+        "file": "40.jpg",
+        "type": "real"
+    },
+    {
+        "file": "41.jpg",
+        "type": "real"
+    },
+    {
+        "file": "42.jpg",
+        "type": "real"
+    },
+    {
+        "file": "43.jpg",
+        "type": "real"
+    },
+    {
+        "file": "44.jpg",
+        "type": "real"
+    },
+    {
+        "file": "45.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "46.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "47.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "48.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "49.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "50.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "51.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "52.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "53.jpg",
+        "type": "fake"
+    },
+    {
+        "file": "54.jpg",
+        "type": "fake"
+    }
+]

@@ -1,0 +1,83 @@
+.entries {
+  display: flex;
+  gap: var(--space-7);
+}
+
+.card {
+  position: relative;
+  display: flex;
+  width: 320px;
+  height: 200px;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-6);
+  transition: background 200ms ease-out;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent);
+  transition: width 300ms ease-out;
+}
+
+.card:hover {
+  background: var(--surface-2);
+}
+
+.card:hover::after {
+  width: 100%;
+}
+
+.top,
+.bottom {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.top strong {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 500;
+}
+
+.top span {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-variant: small-caps;
+  letter-spacing: 0.15em;
+}
+
+.bottom > span:first-child {
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+.enter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.enter svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 200ms ease-out;
+}
+
+.card:hover .enter svg {
+  transform: translateX(4px);
+}

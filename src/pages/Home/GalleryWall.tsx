@@ -1,0 +1,206 @@
+import { useEffect, useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
+import { motion } from 'framer-motion';
+import styles from './GalleryWall.module.css';
+
+type ImageType = 'real' | 'fake';
+type Phase = 'intro' | 'end';
+
+interface ManifestItem {
+  file: string;
+  type: ImageType;
+}
+
+interface GalleryWallProps {
+  phase: Phase;
+  onReady: () => void;
+}
+
+const GRID_COLUMNS = 8;
+const FALLBACK_COUNT = 56;
+const GALLERY_PATH = '/samples';
+
+function seeded(index: number, salt: number) {
+  const x = Math.sin(index * 78.233 + salt * 37.719) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function createFallbackItems(): ManifestItem[] {
+  return Array.from({ length: FALLBACK_COUNT }, (_, index) => ({
+    file: `${String(index + 1).padStart(2, '0')}.jpg`,
+    type: index % 2 === 0 ? 'real' : 'fake',
+  }));
+}
+
+function getColumns() {
+  if (typeof window === 'undefined') return GRID_COLUMNS;
+  if (window.innerWidth < 1280) return 6;
+  if (window.innerWidth < 1440) return 7;
+  return 8;
+}
+
+export function GalleryWall({ phase, onReady }: GalleryWallProps) {
+  const [items, setItems] = useState<ManifestItem[]>(createFallbackItems);
+  const [hasImages, setHasImages] = useState(false);
+  const [readySent, setReadySent] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch(`${GALLERY_PATH}/manifest.json`)
+      .then((response) => {
+        if (!response.ok) throw new Error('manifest missing');
+        return response.json() as Promise<ManifestItem[]>;
+      })
+      .then((manifest) => {
+        if (cancelled) return;
+        const limit = (navigator.hardwareConcurrency ?? 8) <= 4 ? 48 : 60;
+        const normalized = manifest.slice(0, limit);
+        setItems(normalized.length ? normalized : createFallbackItems());
+        setHasImages(Boolean(normalized.length));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setItems(createFallbackItems());
+        setHasImages(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hasImages) {
+      const timer = window.setTimeout(() => {
+        onReady();
+        setReadySent(true);
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
+
+    let cancelled = false;
+    const tasks = items.map(
+      (item) =>
+        new Promise<void>((resolve) => {
+          const image = new Image();
+          image.onload = () => resolve();
+          image.onerror = () => resolve();
+          image.src = `${GALLERY_PATH}/${item.file}`;
+        }),
+    );
+
+    Promise.all(tasks).then(() => {
+      if (!cancelled) {
+        onReady();
+        setReadySent(true);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasImages, items, onReady]);
+
+  const columns = getColumns();
+  const rows = Math.ceil(items.length / columns);
+  const centerRow = (rows - 1) / 2;
+  const centerCol = (columns - 1) / 2;
+
+  const prepared = useMemo(
+    () =>
+      items.map((item, index) => {
+        const row = Math.floor(index / columns);
+        const col = index % columns;
+        const gridSize = Math.max(items.length, 1);
+        const appearDelay = 0.3 + (((row * 7 + col * 3) % gridSize) * 0.03);
+        const stampDelay = 1.8 + seeded(index, 3) * 2.2;
+        const rotate = -4 + seeded(index, 9) * 8;
+        const distance = Math.hypot(row - centerRow, col - centerCol);
+        const flipDelay = 4 + distance * 0.08;
+        const gatherDelay = 5.2 + seeded(index, 14) * 0.18;
+        const tint = 33 + Math.round(seeded(index, 21) * 28);
+
+        return {
+          item,
+          row,
+          col,
+          appearDelay,
+          stampDelay,
+          rotate,
+          flipDelay,
+          gatherDelay,
+          tint,
+        };
+      }),
+    [centerCol, centerRow, columns, items],
+  );
+
+  return (
+    <motion.div
+      className={styles.wall}
+      style={{ '--columns': columns } as CSSProperties}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: phase === 'end' ? 0 : readySent ? 1 : 0 }}
+      transition={{ duration: phase === 'end' ? 0.4 : 0.3 }}
+      aria-hidden="true"
+    >
+      {prepared.map(({ item, appearDelay, stampDelay, rotate, flipDelay, gatherDelay, tint }) => (
+        <motion.div
+          className={styles.cell}
+          key={item.file}
+          initial={{ opacity: 0, scale: 0.95, x: 0, y: 0 }}
+          animate={
+            phase === 'end'
+              ? { opacity: 0, scale: 0, x: '0vw', y: '0vh' }
+              : { opacity: 1, scale: 1, x: 0, y: 0 }
+          }
+          transition={
+            phase === 'end'
+              ? { duration: 0.4, ease: [0.7, 0, 0.3, 1] }
+              : { delay: appearDelay, duration: 0.6, ease: 'easeOut' }
+          }
+        >
+          <motion.div
+            className={styles.flipper}
+            initial={{ rotateY: 0 }}
+            animate={phase === 'end' ? { rotateY: 180 } : { rotateY: 180 }}
+            transition={{ delay: phase === 'end' ? 0 : flipDelay, duration: 0.7, ease: [0.65, 0, 0.35, 1] }}
+          >
+            <div className={styles.face}>
+              {hasImages ? (
+                <img src={`${GALLERY_PATH}/${item.file}`} alt="" loading="eager" draggable="false" />
+              ) : (
+                <span className={styles.placeholder} style={{ backgroundColor: `rgb(${tint}, ${tint - 4}, ${tint - 10})` }} />
+              )}
+              <motion.span
+                className={`${styles.stamp} ${item.type === 'fake' ? styles.fake : styles.real}`}
+                style={{ rotate }}
+                initial={{ opacity: 0, scale: 1.3 }}
+                animate={phase === 'end' ? { opacity: 0, scale: 1 } : { opacity: 1, scale: 1 }}
+                transition={
+                  phase === 'end'
+                    ? { duration: 0.2 }
+                    : { delay: stampDelay, duration: 0.25, ease: 'easeOut' }
+                }
+              >
+                {item.type}
+              </motion.span>
+            </div>
+            <motion.div
+              className={styles.back}
+              animate={phase === 'end' ? { scale: 0, x: '50vw', y: '50vh' } : { scale: 1, x: 0, y: 0 }}
+              transition={
+                phase === 'end'
+                  ? { duration: 0.4, ease: [0.7, 0, 0.3, 1] }
+                  : { delay: gatherDelay, duration: 1, ease: [0.7, 0, 0.3, 1] }
+              }
+            >
+              <span />
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}

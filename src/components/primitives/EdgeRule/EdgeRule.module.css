@@ -1,6 +1,10 @@
-.rule {
+.wrap {
   position: relative;
   width: 100%;
+}
+
+.rule {
+  position: relative;
   height: 1px;
   background: var(--rule);
 }
@@ -22,12 +26,22 @@
   right: 0;
 }
 
-.top::before,
-.top::after {
+.top .rule::before,
+.top .rule::after {
   top: 0;
 }
 
-.bottom::before,
-.bottom::after {
+.bottom .rule::before,
+.bottom .rule::after {
   bottom: 0;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
