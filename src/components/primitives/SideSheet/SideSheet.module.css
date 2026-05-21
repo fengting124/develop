@@ -1,0 +1,34 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(22, 22, 20, 0.12);
+}
+
+.sheet {
+  position: relative;
+  height: 100vh;
+  max-width: 100vw;
+  border-left: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 40px;
+  box-shadow: var(--shadow-3);
+}
+
+.close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--ink-2);
+  transition: color 180ms ease-out;
+}
+
+.close:hover {
+  color: var(--accent);
+}

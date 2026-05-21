@@ -1,0 +1,35 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(22, 22, 20, 0.32);
+  backdrop-filter: blur(2px);
+  padding: var(--space-5);
+}
+
+.dialog {
+  position: relative;
+  max-width: calc(100vw - 48px);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+  padding: 40px;
+}
+
+.close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--ink-2);
+  transition: color 180ms ease-out;
+}
+
+.close:hover {
+  color: var(--accent);
+}

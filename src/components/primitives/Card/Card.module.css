@@ -1,0 +1,42 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.sm {
+  padding: var(--space-5);
+}
+
+.md {
+  padding: var(--space-6);
+}
+
+.lg {
+  padding: var(--space-7);
+}
+
+.hoverable {
+  transition: all 200ms ease-out;
+}
+
+.hoverable::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent);
+  transition: width 300ms ease-out;
+}
+
+.hoverable:hover {
+  background: var(--surface-2);
+}
+
+.hoverable:hover::after {
+  width: 100%;
+}

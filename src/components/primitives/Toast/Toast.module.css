@@ -1,0 +1,41 @@
+.viewport {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 70;
+  display: grid;
+  gap: var(--space-3);
+  width: min(360px, calc(100vw - 48px));
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+  padding: var(--space-4);
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--ink-3);
+}
+
+.success .dot {
+  background: var(--real);
+}
+
+.info .dot {
+  background: var(--low-conf);
+}
+
+.error .dot {
+  background: var(--fake);
+}
