@@ -108,7 +108,7 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
         const rotate = -4 + seeded(index, 9) * 8;
         const distance = Math.hypot(row - centerRow, col - centerCol);
         const flipDelay = 4 + distance * 0.08;
-        const gatherDelay = 4.75 + seeded(index, 14) * 0.12;
+        const gatherDelay = 4.25 + seeded(index, 14) * 0.12;
         const tint = 33 + Math.round(seeded(index, 21) * 28);
 
         return {
