@@ -33,7 +33,7 @@ export function EntryCards({ active }: { active: boolean }) {
       className={styles.entries}
       initial={{ y: 24, opacity: 0 }}
       animate={active ? { y: 0, opacity: 1 } : { y: 24, opacity: 0 }}
-      transition={{ duration: 0.4, delay: 0.4, ease: 'easeOut' }}
+      transition={{ duration: 0.4, delay: active ? 1.1 : 0, ease: 'easeOut' }}
     >
       <EntryCard title="鉴别" english="DETECT" description="为创作者与审核者" to="/detect" />
       <EntryCard title="治理" english="GOVERN" description="为系统建设者" to="/admin" />
