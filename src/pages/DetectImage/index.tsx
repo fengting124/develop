@@ -27,9 +27,9 @@ const evidences = [
 ];
 
 const marks = [
-  { x: 29, y: 45, w: 23, h: 28, label: 'M-01', confidence: 0.91, appearAt: 4200, clue: '塑料盆位置异常' },
-  { x: 56, y: 49, w: 15, h: 18, label: 'M-02', confidence: 0.87, appearAt: 8300, clue: '石头质感不合常理' },
-  { x: 73, y: 35, w: 18, h: 25, label: 'M-03', confidence: 0.79, appearAt: 12000, clue: '光影方向偏离' },
+  { x: 28, y: 46, w: 23, h: 25, label: 'M-01', confidence: 0.91, appearAt: 4200, clue: '塑料盆位置异常' },
+  { x: 56, y: 50, w: 14, h: 15, label: 'M-02', confidence: 0.87, appearAt: 8300, clue: '石头质感不合常理' },
+  { x: 73, y: 37, w: 18, h: 21, label: 'M-03', confidence: 0.79, appearAt: 12000, clue: '光影方向偏离' },
 ];
 
 const tabs = [
