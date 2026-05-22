@@ -9,7 +9,7 @@
   place-items: center;
   align-content: center;
   gap: var(--space-5);
-  padding: var(--space-7);
+  padding: var(--space-7) 0;
 }
 
 .dropzone {
@@ -52,7 +52,7 @@
   grid-template-columns: minmax(420px, 1fr) 360px;
   grid-template-rows: minmax(0, 1fr) auto;
   gap: var(--space-7);
-  padding: var(--space-7) var(--space-8);
+  padding: var(--space-7) 0;
 }
 
 .imagePanel {

@@ -7,7 +7,7 @@
   display: grid;
   justify-items: center;
   gap: var(--space-6);
-  padding: var(--space-9) var(--space-6);
+  padding: var(--space-9) 0;
 }
 
 .kicker {

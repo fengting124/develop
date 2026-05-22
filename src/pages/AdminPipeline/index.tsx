@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PageContainer } from '@/components/primitives';
 import { PipelineNode } from '@/components/PipelineNode/PipelineNode';
 import { pipelineProducts } from '@/data/mocks';
 import styles from './AdminPipeline.module.css';
@@ -42,10 +43,13 @@ export function AdminPipeline() {
   const progress = phase >= 5 ? 100 : phaseProgress * 100;
 
   return (
+    <PageContainer width="wide">
     <div className={styles.page}>
-      <p className={styles.quote}>─ The workshop runs day and night ─</p>
-      <h1>数 据 生 成</h1>
-      <p className={styles.brand}>PIPELINE</p>
+      <header className="pageHeader">
+        <p className="italic-quote">─ The workshop runs day and night ─</p>
+        <h1 className="pageTitle">数 据 生 成</h1>
+        <p className="pageEnglish">PIPELINE</p>
+      </header>
       <hr />
       <section className={styles.flow}>
         {nodes.map(([name, type], index) => (
@@ -85,5 +89,6 @@ export function AdminPipeline() {
         </div>
       </section>
     </div>
+    </PageContainer>
   );
 }

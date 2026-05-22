@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { PageContainer } from '@/components/primitives';
 import { KeyframeStrip } from '@/components/KeyframeStrip/KeyframeStrip';
 import { Timeline } from '@/components/Timeline/Timeline';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
@@ -34,6 +35,7 @@ export function DetectVideo() {
   return (
     <main className={styles.page}>
       <UserTopbar title="视频检测台" english="VIDEO FORENSICS" />
+      <PageContainer width="wide">
       <section className={styles.body}>
         <div className={styles.player}>
           <div className={styles.videoBox}>
@@ -92,6 +94,7 @@ export function DetectVideo() {
           </div>
         </section>
       </section>
+      </PageContainer>
     </main>
   );
 }

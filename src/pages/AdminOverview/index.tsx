@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { PageContainer } from '@/components/primitives';
 import { expertsCore, anomalyPool } from '@/data/mocks';
 import styles from './AdminOverview.module.css';
 
@@ -15,10 +16,13 @@ function Preview({ title, desc, to, children }: { title: string; desc: string; t
 
 export function AdminOverview() {
   return (
+    <PageContainer width="normal">
     <div className={styles.page}>
-      <p className={styles.quote}>─ A workshop for keeping models honest ─</p>
-      <h1>治 理 中 心</h1>
-      <p className={styles.brand}>GOVERN</p>
+      <header className="pageHeader">
+        <p className="italic-quote">─ A workshop for keeping models honest ─</p>
+        <h1 className="pageTitle">治 理 中 心</h1>
+        <p className="pageEnglish">GOVERN</p>
+      </header>
       <hr />
       <section>
         <h2>今日动态</h2>
@@ -44,5 +48,6 @@ export function AdminOverview() {
         <div className={styles.anomalyMini}>{anomalyPool.slice(0, 3).map((item) => <img src={item.src} key={item.id} alt="" />)}</div>
       </Preview>
     </div>
+    </PageContainer>
   );
 }

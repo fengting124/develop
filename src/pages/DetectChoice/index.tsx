@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { PageContainer } from '@/components/primitives';
 import { FilmReel, ImageFrame } from '@/components/icons';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
 import styles from './DetectChoice.module.css';
@@ -7,6 +8,7 @@ export function DetectChoice() {
   return (
     <main className={styles.page}>
       <UserTopbar title="检测选择" english="DETECT CHOICE" />
+      <PageContainer width="narrow">
       <section className={styles.body}>
         <p className={styles.kicker}>─ Choose the material to develop ─</p>
         <h1>请选择待检材料</h1>
@@ -35,6 +37,7 @@ export function DetectChoice() {
           </Link>
         </div>
       </section>
+      </PageContainer>
     </main>
   );
 }

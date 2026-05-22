@@ -8,6 +8,7 @@ export { Input, TextArea } from './Input/Input';
 export type { InputProps, TextAreaProps } from './Input/Input';
 export { Modal } from './Modal/Modal';
 export type { ModalProps } from './Modal/Modal';
+export { PageContainer } from './PageContainer/PageContainer';
 export { SideSheet } from './SideSheet/SideSheet';
 export type { SideSheetProps } from './SideSheet/SideSheet';
 export { ToastProvider } from './Toast/Toast';

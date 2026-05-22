@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button, Input, SideSheet, useToast } from '@/components/primitives';
+import { Button, Input, PageContainer, SideSheet, useToast } from '@/components/primitives';
 import { ArrowLeft, ArrowRight } from '@/components/icons';
 import { anomalyPool } from '@/data/mocks';
 import styles from './AdminAnomaly.module.css';
@@ -31,10 +31,13 @@ export function AdminAnomaly() {
   };
 
   return (
+    <PageContainer width="normal">
     <div className={styles.page}>
-      <p className={styles.quote}>─ Where the model honestly hesitates ─</p>
-      <h1>异 常 池</h1>
-      <p className={styles.brand}>ANOMALY</p>
+      <header className="pageHeader">
+        <p className="italic-quote">─ Where the model honestly hesitates ─</p>
+        <h1 className="pageTitle">异 常 池</h1>
+        <p className="pageEnglish">ANOMALY</p>
+      </header>
       <hr />
       <p className={styles.count}>共有 {items.length} 个样本等待您的确认</p>
       <motion.div className={styles.grid} layout>
@@ -70,5 +73,6 @@ export function AdminAnomaly() {
         ) : null}
       </SideSheet>
     </div>
+    </PageContainer>
   );
 }

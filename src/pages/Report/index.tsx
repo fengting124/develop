@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button, EdgeRule, Modal, useToast } from '@/components/primitives';
+import { Button, EdgeRule, Modal, PageContainer, useToast } from '@/components/primitives';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
 import { VerdictCard } from '@/components/VerdictCard/VerdictCard';
 import { imageDemo } from '@/data/mocks';
@@ -72,6 +72,7 @@ export function Report() {
       />
       <EdgeRule position="top" />
 
+      <PageContainer width="narrow">
       <article className={styles.paper}>
         <p className={styles.italicQuote}>─ A report on visual authenticity ─</p>
         <h1>鉴 别 报 告</h1>
@@ -139,6 +140,7 @@ export function Report() {
           <p>报告时间 ─ 2026.11.21 14:23:24</p>
         </footer>
       </article>
+      </PageContainer>
 
       <EdgeRule position="bottom" />
 

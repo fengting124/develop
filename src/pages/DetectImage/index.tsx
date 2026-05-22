@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button } from '@/components/primitives';
+import { Button, PageContainer } from '@/components/primitives';
 import { ForensicMark } from '@/components/ForensicMark/ForensicMark';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
 import { VerdictCard } from '@/components/VerdictCard/VerdictCard';
@@ -80,6 +80,7 @@ export function DetectImage() {
   return (
     <main className={styles.page}>
       <UserTopbar title="图片检测台" english="IMAGE FORENSICS" />
+      <PageContainer width="wide">
       {state === 'idle' ? (
         <section className={styles.idle}>
           <button
@@ -182,6 +183,7 @@ export function DetectImage() {
           </div>
         </section>
       )}
+      </PageContainer>
     </main>
   );
 }

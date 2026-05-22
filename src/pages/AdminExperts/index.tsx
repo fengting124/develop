@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Button, Input, Modal, useToast } from '@/components/primitives';
+import { Button, Input, Modal, PageContainer, useToast } from '@/components/primitives';
 import { ExpertCard } from '@/components/ExpertCard/ExpertCard';
 import { expertsCore, expertsLora } from '@/data/mocks';
 import styles from './AdminExperts.module.css';
@@ -18,10 +18,13 @@ export function AdminExperts() {
   };
 
   return (
+    <PageContainer width="normal">
     <div className={styles.page}>
-      <p className={styles.quote}>─ A constellation of expertise ─</p>
-      <h1>专 家 库</h1>
-      <p className={styles.brand}>EXPERTS</p>
+      <header className="pageHeader">
+        <p className="italic-quote">─ A constellation of expertise ─</p>
+        <h1 className="pageTitle">专 家 库</h1>
+        <p className="pageEnglish">EXPERTS</p>
+      </header>
       <hr />
       <section>
         <h2>核心专家</h2>
@@ -59,5 +62,6 @@ export function AdminExperts() {
         </div>
       </Modal>
     </div>
+    </PageContainer>
   );
 }
