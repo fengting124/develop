@@ -4,6 +4,7 @@ import styles from './VerdictCard.module.css';
 export interface VerdictCardProps {
   verdict: 'fake' | 'real' | 'unsure';
   confidence: number;
+  variant?: 'default' | 'large';
 }
 
 const copy = {
@@ -12,10 +13,10 @@ const copy = {
   unsure: { zh: '低置信度', en: 'UNSURE' },
 };
 
-export function VerdictCard({ verdict, confidence }: VerdictCardProps) {
+export function VerdictCard({ verdict, confidence, variant = 'default' }: VerdictCardProps) {
   return (
     <motion.section
-      className={`${styles.card} ${styles[verdict]}`}
+      className={`${styles.card} ${styles[verdict]} ${variant === 'large' ? styles.large : ''}`}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}

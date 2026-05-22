@@ -49,6 +49,9 @@
   font-weight: 400;
 }
 
-.about {
+.actions {
   justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
 }

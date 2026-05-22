@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router-dom';
+import type { ReactNode } from 'react';
 import { ArrowLeft } from '@/components/icons';
 import styles from './UserTopbar.module.css';
 
 interface UserTopbarProps {
   title: string;
   english: string;
+  actions?: ReactNode;
 }
 
-export function UserTopbar({ title, english }: UserTopbarProps) {
+export function UserTopbar({ title, english, actions }: UserTopbarProps) {
   const navigate = useNavigate();
 
   return (
@@ -20,7 +22,9 @@ export function UserTopbar({ title, english }: UserTopbarProps) {
         <span>{title}</span>
         <strong>{english}</strong>
       </div>
-      <button className={styles.about} type="button">关于显影</button>
+      <div className={styles.actions}>
+        {actions ?? <button className={styles.about} type="button">关于显影</button>}
+      </div>
     </header>
   );
 }

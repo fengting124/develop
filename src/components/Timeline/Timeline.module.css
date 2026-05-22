@@ -1,0 +1,42 @@
+.wrap {
+  width: 720px;
+  max-width: 100%;
+}
+
+.ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.track {
+  position: relative;
+  height: 4px;
+  background: var(--rule);
+}
+
+.range {
+  position: absolute;
+  top: 0;
+  height: 4px;
+  background: var(--accent);
+  transition: opacity 500ms ease-out, height 160ms ease-out, top 160ms ease-out, background 160ms ease-out;
+}
+
+.activeRange {
+  top: -2px;
+  height: 8px;
+  background: var(--fake);
+}
+
+.cursor {
+  position: absolute;
+  top: -8px;
+  width: 1.5px;
+  height: 20px;
+  background: var(--accent);
+  transform: translateX(-50%);
+}

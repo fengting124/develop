@@ -4,101 +4,114 @@
 }
 
 .body {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
   padding: var(--space-7) var(--space-8);
 }
 
-.stage {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  min-height: calc(100vh - 64px - 96px);
-  gap: var(--space-7);
+.player {
+  width: 720px;
+  max-width: 100%;
 }
 
-.viewer {
+.videoBox {
   display: grid;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   place-items: center;
   align-content: center;
-  gap: var(--space-5);
+  gap: var(--space-4);
   border: 1px solid var(--rule);
-  background: var(--surface);
+  background:
+    linear-gradient(90deg, rgba(200, 65, 46, 0.08), transparent 40%),
+    var(--surface);
 }
 
-.viewer svg {
-  width: 96px;
-  height: 96px;
-  color: var(--ink);
+.videoBox svg {
+  width: 84px;
+  height: 84px;
 }
 
 .reelRunning {
   animation: spin 1.2s linear infinite;
 }
 
-.viewer h1 {
-  font-family: var(--font-serif);
-  font-size: var(--text-3xl);
-  font-weight: 500;
-}
-
-.viewer p {
-  color: var(--ink-3);
-  font-family: var(--font-serif);
-  font-style: italic;
-}
-
-.panel {
-  border-left: 1px solid var(--rule);
-  padding-left: var(--space-6);
-}
-
-.panel h2 {
-  font-family: var(--font-serif);
-  font-size: var(--text-xl);
-}
-
-.panel p {
-  margin: var(--space-3) 0 var(--space-6);
-  color: var(--ink-2);
-}
-
-.timeline {
-  display: flex;
-  align-items: end;
-  gap: 6px;
-  height: 86px;
-  border-bottom: 1px solid var(--rule);
-}
-
-.timeline span {
-  width: 12px;
-  background: var(--ink-3);
-}
-
-.timeline .risk {
-  background: var(--accent);
-}
-
-.timeline .active {
-  background: var(--ink);
-}
-
-.metrics {
-  display: grid;
-  gap: var(--space-2);
-  margin-top: var(--space-6);
-}
-
-.metrics span {
-  color: var(--ink-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-}
-
-.metrics strong {
+.videoBox h1,
+.progress h2 {
   font-family: var(--font-serif);
   font-size: var(--text-2xl);
   font-weight: 500;
 }
 
+.videoBox p {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-style: italic;
+}
+
+.videoBox span {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.block {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  width: 720px;
+  max-width: 100%;
+}
+
+.block h2 {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 400;
+}
+
+.result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-6);
+  width: 720px;
+  max-width: 100%;
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-6);
+}
+
+.progress p {
+  margin-top: var(--space-2);
+  color: var(--ink-2);
+}
+
+.ranges {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.ranges button {
+  width: fit-content;
+  padding: var(--space-2) var(--space-3);
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.ranges button:hover {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.ranges span {
+  margin-right: var(--space-3);
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
