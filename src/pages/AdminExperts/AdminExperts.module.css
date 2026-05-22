@@ -1,0 +1,89 @@
+.page {
+  max-width: 980px;
+}
+
+.quote {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-style: italic;
+}
+
+.page h1 {
+  margin-top: var(--space-6);
+  font-family: var(--font-serif);
+  font-size: 48px;
+  font-weight: 500;
+}
+
+.brand {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  letter-spacing: 0.3em;
+}
+
+.page hr {
+  margin: var(--space-7) 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.page h2,
+.wizard h2 {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: 500;
+}
+
+.cards,
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 200px);
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wizard {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.wizard p {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-style: italic;
+}
+
+.wizard span {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.wizard label {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.options {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.options button,
+.summary {
+  padding: var(--space-4);
+  border: 1px solid var(--rule);
+  text-align: left;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+}

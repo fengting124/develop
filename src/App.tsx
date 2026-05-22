@@ -10,6 +10,7 @@ import { AdminPipeline } from '@/pages/AdminPipeline';
 import { AdminExperts } from '@/pages/AdminExperts';
 import { AdminAnomaly } from '@/pages/AdminAnomaly';
 import { Dev } from '@/pages/Dev';
+import { AdminLayout } from '@/layouts/AdminLayout';
 
 export default function App() {
   return (
@@ -21,10 +22,12 @@ export default function App() {
           <Route path="/detect/image" element={<DetectImage />} />
           <Route path="/detect/video" element={<DetectVideo />} />
           <Route path="/detect/report/:id" element={<Report />} />
-          <Route path="/admin" element={<AdminOverview />} />
-          <Route path="/admin/pipeline" element={<AdminPipeline />} />
-          <Route path="/admin/experts" element={<AdminExperts />} />
-          <Route path="/admin/anomaly" element={<AdminAnomaly />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminOverview />} />
+            <Route path="pipeline" element={<AdminPipeline />} />
+            <Route path="experts" element={<AdminExperts />} />
+            <Route path="anomaly" element={<AdminAnomaly />} />
+          </Route>
           <Route path="/dev" element={<Dev />} />
         </Routes>
       </BrowserRouter>

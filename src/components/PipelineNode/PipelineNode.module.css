@@ -1,0 +1,104 @@
+.wrap {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.node {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink-3);
+}
+
+.active {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.done {
+  border-color: var(--real);
+}
+
+.index {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.icon {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.icon rect {
+  fill: currentColor;
+  stroke: none;
+}
+
+.audio.iconActive rect {
+  animation: audio 1.2s ease-in-out infinite;
+}
+
+.cursor {
+  animation: blink 0.8s steps(1) infinite;
+}
+
+.synthesis.iconActive path:first-child {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.star {
+  transform-origin: center;
+}
+
+.synthesis.iconActive .star,
+.generation.iconActive {
+  animation: spin 3s linear infinite;
+}
+
+.annotation.iconActive rect {
+  animation: fill 2s ease-in-out infinite;
+}
+
+.check {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  color: var(--real);
+  font-size: 12px;
+}
+
+.wrap p {
+  font-size: 14px;
+}
+
+@keyframes audio {
+  50% { transform: scaleY(0.45); }
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+@keyframes pulse {
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fill {
+  50% { fill: var(--accent-soft); }
+}

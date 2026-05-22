@@ -1,0 +1,130 @@
+.page {
+  max-width: 820px;
+}
+
+.quote {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-style: italic;
+}
+
+.page h1 {
+  margin-top: var(--space-6);
+  font-family: var(--font-serif);
+  font-size: 48px;
+  font-weight: 500;
+}
+
+.brand {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-variant: small-caps;
+  letter-spacing: 0.3em;
+}
+
+.page hr {
+  margin: var(--space-7) 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+.page h2 {
+  margin-bottom: var(--space-5);
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: 500;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+}
+
+.status i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}
+
+.ok {
+  background: var(--real);
+}
+
+.warn {
+  background: var(--accent);
+}
+
+.status span {
+  font-size: 15px;
+}
+
+.status em {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-style: normal;
+}
+
+.preview {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.preview p {
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+}
+
+.preview a {
+  justify-self: end;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.pipeMini {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.pipeMini span {
+  width: 56px;
+  height: 28px;
+  border: 1px solid var(--rule);
+  background: linear-gradient(90deg, var(--accent-soft), var(--surface));
+  animation: flow 1.5s linear infinite;
+}
+
+.expertMini {
+  display: grid;
+  grid-template-columns: repeat(4, 32px);
+  gap: var(--space-3);
+}
+
+.expertMini span {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.anomalyMini {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.anomalyMini img {
+  width: 96px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px dashed var(--rule);
+}
+
+@keyframes flow {
+  50% { border-color: var(--accent); }
+}
