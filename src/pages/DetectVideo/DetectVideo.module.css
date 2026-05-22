@@ -1,0 +1,104 @@
+.page {
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+.body {
+  padding: var(--space-7) var(--space-8);
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  min-height: calc(100vh - 64px - 96px);
+  gap: var(--space-7);
+}
+
+.viewer {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--space-5);
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+.viewer svg {
+  width: 96px;
+  height: 96px;
+  color: var(--ink);
+}
+
+.reelRunning {
+  animation: spin 1.2s linear infinite;
+}
+
+.viewer h1 {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 500;
+}
+
+.viewer p {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-style: italic;
+}
+
+.panel {
+  border-left: 1px solid var(--rule);
+  padding-left: var(--space-6);
+}
+
+.panel h2 {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+}
+
+.panel p {
+  margin: var(--space-3) 0 var(--space-6);
+  color: var(--ink-2);
+}
+
+.timeline {
+  display: flex;
+  align-items: end;
+  gap: 6px;
+  height: 86px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.timeline span {
+  width: 12px;
+  background: var(--ink-3);
+}
+
+.timeline .risk {
+  background: var(--accent);
+}
+
+.timeline .active {
+  background: var(--ink);
+}
+
+.metrics {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.metrics span {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.metrics strong {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 500;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

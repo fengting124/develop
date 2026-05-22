@@ -1,0 +1,219 @@
+.page {
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+.idle {
+  display: grid;
+  min-height: calc(100vh - 64px);
+  place-items: center;
+  align-content: center;
+  gap: var(--space-5);
+  padding: var(--space-7);
+}
+
+.dropzone {
+  display: grid;
+  width: min(800px, 86vw);
+  aspect-ratio: 4 / 3;
+  place-items: center;
+  align-content: center;
+  gap: var(--space-4);
+  border: 1.5px dashed var(--rule);
+  background: transparent;
+  text-align: center;
+  transition: border-color 160ms ease-out;
+}
+
+.dropzone:hover {
+  border-color: var(--accent);
+}
+
+.dropzone span {
+  font-family: var(--font-serif);
+  font-size: 24px;
+}
+
+.dropzone em {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.dropzone strong {
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+
+.workbench {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) 360px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-7);
+  padding: var(--space-7) var(--space-8);
+}
+
+.imagePanel {
+  display: grid;
+  place-items: center;
+  min-height: 590px;
+}
+
+.imageWrap {
+  position: relative;
+  max-width: 600px;
+  width: 100%;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-2);
+}
+
+.imageWrap img {
+  width: 100%;
+  display: block;
+}
+
+.imageBadge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  background: var(--fake);
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transform: rotate(-2deg);
+}
+
+.sidePanel {
+  min-height: 590px;
+  border-left: 1px solid var(--rule);
+  padding-left: var(--space-6);
+}
+
+.panelTitle {
+  margin-bottom: var(--space-6);
+}
+
+.panelTitle h2,
+.donePanel h2 {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: 500;
+}
+
+.panelTitle p {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+.steps {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: var(--space-3);
+}
+
+.stepIndex {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.step strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.step em,
+.stepState {
+  display: block;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.done .stepState {
+  color: var(--real);
+}
+
+.active .stepState {
+  color: var(--accent);
+  animation: breathe 1.2s ease-in-out infinite;
+}
+
+.evidenceBar {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-5);
+}
+
+.evidenceBar h2 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-base);
+  font-weight: 500;
+}
+
+.evidenceBar div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+}
+
+.evidenceBar span {
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+}
+
+.evidenceVisible {
+  color: var(--accent) !important;
+}
+
+.donePanel {
+  display: grid;
+  gap: var(--space-6);
+  justify-items: start;
+}
+
+.clueList {
+  display: grid;
+  width: 100%;
+  gap: var(--space-2);
+}
+
+.clueList button {
+  padding: var(--space-3);
+  text-align: left;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.clueList button:hover {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
+.reportLink {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}

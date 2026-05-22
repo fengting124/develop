@@ -1,0 +1,108 @@
+.page {
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+.body {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+  padding: var(--space-9) var(--space-6);
+}
+
+.kicker {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-style: italic;
+}
+
+.body h1 {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 500;
+}
+
+.cards {
+  display: flex;
+  gap: var(--space-7);
+  margin-top: var(--space-5);
+}
+
+.choiceCard {
+  position: relative;
+  display: flex;
+  width: 420px;
+  height: 320px;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-6);
+  transition: background 200ms ease-out, border-color 200ms ease-out;
+}
+
+.choiceCard:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.choiceCard svg {
+  width: 72px;
+  height: 72px;
+  color: var(--ink);
+}
+
+.imageIcon path:nth-child(3) {
+  transition: stroke-dashoffset 700ms ease-out;
+  stroke-dasharray: 36;
+  stroke-dashoffset: 28;
+}
+
+.choiceCard:hover .imageIcon path:nth-child(3) {
+  stroke-dashoffset: 0;
+}
+
+.videoIcon {
+  transition: transform 700ms ease-out;
+}
+
+.choiceCard:hover .videoIcon {
+  transform: rotate(360deg);
+}
+
+.center {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.center strong {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: 500;
+}
+
+.center em {
+  color: var(--ink-3);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-style: normal;
+  font-variant: small-caps;
+  letter-spacing: 0.15em;
+}
+
+.bottom {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+}
+
+.bottom em {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-style: italic;
+}

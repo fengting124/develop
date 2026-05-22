@@ -1,0 +1,54 @@
+.topbar {
+  display: grid;
+  grid-template-columns: 180px 1fr 180px;
+  align-items: center;
+  height: 64px;
+  border-bottom: 1px solid var(--rule);
+  padding: 0 64px;
+  background: rgba(248, 246, 242, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.back,
+.about {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  transition: color 160ms ease-out;
+}
+
+.back:hover,
+.about:hover {
+  color: var(--accent);
+}
+
+.back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.title {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.title span {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+}
+
+.title strong {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+
+.about {
+  justify-self: end;
+}

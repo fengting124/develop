@@ -1,0 +1,46 @@
+.card {
+  display: grid;
+  place-items: center;
+  width: 320px;
+  height: 160px;
+  border: 1.5px solid;
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.card h2 {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: 500;
+}
+
+.card p {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-variant: small-caps;
+  letter-spacing: 0.15em;
+}
+
+.card span {
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.fake {
+  border-color: var(--fake);
+  background: var(--fake-soft);
+  color: var(--fake);
+}
+
+.real {
+  border-color: var(--real);
+  background: var(--real-soft);
+  color: var(--real);
+}
+
+.unsure {
+  border-color: var(--low-conf);
+  background: var(--low-conf-soft);
+  color: var(--low-conf);
+}

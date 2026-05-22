@@ -80,3 +80,27 @@ export function Spinner(props: IconProps) {
     </IconBase>
   );
 }
+
+export function ImageFrame(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M4 5h16v14H4z" />
+      <path d="M7 15c2-4 4-4 6 0 1.4-2.2 2.8-2.2 4.2 0" />
+      <path d="M8 9h.1" />
+      <path d="M10 11c1.4-1.2 2.8-1.2 4.2 0" />
+    </IconBase>
+  );
+}
+
+export function FilmReel(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M5 6h14v12H5z" />
+      <path d="M8 6v12" />
+      <path d="M16 6v12" />
+      <path d="M8 9h8" />
+      <path d="M8 15h8" />
+      <path d="M11 11.2 14 13l-3 1.8z" />
+    </IconBase>
+  );
+}

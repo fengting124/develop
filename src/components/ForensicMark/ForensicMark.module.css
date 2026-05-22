@@ -1,0 +1,38 @@
+.mark {
+  position: absolute;
+  border: 1.5px solid var(--accent);
+  background: transparent;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.mark::after {
+  content: "";
+  position: absolute;
+  right: -34px;
+  bottom: -18px;
+  width: 34px;
+  border-top: 1px dashed var(--accent);
+}
+
+.label {
+  position: absolute;
+  left: calc(100% + 34px);
+  bottom: -27px;
+  white-space: nowrap;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+.active {
+  border-width: 2.5px;
+  box-shadow: 0 0 0 12px var(--accent-soft);
+}
+
+.active .label {
+  background: var(--accent);
+  color: white;
+}
