@@ -129,7 +129,7 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
       transition={{ duration: phase === 'end' ? 0.4 : 0.3 }}
       aria-hidden="true"
     >
-      {prepared.map(({ item, appearDelay, stampDelay, rotate, flipDelay, gatherDelay, tint }) => (
+      {prepared.map(({ item, appearDelay, stampDelay, rotate, flipDelay, gatherDelay, tint }, index) => (
         <motion.div
           className={styles.cell}
           key={item.file}
@@ -153,7 +153,14 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
           >
             <div className={styles.face}>
               {hasImages ? (
-                <img src={`${GALLERY_PATH}/${item.file}`} alt="" loading="eager" draggable="false" />
+                <img
+                  src={`${GALLERY_PATH}/${item.file}`}
+                  alt=""
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority={index < 8 ? 'high' : 'auto'}
+                  draggable="false"
+                />
               ) : (
                 <span className={styles.placeholder} style={{ backgroundColor: `rgb(${tint}, ${tint - 4}, ${tint - 10})` }} />
               )}

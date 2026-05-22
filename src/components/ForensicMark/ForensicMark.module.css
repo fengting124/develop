@@ -29,7 +29,7 @@
 
 .active {
   border-width: 2.5px;
-  box-shadow: 0 0 0 12px var(--accent-soft);
+  outline: 8px solid var(--accent-soft);
 }
 
 .active .label {

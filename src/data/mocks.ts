@@ -25,7 +25,7 @@ export const videoFrames = Array.from({ length: 30 }, (_, index) => ({
 
 export const expertsCore = [
   { name: '纹理', english: 'Texture', iconType: 'texture' as const, status: 'online' as const },
-  { name: '频域', english: 'Frequency', iconType: 'frequency' as const, status: 'online' as const },
+  { name: '谱纹', english: 'Spectrum', iconType: 'frequency' as const, status: 'online' as const },
   { name: '风格', english: 'Style', iconType: 'style' as const, status: 'online' as const },
   { name: '语义', english: 'Semantic', iconType: 'semantic' as const, status: 'online' as const },
 ];

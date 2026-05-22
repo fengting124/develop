@@ -34,7 +34,7 @@
 }
 
 .reelRunning {
-  animation: spin 1.2s linear infinite;
+  animation: scanPulse 1.2s ease-out infinite;
 }
 
 .videoBox h1,
@@ -110,8 +110,9 @@
   font-family: var(--font-mono);
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+@keyframes scanPulse {
+  50% {
+    transform: translateY(-4px);
+    opacity: 0.72;
   }
 }

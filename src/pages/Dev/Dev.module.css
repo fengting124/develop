@@ -97,7 +97,7 @@
 }
 
 .spinner {
-  animation: spin 900ms linear infinite;
+  animation: pulse 900ms ease-out infinite;
 }
 
 .dialogCopy {
@@ -109,9 +109,9 @@
   color: var(--ink-2);
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+@keyframes pulse {
+  50% {
+    opacity: 0.36;
   }
 }
 
