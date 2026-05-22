@@ -1,94 +1,172 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { PageContainer } from '@/components/primitives';
-import { PipelineNode } from '@/components/PipelineNode/PipelineNode';
-import { pipelineProducts } from '@/data/mocks';
+import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PageContainer, useToast } from '@/components/primitives';
 import styles from './AdminPipeline.module.css';
 
-const nodes = [
-  ['音轨', 'audio'],
-  ['文本', 'text'],
-  ['合成', 'synthesis'],
-  ['生成', 'generation'],
-  ['标注', 'annotation'],
-] as const;
+interface ShowcaseCardProps {
+  title: string;
+  english: string;
+  description: string;
+  thumbnail: string;
+  to: string;
+}
 
-export function AdminPipeline() {
-  const [phase, setPhase] = useState(0);
-  const [plus, setPlus] = useState(false);
-  const [phaseProgress, setPhaseProgress] = useState(0);
+interface UploadCardProps {
+  title: string;
+  english: string;
+  description: string;
+}
 
-  useEffect(() => {
-    const startedAt = Date.now();
-    const progressTimer = window.setInterval(() => {
-      setPhaseProgress(((Date.now() - startedAt) % 2500) / 2500);
-    }, 120);
-    const timer = window.setInterval(() => {
-      setPhase((value) => {
-        const next = (value + 1) % 6;
-        if (next === 0) {
-          setPlus(true);
-          window.setTimeout(() => setPlus(false), 900);
-        }
-        return next;
-      });
-    }, 2500);
-    return () => {
-      window.clearInterval(timer);
-      window.clearInterval(progressTimer);
-    };
-  }, []);
+function UploadIcon() {
+  return (
+    <svg className={styles.uploadIcon} viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M24 34V12" />
+      <path d="m15 21 9-9 9 9" />
+      <path d="M11 34v6h26v-6" />
+    </svg>
+  );
+}
 
-  const activeIndex = Math.min(phase, 4);
-  const progress = phase >= 5 ? 100 : phaseProgress * 100;
+function ToggleOption({ checked, label }: { checked?: boolean; label: string }) {
+  const [isOn, setIsOn] = useState(Boolean(checked));
 
   return (
+    <label className={styles.toggleRow}>
+      <span
+        className={`${styles.toggle} ${isOn ? styles.toggleOn : ''}`}
+        onClick={() => setIsOn((value) => !value)}
+        role="switch"
+        aria-checked={isOn}
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setIsOn((value) => !value);
+          }
+        }}
+      >
+        <span className={styles.toggleKnob} />
+      </span>
+      <span className={styles.toggleLabel}>{label}</span>
+    </label>
+  );
+}
+
+function ShowcaseCard({ title, english, description, thumbnail, to }: ShowcaseCardProps) {
+  const navigate = useNavigate();
+
+  return (
+    <article className={styles.showcaseCard} onClick={() => navigate(to)}>
+      <div className={styles.showcaseThumb}>
+        <img src={thumbnail} alt="" />
+        <div className={styles.showcaseOverlay}>
+          <span className={styles.overlayBadge}>SHOWCASE</span>
+        </div>
+      </div>
+      <div className={styles.showcaseInfo}>
+        <p className={styles.showcaseLabel}>
+          <span className={styles.labelDash}>─</span>
+          <span>{english}</span>
+        </p>
+        <h3 className={styles.showcaseTitle}>{title}</h3>
+        <p className={styles.showcaseDesc}>{description}</p>
+        <div className={styles.showcaseFooter}>
+          <span className={styles.showcaseCTA}>
+            <span>查看完整流程</span>
+            <span className={styles.showcaseArrow}>→</span>
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function UploadCard({ title, english, description }: UploadCardProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
+
+  return (
+    <article className={styles.uploadCard}>
+      <div className={styles.uploadInfo}>
+        <p className={styles.uploadLabel}>
+          <span className={styles.labelDash}>─</span>
+          <span>{english}</span>
+        </p>
+        <h3 className={styles.uploadTitle}>{title}</h3>
+        <p className={styles.uploadDesc}>{description}</p>
+      </div>
+
+      <button className={styles.uploadZone} type="button" onClick={() => inputRef.current?.click()}>
+        <UploadIcon />
+        <p className={styles.uploadHint}>拖入或点击选择视频</p>
+        <p className={styles.uploadFormats}>支持 MP4 · MOV · WebM</p>
+      </button>
+      <input
+        ref={inputRef}
+        hidden
+        type="file"
+        accept="video/mp4,video/quicktime,video/webm"
+        onChange={() => showToast('视频已进入生成队列', 'success')}
+      />
+
+      <div className={styles.uploadOptions}>
+        <p className={styles.optionsLabel}>默认参数</p>
+        <div className={styles.optionsList}>
+          <ToggleOption checked label="启用音轨替换" />
+          <ToggleOption checked label="启用唇形对齐" />
+          <ToggleOption label="启用帧插值" />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export function AdminPipeline() {
+  return (
     <PageContainer width="wide">
-    <div className={styles.page}>
-      <header className="pageHeader">
-        <p className="italic-quote">─ The workshop runs day and night ─</p>
-        <h1 className="pageTitle">数 据 生 成</h1>
-        <p className="pageEnglish">PIPELINE</p>
-      </header>
-      <hr />
-      <section className={styles.flow}>
-        {nodes.map(([name, type], index) => (
-          <div className={styles.nodeSlot} key={name}>
-            <PipelineNode
-              index={index + 1}
-              name={name}
-              iconType={type}
-              status={phase > index ? 'done' : phase === index ? 'active' : 'idle'}
+      <div className={styles.page}>
+        <header className="pageHeader">
+          <p className="italic-quote">─ The workshop runs day and night ─</p>
+          <h1 className="pageTitle">数 据 生 成</h1>
+          <p className="pageEnglish">PIPELINE</p>
+        </header>
+
+        <section className={styles.dataBlock}>
+          <header className={styles.blockHeader}>
+            <span className={styles.blockIndex}>①</span>
+            <h2 className={styles.blockTitle}>视频数据</h2>
+            <span className={styles.blockEnglish}>VIDEO DATA</span>
+          </header>
+
+          <div className={styles.blockGrid}>
+            <ShowcaseCard
+              title="样例可视化"
+              english="Process Showcase"
+              description="查看一段真实视频如何被构造为伪造样本，包含从音轨分离到帧合成的完整工作流。"
+              thumbnail="/samples/09.jpg"
+              to="/admin/pipeline/showcase/video"
             />
-            {index < nodes.length - 1 ? <svg className={`${styles.line} ${phase === index ? styles.lineActive : ''}`} viewBox="0 0 90 8"><path d="M0 4h90" /></svg> : null}
+            <UploadCard
+              title="导入新视频"
+              english="Start Generating"
+              description="上传一段真实视频，系统将自动完成整个伪造样本的构造流程。"
+            />
           </div>
-        ))}
-        <AnimatePresence>{plus ? <motion.span className={styles.plus} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>+1</motion.span> : null}</AnimatePresence>
-      </section>
-      <hr />
-      <section>
-        <h2>当前正在处理</h2>
-        <div className={styles.current}>
-          <img src={pipelineProducts[activeIndex % pipelineProducts.length].src} alt="" />
-          <div>
-            <p>当前阶段 ─ {nodes[activeIndex][0]}</p>
-            <span><i style={{ width: `${progress}%` }} /></span>
+        </section>
+
+        <section className={styles.dataBlock}>
+          <header className={styles.blockHeader}>
+            <span className={styles.blockIndex}>②</span>
+            <h2 className={styles.blockTitle}>图片数据</h2>
+            <span className={styles.blockEnglish}>IMAGE DATA</span>
+          </header>
+
+          <div className={styles.placeholderBlock}>
+            <p className={styles.placeholderQuote}>─ Coming in next revision ─</p>
+            <p className={styles.placeholderText}>图片数据生成模块暂未开放</p>
           </div>
-        </div>
-      </section>
-      <hr />
-      <section>
-        <h2>产出物</h2>
-        <div className={styles.products}>
-          {pipelineProducts.map((item) => (
-            <article key={item.src}>
-              <img src={item.src} alt="" />
-              <span>{item.createdAgo}<br />时长 ─ {item.duration}<br />类型 ─ {item.type}</span>
-            </article>
-          ))}
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
     </PageContainer>
   );
 }

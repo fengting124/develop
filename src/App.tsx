@@ -11,6 +11,8 @@ const DetectVideo = lazy(() => import('@/pages/DetectVideo').then((module) => ({
 const Report = lazy(() => import('@/pages/Report').then((module) => ({ default: module.Report })));
 const AdminOverview = lazy(() => import('@/pages/AdminOverview').then((module) => ({ default: module.AdminOverview })));
 const AdminPipeline = lazy(() => import('@/pages/AdminPipeline').then((module) => ({ default: module.AdminPipeline })));
+const VideoShowcase = lazy(() => import('@/pages/AdminPipeline/VideoShowcase').then((module) => ({ default: module.VideoShowcase })));
+const ImageShowcase = lazy(() => import('@/pages/AdminPipeline/ImageShowcase').then((module) => ({ default: module.ImageShowcase })));
 const AdminExperts = lazy(() => import('@/pages/AdminExperts').then((module) => ({ default: module.AdminExperts })));
 const AdminAnomaly = lazy(() => import('@/pages/AdminAnomaly').then((module) => ({ default: module.AdminAnomaly })));
 const Dev = lazy(() => import('@/pages/Dev').then((module) => ({ default: module.Dev })));
@@ -38,6 +40,8 @@ function AnimatedRoutes() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminOverview />} />
               <Route path="pipeline" element={<AdminPipeline />} />
+              <Route path="pipeline/showcase/video" element={<VideoShowcase />} />
+              <Route path="pipeline/showcase/image" element={<ImageShowcase />} />
               <Route path="experts" element={<AdminExperts />} />
               <Route path="anomaly" element={<AdminAnomaly />} />
             </Route>

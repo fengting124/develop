@@ -1,0 +1,39 @@
+.page {
+  width: 100%;
+}
+
+.backLink {
+  display: inline-flex;
+  margin-bottom: var(--space-6);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.backLink:hover {
+  color: var(--accent);
+}
+
+.imagePlaceholder {
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+}
+
+.placeholderQuote {
+  margin-bottom: var(--space-4);
+  color: var(--ink-3);
+  font-family: 'Instrument Serif', serif;
+  font-size: var(--text-lg);
+  font-style: italic;
+}
+
+.placeholderText {
+  color: var(--ink-2);
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  letter-spacing: 0.05em;
+}
