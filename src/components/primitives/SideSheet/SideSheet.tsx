@@ -9,9 +9,10 @@ export interface SideSheetProps {
   onClose: () => void;
   children: ReactNode;
   width?: number;
+  showClose?: boolean;
 }
 
-export function SideSheet({ isOpen, onClose, children, width = 480 }: SideSheetProps) {
+export function SideSheet({ isOpen, onClose, children, width = 480, showClose = true }: SideSheetProps) {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -42,9 +43,11 @@ export function SideSheet({ isOpen, onClose, children, width = 480 }: SideSheetP
             transition={{ duration: 0.3, ease: [0.65, 0, 0.35, 1] }}
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <button className={styles.close} onClick={onClose} type="button" aria-label="关闭">
-              <Close />
-            </button>
+            {showClose ? (
+              <button className={styles.close} onClick={onClose} type="button" aria-label="关闭">
+                <Close />
+              </button>
+            ) : null}
             {children}
           </motion.aside>
         </motion.div>

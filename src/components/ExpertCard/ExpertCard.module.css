@@ -1,76 +1,212 @@
-.card {
+.coreExpertCard,
+.loraCard {
   position: relative;
   display: flex;
-  width: 200px;
-  height: 200px;
+  width: 100%;
+  min-height: 240px;
   flex-direction: column;
-  justify-content: space-between;
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   background: var(--surface);
-  padding: var(--space-5);
   overflow: hidden;
+  transition: background 200ms ease-out, border-color 200ms ease-out, opacity 200ms ease-out;
 }
 
-.status {
+.coreExpertCard {
+  aspect-ratio: 1;
+  padding: 28px;
+}
+
+.coreExpertCard:hover,
+.loraCard:hover {
+  border-color: var(--ink-3);
+  background: var(--surface-2);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-3);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--ink-3);
+  font-weight: var(--weight-medium);
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
 }
 
 .online {
   color: var(--real);
 }
 
+.online .statusDot {
+  background: var(--real);
+}
+
 .training {
   color: var(--accent);
-  animation: breathe 1.2s ease-in-out infinite;
 }
 
-.symbol {
-  align-self: center;
-  width: 40px;
-  height: 40px;
-  fill: none;
-  stroke: var(--ink-2);
-  stroke-width: 1.5;
+.training .statusDot {
+  background: linear-gradient(90deg, var(--accent) 50%, transparent 50%);
+  animation: breathe 1.2s ease-out infinite;
 }
 
-.card h3 {
-  font-family: var(--font-serif);
-  font-size: var(--text-xl);
-  font-weight: 500;
-}
-
-.card p {
+.pending {
   color: var(--ink-3);
+}
+
+.iconWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.nameWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nameCn {
+  color: var(--ink);
   font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.05em;
+}
+
+.nameEn {
+  color: var(--ink-3);
+  font-family: 'Instrument Serif', serif;
   font-size: var(--text-sm);
+  font-style: italic;
+  letter-spacing: 0.15em;
 }
 
 .arrow {
   position: absolute;
-  right: var(--space-4);
-  bottom: var(--space-4);
-  width: 16px;
-  height: 16px;
+  right: 28px;
+  bottom: 28px;
+  width: 18px;
+  height: 18px;
+  color: var(--ink-3);
+  transition: color 200ms ease-out, transform 200ms ease-out;
 }
 
-.progress {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 2px;
+.coreExpertCard:hover .arrow {
+  color: var(--accent);
+  transform: translateX(4px);
+}
+
+.loraCard {
+  gap: 20px;
+  padding: var(--space-5);
+}
+
+.loraBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.logoWrap {
+  display: flex;
+  width: 64px;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  background: var(--canvas);
+  padding: var(--space-2);
+  overflow: hidden;
+}
+
+.logo {
   width: 100%;
-  background: var(--rule);
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(0.15);
 }
 
-.progress i {
-  display: block;
+.loraIdBlock {
+  text-align: center;
+}
+
+.loraId {
+  color: var(--ink);
+  font-family: 'Instrument Serif', serif;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.05em;
+}
+
+.loraTarget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+}
+
+.loraFooter {
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--rule);
+}
+
+.generatorName {
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.progressBar {
+  height: 2px;
+  margin-top: var(--space-3);
+  border-radius: 1px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.progressFill {
   height: 100%;
   background: var(--accent);
+  transition: width 300ms ease-out;
+}
+
+.loraCard.training {
+  border-left: 2px solid var(--accent);
+}
+
+.loraCard.pending {
+  opacity: 0.62;
+}
+
+.loraCard.pending .logo {
+  filter: grayscale(1);
+  opacity: 0.5;
 }
 
 @keyframes breathe {
-  50% { opacity: 0.4; }
+  50% {
+    opacity: 0.4;
+  }
 }

@@ -31,10 +31,35 @@ export const expertsCore = [
 ];
 
 export const expertsLora = [
-  { name: 'α-01', english: 'Targeted', iconType: 'lora' as const, status: 'online' as const },
-  { name: 'α-02', english: 'Targeted', iconType: 'lora' as const, status: 'online' as const },
-  { name: 'α-03', english: 'Targeted', iconType: 'lora' as const, status: 'training' as const, trainingProgress: 0.67 },
-  { name: 'α-04', english: 'Targeted', iconType: 'lora' as const, status: 'pending' as const },
+  {
+    id: 'α-01',
+    generatorName: 'Stable Diffusion 3',
+    generatorShort: 'SD3',
+    logoSrc: '/images/generators/sd3.png',
+    status: 'online' as const,
+  },
+  {
+    id: 'α-02',
+    generatorName: 'FLUX.1',
+    generatorShort: 'FLUX',
+    logoSrc: '/images/generators/flux.png',
+    status: 'online' as const,
+  },
+  {
+    id: 'α-03',
+    generatorName: 'DALL·E 3',
+    generatorShort: 'DALLE3',
+    logoSrc: '/images/generators/dalle3.png',
+    status: 'training' as const,
+    trainingProgress: 0.67,
+  },
+  {
+    id: 'α-04',
+    generatorName: 'Midjourney v6.1',
+    generatorShort: 'MJv6.1',
+    logoSrc: '/images/generators/mjv61.png',
+    status: 'pending' as const,
+  },
 ];
 
 export const anomalyPool = Array.from({ length: 12 }, (_, index) => ({

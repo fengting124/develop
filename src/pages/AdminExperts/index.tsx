@@ -27,20 +27,28 @@ export function AdminExperts() {
       </header>
       <hr />
       <section>
-        <h2>核心专家</h2>
+        <h2 className={styles.groupTitle}>核心专家</h2>
         <div className={styles.cards}>{expertsCore.map((item) => <ExpertCard key={item.name} type="core" {...item} />)}</div>
       </section>
       <hr />
       <section>
         <header className={styles.sectionHead}>
-          <h2>靶向专家</h2>
+          <h2 className={styles.groupTitle}>靶向专家</h2>
           <Button variant="text" prefix="+" onClick={() => setOpen(true)}>新增</Button>
         </header>
         <div className={styles.grid}>
-          {expertsLora.map((item) => <ExpertCard key={item.name} type="lora" {...item} />)}
+          {expertsLora.map((item) => <ExpertCard key={item.id} type="lora" {...item} />)}
           {extra ? (
             <motion.div initial={{ opacity: 0, scale: 0.85, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <ExpertCard type="lora" name="α-05" english="Targeted" status="training" trainingProgress={0.28} iconType="lora" />
+              <ExpertCard
+                type="lora"
+                id="α-05"
+                generatorName="GPT Image"
+                generatorShort="GPT-IMG"
+                logoSrc="/images/generators/gpt-image.png"
+                status="training"
+                trainingProgress={0.28}
+              />
             </motion.div>
           ) : null}
         </div>

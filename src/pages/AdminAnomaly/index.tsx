@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button, Input, PageContainer, SideSheet, useToast } from '@/components/primitives';
-import { ArrowLeft, ArrowRight } from '@/components/icons';
+import { PageContainer, SideSheet, useToast } from '@/components/primitives';
+import { ArrowLeft, ArrowRight, Close } from '@/components/icons';
 import { anomalyPool } from '@/data/mocks';
 import styles from './AdminAnomaly.module.css';
 
@@ -50,25 +50,63 @@ export function AdminAnomaly() {
           ))}
         </AnimatePresence>
       </motion.div>
-      <SideSheet isOpen={Boolean(current)} onClose={() => setIndex(null)} width={480}>
+      <SideSheet isOpen={Boolean(current)} onClose={() => setIndex(null)} width={520} showClose={false}>
         {current ? (
           <div className={styles.sheet}>
-            <div className={styles.sheetNav}>
-              <button onClick={() => setIndex(Math.max((index ?? 0) - 1, 0))} type="button"><ArrowLeft /></button>
-              <button onClick={() => setIndex(Math.min((index ?? 0) + 1, items.length - 1))} type="button"><ArrowRight /></button>
+            <header className={styles.sideSheetHeader}>
+              <div className={styles.sheetMeta}>
+                <p className={styles.sheetItalic}>─ Awaiting your judgement</p>
+                <p className={styles.sheetId}>样本 № {current.id}</p>
+              </div>
+              <div className={styles.sheetActions}>
+                <button onClick={() => setIndex(Math.max((index ?? 0) - 1, 0))} type="button" aria-label="上一个样本"><ArrowLeft /></button>
+                <button onClick={() => setIndex(Math.min((index ?? 0) + 1, items.length - 1))} type="button" aria-label="下一个样本"><ArrowRight /></button>
+                <button onClick={() => setIndex(null)} type="button" aria-label="关闭"><Close /></button>
+              </div>
+            </header>
+            <div className={styles.sideSheetBody}>
+              <div className={styles.sampleImage}>
+                <img src={current.src} alt="" />
+              </div>
+              <section className={styles.sheetSection}>
+                <h3 className={styles.sectionLabel}>系统判断</h3>
+                <p className={styles.systemThought}>
+                  ⋯ 这张图像让系统犹豫了。<br />
+                  专家给出了分歧的意见，<br />
+                  系统选择不下结论。
+                </p>
+              </section>
+              <section className={styles.sheetSection}>
+                <h3 className={styles.sectionLabel}>您的判断</h3>
+                <div className={styles.choices}>
+                  <label className={styles.radio}>
+                    <input className={styles.radioInput} type="radio" name="judgement" value="fake" />
+                    <span className={styles.radioMark} />
+                    <span className={styles.radioLabel}>这是 AI 生成</span>
+                  </label>
+                  <label className={styles.radio}>
+                    <input className={styles.radioInput} type="radio" name="judgement" value="real" />
+                    <span className={styles.radioMark} />
+                    <span className={styles.radioLabel}>这是真实内容</span>
+                  </label>
+                  <label className={styles.radio}>
+                    <input className={styles.radioInput} type="radio" name="judgement" value="unsure" />
+                    <span className={styles.radioMark} />
+                    <span className={styles.radioLabel}>我也无法判断</span>
+                  </label>
+                </div>
+              </section>
+              <section className={styles.sheetSection}>
+                <h3 className={styles.sectionLabel}>备注（选填）</h3>
+                <textarea className={styles.noteInput} placeholder="可以补充您的判断依据" />
+              </section>
             </div>
-            <p>─ Awaiting your judgement ─</p>
-            <h2>样本 № {current.id}</h2>
-            <hr />
-            <img src={current.src} alt="" />
-            <hr />
-            <h3>系统判断</h3>
-            <em>⋯ 这张图像让系统犹豫了。专家给出了分歧的意见，系统选择不下结论。</em>
-            <hr />
-            <h3>您的判断</h3>
-            <div className={styles.radio}><button type="button">○ 这是 AI 生成</button><button type="button">○ 这是真实内容</button><button type="button">○ 我也无法判断</button></div>
-            <label>备注（选填）<Input /></label>
-            <Button fullWidth onClick={submit}>提交并触发同源样本扩充 →</Button>
+            <footer className={styles.sideSheetFooter}>
+              <button className={styles.submitBtn} onClick={submit} type="button">
+                <span>提交并触发同源样本扩充</span>
+                <span>→</span>
+              </button>
+            </footer>
           </div>
         ) : null}
       </SideSheet>

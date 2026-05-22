@@ -37,12 +37,31 @@
   font-weight: 500;
 }
 
+.groupTitle {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.1em;
+}
+
+.groupTitle::before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+}
+
 .cards,
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 200px);
-  gap: var(--space-4);
-  margin-top: var(--space-5);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-5);
 }
 
 .sectionHead {

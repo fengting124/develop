@@ -1,39 +1,93 @@
 import { ArrowRight } from '@/components/icons';
+import { SemanticIcon, SpectrumIcon, StyleIcon, TextureIcon } from '@/components/icons/ExpertIcons';
 import styles from './ExpertCard.module.css';
 
 export interface ExpertCardProps {
   type: 'core' | 'lora';
-  name: string;
-  english: string;
+  name?: string;
+  english?: string;
+  id?: string;
+  generatorName?: string;
+  generatorShort?: string;
+  logoSrc?: string;
   status: 'online' | 'training' | 'pending';
   trainingProgress?: number;
   iconType?: 'texture' | 'frequency' | 'style' | 'semantic' | 'lora';
 }
 
-function ExpertIcon({ type = 'lora' }: { type?: ExpertCardProps['iconType'] }) {
+const statusLabel = {
+  online: '在线',
+  training: '训练中',
+  pending: '待激活',
+};
+
+function StatusIndicator({ status }: { status: ExpertCardProps['status'] }) {
   return (
-    <svg className={styles.symbol} viewBox="0 0 40 40" aria-hidden="true">
-      {type === 'texture' ? [8, 13, 18, 23, 28].map((x) => <path key={x} d={`M${x} 30 26 ${x - 2}`} />) : null}
-      {type === 'frequency' ? <><circle cx="20" cy="20" r="5" /><circle cx="20" cy="20" r="10" /><circle cx="20" cy="20" r="15" /></> : null}
-      {type === 'style' ? <path d="M8 24c8-18 10 12 24-4" /> : null}
-      {type === 'semantic' ? <><path d="M9 25 16 12l8 6 7-8" /><circle cx="9" cy="25" r="1.8" /><circle cx="16" cy="12" r="1.8" /><circle cx="24" cy="18" r="1.8" /><circle cx="31" cy="10" r="1.8" /><circle cx="22" cy="29" r="1.8" /></> : null}
-      {type === 'lora' ? <><path d="m20 5 13 7v16l-13 7-13-7V12z" /><path d="m17 16 8 4-8 4z" /></> : null}
-    </svg>
+    <span className={`${styles.statusRow} ${styles[status]}`}>
+      <span className={styles.statusDot} />
+      <span>{statusLabel[status]}</span>
+    </span>
   );
 }
 
-export function ExpertCard({ name, english, status, trainingProgress = 0, iconType }: ExpertCardProps) {
-  const statusText = status === 'online' ? '在线' : status === 'training' ? '训练' : '待激活';
+function CoreIcon({ type }: { type?: ExpertCardProps['iconType'] }) {
+  if (type === 'frequency') return <SpectrumIcon />;
+  if (type === 'style') return <StyleIcon />;
+  if (type === 'semantic') return <SemanticIcon />;
+  return <TextureIcon />;
+}
+
+function CoreExpertCard({ name = '', english = '', status, iconType }: ExpertCardProps) {
   return (
-    <article className={styles.card}>
-      <span className={`${styles.status} ${styles[status]}`}>{status === 'online' ? '●' : status === 'training' ? '◐' : '◯'} {statusText}</span>
-      <ExpertIcon type={iconType} />
-      <div>
-        <h3>{name}</h3>
-        <p>{english}</p>
+    <article className={styles.coreExpertCard}>
+      <StatusIndicator status={status} />
+      <div className={styles.iconWrap}>
+        <CoreIcon type={iconType} />
+      </div>
+      <div className={styles.nameWrap}>
+        <h3 className={styles.nameCn}>{name}</h3>
+        <p className={styles.nameEn}>{english}</p>
       </div>
       <ArrowRight className={styles.arrow} />
-      {status === 'training' ? <span className={styles.progress}><i style={{ width: `${trainingProgress * 100}%` }} /></span> : null}
     </article>
   );
+}
+
+function LoraExpertCard({
+  id = '',
+  generatorName = '',
+  generatorShort = '',
+  logoSrc = '/images/generators/default.png',
+  status,
+  trainingProgress = 0,
+}: ExpertCardProps) {
+  return (
+    <article className={`${styles.loraCard} ${styles[status]}`}>
+      <StatusIndicator status={status} />
+      <div className={styles.loraBody}>
+        <div className={styles.logoWrap}>
+          <img src={logoSrc} alt={generatorName} className={styles.logo} />
+        </div>
+        <div className={styles.loraIdBlock}>
+          <p className={styles.loraId}>{id}</p>
+          <p className={styles.loraTarget}>
+            <span>─</span>
+            <span>{generatorShort}</span>
+          </p>
+        </div>
+      </div>
+      <div className={styles.loraFooter}>
+        <p className={styles.generatorName}>{generatorName}</p>
+        {status === 'training' ? (
+          <div className={styles.progressBar}>
+            <div className={styles.progressFill} style={{ width: `${trainingProgress * 100}%` }} />
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+export function ExpertCard(props: ExpertCardProps) {
+  return props.type === 'core' ? <CoreExpertCard {...props} /> : <LoraExpertCard {...props} />;
 }
