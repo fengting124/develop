@@ -325,7 +325,7 @@ export function DetectVideo() {
             <aside className={styles.progressPane}>
               <header className={styles.panelHeader}>
                 <h2>{done ? '显影完成' : '正在显影'}</h2>
-                <p>DEVELOPING</p>
+                <p>{done ? 'COMPLETE' : 'DEVELOPING'}</p>
               </header>
               <div className={styles.steps}>
                 {steps.map((step, index) => (

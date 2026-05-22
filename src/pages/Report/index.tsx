@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button, EdgeRule, Modal, PageContainer, useToast } from '@/components/primitives';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
-import { VerdictCard } from '@/components/VerdictCard/VerdictCard';
 import { imageDemo } from '@/data/mocks';
 import styles from './Report.module.css';
 
@@ -74,10 +73,25 @@ export function Report() {
 
       <PageContainer width="narrow">
       <article className={styles.paper}>
-        <p className={styles.italicQuote}>─ A report on visual authenticity ─</p>
-        <h1>鉴 别 报 告</h1>
-        <p className={styles.brand}>DEVELOP</p>
-        <p className={styles.caseNo}>№ DV-2026-1121-003</p>
+        <header className={styles.reportHeader}>
+          <p className={styles.italicQuote}>─ A report on visual authenticity ─</p>
+          <div className={styles.titleBlock}>
+            <span className={styles.ornamentLeft}>❡</span>
+            <h1 className={styles.reportTitle}>鉴 别 报 告</h1>
+            <span className={styles.ornamentRight}>❡</span>
+          </div>
+          <p className={styles.brand}>DEVELOP</p>
+          <div className={styles.caseNumberWrap}>
+            <span className={styles.caseNumberLine} />
+            <span className={styles.caseNumber}>№ DV-2026-1121-003</span>
+            <span className={styles.caseNumberLine} />
+          </div>
+          <div className={styles.dateSeal}>
+            <span className={styles.dateSealLine} />
+            <span className={styles.dateSealText}>2026 · 11 · 21</span>
+            <span className={styles.dateSealLine} />
+          </div>
+        </header>
 
         <hr className={styles.sectionDivider} />
 
@@ -98,7 +112,15 @@ export function Report() {
 
         <section>
           <h2>二. 鉴别结论</h2>
-          <VerdictCard variant="large" verdict={imageDemo.verdict} confidence={imageDemo.confidence} />
+          <div className={styles.verdictCardLarge}>
+            <p className={styles.verdictCardLargeCn}>AI 生成</p>
+            <p className={styles.verdictCardLargeEn}>FAKE</p>
+            <p className={styles.verdictCardLargeConf}>
+              <span className={styles.verdictConfDash} />
+              <span><span className={styles.verdictConfValue}>{Math.round(imageDemo.confidence * 100)}%</span> confidence</span>
+              <span className={styles.verdictConfDash} />
+            </p>
+          </div>
         </section>
 
         <hr className={styles.sectionDivider} />

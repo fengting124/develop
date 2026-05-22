@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { PageContainer } from '@/components/primitives';
 import { anomalyPool, expertsCore } from '@/data/mocks';
@@ -82,19 +83,71 @@ function TodayStatusList() {
 }
 
 function PipelineThumbnail() {
+  const [activeIndex, setActiveIndex] = useState(2);
+  const nodes = ['audio', 'text', 'speech', 'lip', 'compose'];
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % nodes.length);
+    }, 2500);
+    return () => window.clearInterval(timer);
+  }, [nodes.length]);
+
   return (
     <div className={styles.miniPipeline}>
-      {[0, 1, 2, 3, 4].map((node, index) => (
+      {nodes.map((node, index) => (
         <div className={styles.pipelineGroup} key={node}>
           <span
-            className={`${styles.miniNode} ${index < 2 ? styles.done : ''} ${index === 2 ? styles.active : ''}`}
+            className={`${styles.miniNode} ${index < activeIndex ? styles.doneNode : ''} ${index === activeIndex ? styles.activeNode : ''}`}
           >
-            {index + 1}
+            <MiniPipelineIcon type={node} />
           </span>
-          {index < 4 ? <span className={`${styles.miniConnector} ${index <= 1 ? styles.active : ''}`} /> : null}
+          {index < nodes.length - 1 ? <span className={`${styles.miniConnector} ${index < activeIndex ? styles.activeConnector : ''}`} /> : null}
         </div>
       ))}
     </div>
+  );
+}
+
+function MiniPipelineIcon({ type }: { type: string }) {
+  if (type === 'audio') {
+    return (
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        {[2, 5, 8, 11].map((x) => <rect key={x} x={x - 1} y={4 + (x % 3)} width="1.5" height={8 - (x % 3)} fill="currentColor" />)}
+      </svg>
+    );
+  }
+  if (type === 'text') {
+    return (
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <line x1="3" y1="5" x2="13" y2="5" />
+        <line x1="3" y1="8" x2="11" y2="8" />
+        <line x1="3" y1="11" x2="9" y2="11" />
+      </svg>
+    );
+  }
+  if (type === 'speech') {
+    return (
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M2 8 Q5 4, 8 8 T14 8" />
+      </svg>
+    );
+  }
+  if (type === 'lip') {
+    return (
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <ellipse cx="8" cy="8" rx="5" ry="2" />
+        <line x1="3" y1="8" x2="13" y2="8" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="2" y="2" width="5" height="5" fill="currentColor" opacity="0.9" />
+      <rect x="9" y="2" width="5" height="5" fill="currentColor" opacity="0.6" />
+      <rect x="2" y="9" width="5" height="5" fill="currentColor" opacity="0.4" />
+      <rect x="9" y="9" width="5" height="5" fill="currentColor" opacity="0.75" />
+    </svg>
   );
 }
 
