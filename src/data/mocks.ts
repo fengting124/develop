@@ -23,6 +23,67 @@ export const videoFrames = Array.from({ length: 30 }, (_, index) => ({
   time: index,
 }));
 
+export const videoDemoFull = {
+  id: 'DV-2026-1121-V01',
+  src: '/videos/video-demo-01.mp4',
+  duration: 30,
+  verdict: 'fake' as const,
+  confidence: 0.91,
+  windows: [
+    { start: 0, end: 5 },
+    { start: 5, end: 10 },
+    { start: 10, end: 15 },
+    { start: 15, end: 20 },
+    { start: 20, end: 25 },
+    { start: 25, end: 30 },
+  ],
+  frames: Array.from({ length: 30 }, (_, index) => ({
+    time: index,
+    src: `/samples/${String((index % 54) + 1).padStart(2, '0')}.jpg`,
+  })),
+  candidates: [
+    { id: 'c1', start: 2.1, end: 3.5, confidence: 0.32 },
+    { id: 'c2', start: 4.8, end: 6.2, confidence: 0.45 },
+    { id: 'c3', start: 8.0, end: 14.9, confidence: 0.89 },
+    { id: 'c4', start: 15.5, end: 17.0, confidence: 0.28 },
+    { id: 'c5', start: 18.2, end: 19.5, confidence: 0.51 },
+    { id: 'c6', start: 20.8, end: 25.0, confidence: 0.83 },
+    { id: 'c7', start: 26.0, end: 27.5, confidence: 0.38 },
+  ],
+  fakeRanges: [
+    {
+      start: 8.2,
+      end: 14.7,
+      reason: '跨帧身份漂移',
+      english: 'Cross-frame identity drift',
+      confidence: 0.89,
+      keyframes: ['/samples/18.jpg', '/samples/19.jpg', '/samples/20.jpg'],
+      expertVotes: [
+        { type: 'texture' as const, name: '纹理专家', intensity: 0.4 },
+        { type: 'frequency' as const, name: '谱纹专家', intensity: 0.85 },
+        { type: 'style' as const, name: '风格专家', intensity: 0.6 },
+        { type: 'semantic' as const, name: '语义专家', intensity: 0.92 },
+        { type: 'lora' as const, name: '靶向专家', intensity: 0.75 },
+      ],
+    },
+    {
+      start: 21.0,
+      end: 24.5,
+      reason: '口型不同步',
+      english: 'Lip-sync mismatch',
+      confidence: 0.83,
+      keyframes: ['/samples/31.jpg', '/samples/32.jpg', '/samples/33.jpg'],
+      expertVotes: [
+        { type: 'texture' as const, name: '纹理专家', intensity: 0.3 },
+        { type: 'frequency' as const, name: '谱纹专家', intensity: 0.6 },
+        { type: 'style' as const, name: '风格专家', intensity: 0.55 },
+        { type: 'semantic' as const, name: '语义专家', intensity: 0.78 },
+        { type: 'lora' as const, name: '靶向专家', intensity: 0.5 },
+      ],
+    },
+  ],
+};
+
 export const expertsCore = [
   { name: '纹理', english: 'Texture', iconType: 'texture' as const, status: 'online' as const },
   { name: '谱纹', english: 'Spectrum', iconType: 'frequency' as const, status: 'online' as const },
