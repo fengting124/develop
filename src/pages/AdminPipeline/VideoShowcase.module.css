@@ -64,6 +64,34 @@
   align-items: center;
 }
 
+.jsonPanel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-4);
+}
+
+.jsonLabel {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.12em;
+}
+
+.jsonValue {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
 .tileLabel {
   display: flex;
   align-items: baseline;
@@ -278,6 +306,129 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+}
+
+.segmentTimeline {
+  position: relative;
+  height: 56px;
+  margin-bottom: var(--space-6);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background:
+    repeating-linear-gradient(
+      to right,
+      transparent 0,
+      transparent calc(10% - 1px),
+      var(--rule) calc(10% - 1px),
+      var(--rule) 10%
+    ),
+    var(--surface);
+}
+
+.segmentTimeline::before {
+  content: '';
+  position: absolute;
+  left: var(--space-4);
+  right: var(--space-4);
+  top: 50%;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--rule);
+}
+
+.segmentBlock {
+  position: absolute;
+  top: 50%;
+  height: 14px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.segmentBlock::before,
+.segmentBlock::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  width: 1.5px;
+  background: var(--accent);
+}
+
+.segmentBlock::before {
+  left: 0;
+}
+
+.segmentBlock::after {
+  right: 0;
+}
+
+.segmentTag {
+  position: absolute;
+  left: 50%;
+  top: -28px;
+  transform: translateX(-50%);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.segmentCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.segmentCard {
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-5);
+}
+
+.segmentCardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+}
+
+.segmentId {
+  color: var(--accent);
+}
+
+.segmentFrames {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.segmentFrames img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+.segmentText {
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-style: italic;
+  text-align: center;
 }
 
 .stepCard {
@@ -622,6 +773,11 @@
 }
 
 @media (max-width: 1180px) {
+  .jsonPanel,
+  .segmentCards {
+    grid-template-columns: 1fr;
+  }
+
   .comparisonGrid,
   .stepBody {
     grid-template-columns: 1fr;
