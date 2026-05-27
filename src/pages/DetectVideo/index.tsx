@@ -29,13 +29,15 @@ function phaseLabel(elapsed: number, done: boolean) {
   return 'AGGREGATING';
 }
 
-function StepItem({
+// ─── 流程节点卡（替换原 StepItem）────────────────────────
+function FlowNode({
   index,
   name,
   english,
   status,
   time,
   children,
+  isLast,
 }: {
   index: string;
   name: string;
@@ -43,16 +45,64 @@ function StepItem({
   status: 'done' | 'active' | 'pending';
   time?: string;
   children?: React.ReactNode;
+  isLast?: boolean;
 }) {
   return (
-    <div className={`${styles.stepItem} ${styles[status]}`}>
-      <span className={styles.stepIndex}>{index}</span>
-      <div>
-        <strong>{name}</strong>
-        <em>{english}</em>
-        <span className={styles.stepState}>{status === 'done' ? `✓ ${time}` : status === 'active' ? '⋯ 进行中' : '○'}</span>
-        {children}
+    <div className={styles.flowNodeGroup}>
+      {/* 节点卡本体 */}
+      <div className={`${styles.flowNode} ${styles[`flow_${status}`]}`}>
+        {/* 左侧状态圆 */}
+        <span className={`${styles.flowDot} ${styles[`flowDot_${status}`]}`}>
+          {status === 'done' && (
+            <svg viewBox="0 0 10 10" className={styles.flowCheck}>
+              <polyline points="1.5,5 4,7.5 8.5,2.5" />
+            </svg>
+          )}
+          {status === 'active' && <span className={styles.flowPulse} />}
+        </span>
+
+        {/* 右侧文字区 */}
+        <div className={styles.flowContent}>
+          <div className={styles.flowHead}>
+            <span className={styles.flowIndex}>{index}</span>
+            <strong className={styles.flowName}>{name}</strong>
+            <span className={styles.flowEn}>{english}</span>
+          </div>
+
+          {/* 状态行 */}
+          <div className={styles.flowStatus}>
+            {status === 'done' && (
+              <span className={styles.flowStatusDone}>✓ {time}</span>
+            )}
+            {status === 'active' && (
+              <span className={styles.flowStatusActive}>
+                <span className={styles.flowBlink}>▌</span> 进行中
+              </span>
+            )}
+            {status === 'pending' && (
+              <span className={styles.flowStatusPending}>待处理</span>
+            )}
+          </div>
+
+          {children}
+        </div>
       </div>
+
+      {/* 节点间箭头连接线（最后节点无） */}
+      {!isLast && (
+        <div className={styles.flowArrow}>
+          <svg viewBox="0 0 16 28" className={styles.flowArrowSvg} aria-hidden="true">
+            <line
+              x1="8" y1="0" x2="8" y2="20"
+              className={`${styles.flowArrowLine} ${status === 'done' ? styles.flowArrowLineDone : ''}`}
+              strokeDasharray={status === 'pending' ? '3 3' : 'none'}
+            />
+            {status === 'done' && (
+              <path d="M4,17 L8,24 L12,17" className={styles.flowArrowHead} />
+            )}
+          </svg>
+        </div>
+      )}
     </div>
   );
 }
@@ -356,28 +406,54 @@ export function DetectVideo() {
                 <h2>{done ? '显影完成' : '正在显影'}</h2>
                 <p>{done ? 'COMPLETE' : 'DEVELOPING'}</p>
               </header>
-              <div className={styles.steps}>
-                {steps.map((step, index) => (
-                  <StepItem
-                    key={step.name}
-                    index={String(index + 1).padStart(2, '0')}
-                    name={step.name}
-                    english={step.english}
-                    status={done || elapsed >= stepEnds[index] ? 'done' : index === activeStep ? 'active' : 'pending'}
-                    time={`${(step.duration / 1000).toFixed(1)}s`}
-                  >
-                    {index === 2 ? (
-                      <div className={styles.stepSubProgress}>
-                        <div className={styles.windowsProgress}>
-                          {videoDemoFull.windows.map((_, dotIndex) => (
-                            <span key={dotIndex} className={`${styles.windowDot} ${dotIndex < analyzedWindowCount ? styles.windowDotDone : ''}`} />
-                          ))}
+
+              {/* 流程节点图 */}
+              <div className={styles.flowGraph}>
+                {steps.map((step, index) => {
+                  const stepStatus = done || elapsed >= stepEnds[index]
+                    ? 'done'
+                    : index === activeStep
+                    ? 'active'
+                    : 'pending';
+                  return (
+                    <FlowNode
+                      key={step.name}
+                      index={String(index + 1).padStart(2, '0')}
+                      name={step.name}
+                      english={step.english}
+                      status={stepStatus}
+                      time={`${(step.duration / 1000).toFixed(1)}s`}
+                      isLast={index === steps.length - 1}
+                    >
+                      {/* 步骤 03：多专家协同 — 显示窗口进度点 */}
+                      {index === 2 && (
+                        <div className={styles.stepSubProgress}>
+                          <div className={styles.windowsProgress}>
+                            {videoDemoFull.windows.map((_, dotIndex) => (
+                              <span
+                                key={dotIndex}
+                                className={`${styles.windowDot} ${dotIndex < analyzedWindowCount ? styles.windowDotDone : ''}`}
+                              />
+                            ))}
+                          </div>
+                          <span className={styles.windowsProgressText}>
+                            {analyzedWindowCount}/{videoDemoFull.windows.length} 窗口
+                          </span>
                         </div>
-                        <span className={styles.windowsProgressText}>{analyzedWindowCount}/6 窗口</span>
-                      </div>
-                    ) : null}
-                  </StepItem>
-                ))}
+                      )}
+
+                      {/* 步骤 04：候选筛选 — 显示淘汰数量 */}
+                      {index === 3 && stepStatus !== 'pending' && (
+                        <div className={styles.filterSummary}>
+                          <span className={styles.filterKept}>↑ 保留 {revealedRanges.length} 段</span>
+                          <span className={styles.filterDropped}>
+                            ↓ 淘汰 {visibleCandidates.length - revealedRanges.length} 段
+                          </span>
+                        </div>
+                      )}
+                    </FlowNode>
+                  );
+                })}
               </div>
             </aside>
 
@@ -387,18 +463,20 @@ export function DetectVideo() {
                 <p>EVIDENCE</p>
               </header>
               <div className={styles.fragmentList}>
-                {visibleEvidence.map((range, index) => (
-                  <FragmentEvidenceCard
-                    key={`${range.start}-${range.end}`}
-                    index={index}
-                    range={range}
-                    active={activeRange === index}
-                    onHover={(hovered) => {
-                      setActiveRange(hovered ? index : null);
-                      if (hovered && videoRef.current) videoRef.current.currentTime = range.start;
-                    }}
-                  />
-                ))}
+                <AnimatePresence>
+                  {visibleEvidence.map((range, index) => (
+                    <FragmentEvidenceCard
+                      key={`${range.start}-${range.end}`}
+                      index={index}
+                      range={range}
+                      active={activeRange === index}
+                      onHover={(hovered) => {
+                        setActiveRange(hovered ? index : null);
+                        if (hovered && videoRef.current) videoRef.current.currentTime = range.start;
+                      }}
+                    />
+                  ))}
+                </AnimatePresence>
                 {visibleEvidence.length === 0 ? (
                   <div className={styles.evidencePlaceholder}>
                     <p>候选片段正在生成</p>

@@ -625,55 +625,181 @@
   padding: var(--space-5);
 }
 
-.steps {
-  display: grid;
-  gap: var(--space-5);
+/* ━━━ 流程节点图（替换原 steps / stepItem） ━━━━━━━━━━━━━ */
+.flowGraph {
+  display: flex;
+  flex-direction: column;
 }
 
-.stepItem {
-  display: grid;
-  grid-template-columns: 34px 1fr;
-  gap: var(--space-3);
+.flowNodeGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.stepIndex {
-  color: var(--accent);
+/* 节点卡 */
+.flowNode {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.flow_done {
+  border-color: var(--rule);
+  background: var(--surface);
+}
+.flow_active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.flow_pending {
+  opacity: 0.45;
+  border-color: var(--rule);
+  background: transparent;
+}
+
+/* 状态圆 */
+.flowDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--rule);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  transition: background 0.3s;
+}
+.flowDot_done   { background: var(--real); }
+.flowDot_active { background: var(--accent); }
+.flowDot_pending { background: transparent; border: 1.5px dashed var(--rule); }
+
+.flowCheck {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.flowPulse {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: dotPulse 0.85s ease-in-out infinite alternate;
+}
+@keyframes dotPulse {
+  from { transform: scale(0.7); }
+  to   { transform: scale(1.1); }
+}
+
+/* 内容区 */
+.flowContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flowHead {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.flowIndex {
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-}
-
-.stepItem strong {
-  display: block;
-  color: var(--ink);
-  font-size: var(--text-base);
-  font-weight: var(--weight-medium);
-}
-
-.stepItem em {
-  display: block;
+  font-size: 9px;
   color: var(--ink-3);
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+.flowName {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+}
+.flow_active .flowName { color: var(--accent); }
+
+.flowEn {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: 9px;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
   font-style: italic;
 }
 
-.stepState {
-  display: block;
-  margin-top: 4px;
-  color: var(--ink-3);
+/* 状态行 */
+.flowStatus {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: 11px;
+}
+.flowStatusDone    { color: var(--real); }
+.flowStatusActive  { color: var(--accent); display: flex; align-items: center; gap: 4px; }
+.flowStatusPending { color: var(--ink-3); }
+
+.flowBlink {
+  animation: cursorBlink 0.7s step-end infinite;
+}
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
-.done .stepState {
-  color: var(--real);
+/* 箭头连接线 */
+.flowArrow {
+  width: 20px;
+  height: 28px;
+  margin-left: 18px;
+  flex-shrink: 0;
+}
+.flowArrowSvg {
+  width: 16px;
+  height: 28px;
+  overflow: visible;
+}
+.flowArrowLine {
+  stroke: var(--rule);
+  stroke-width: 1.5;
+  fill: none;
+  transition: stroke 0.4s;
+}
+.flowArrowLineDone {
+  stroke: var(--accent);
+  opacity: 0.55;
+}
+.flowArrowHead {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.55;
 }
 
-.active .stepState {
-  color: var(--accent);
-  animation: pulse 1.2s ease-out infinite;
+/* 步骤 04 筛选摘要 */
+.filterSummary {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
+.filterKept    { color: var(--real); }
+.filterDropped { color: var(--ink-3); }
 
 .stepSubProgress {
   display: flex;
