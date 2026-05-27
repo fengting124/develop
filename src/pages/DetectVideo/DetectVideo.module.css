@@ -32,12 +32,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  overflow-y: auto;
+  overflow-y: auto;       /* 整列可下滑 */
   overflow-x: hidden;
   border-left: 1px solid var(--rule);
   padding-left: var(--space-5);
   padding-right: var(--space-2);
-  min-height: 0;   /* grid item 内 overflow 生效的关键 */
+  padding-bottom: var(--space-6);
+  min-height: 0;          /* grid item 内 overflow 生效 */
 }
 
 /* Custom scrollbar for columns */
@@ -394,15 +395,14 @@
 }
 
 .fragmentCard {
-  display: grid;
-  grid-template-columns: 150px minmax(220px, 1fr) 210px;
-  gap: var(--space-5);
-  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   border: 1px solid var(--rule);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius);
   background: var(--canvas);
-  padding: var(--space-5);
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -443,10 +443,11 @@
 
 .fragmentLeft {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  border-right: 1px dashed var(--rule);
-  padding-right: var(--space-5);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px dashed var(--rule);
 }
 
 .fragmentIndex {
@@ -461,10 +462,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 4px;
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   font-weight: var(--weight-medium);
 }
 
@@ -483,6 +483,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  width: 100%;
 }
 
 .keyframesLabel,
@@ -495,9 +496,10 @@
 }
 
 .keyframesRow {
-  display: flex;
-  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
+  width: 100%;
 }
 
 .keyframeBox {
@@ -557,10 +559,13 @@
 
 .fragmentRight {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  border-left: 1px dashed var(--rule);
-  padding-left: var(--space-4);
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--rule);
+  flex-wrap: wrap;
 }
 
 .fragmentReason {
@@ -569,7 +574,9 @@
   gap: var(--space-2);
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
+  flex: 1;
+  min-width: 0;
 }
 
 .reasonDash {
@@ -579,8 +586,9 @@
 
 .expertVotes {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .votesRow {
@@ -607,11 +615,11 @@
 }
 
 .fragmentConfidence {
-  margin-top: auto;
   color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .confValue {
@@ -648,21 +656,11 @@
 }
 
 .evidencePane {
-  flex: 1;
-  min-height: 0;
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   background: var(--surface);
   padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.evidencePane .fragmentList {
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
+  /* 自然撑开，随 rightCol 整体下滑 */
 }
 
 .progressPane {
@@ -1123,13 +1121,10 @@
     padding-top: var(--space-5);
   }
 
-  .fragmentCard {
-    grid-template-columns: 1fr;
+  .fragmentLeft {
+    padding-bottom: var(--space-2);
   }
-
-  .fragmentLeft,
   .fragmentRight {
-    border: 0;
-    padding: 0;
+    padding-top: var(--space-2);
   }
 }
