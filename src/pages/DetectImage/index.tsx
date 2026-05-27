@@ -1,352 +1,163 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button } from '@/components/primitives';
-import { ForensicMark } from '@/components/ForensicMark/ForensicMark';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
+import { ForensicMark } from '@/components/ForensicMark/ForensicMark';
 import styles from './DetectImage.module.css';
 
 type ProcessState = 'idle' | 'processing' | 'done';
-type RightTab = 'flow' | 'semantic' | 'experts';
-type StepStatus = 'done' | 'active' | 'pending';
 
 const demoImage = '/images/图片检测示例图/image.png';
 
-const steps = [
-  { name: '全局语义读取', english: 'Global semantic reading', duration: 2600 },
-  { name: '局部细节核查', english: 'Local detail review', duration: 3400 },
-  { name: '异构专家协同', english: 'Expert ensemble', duration: 5200 },
-  { name: '证据汇总', english: 'Evidence aggregation', duration: 4200 },
-  { name: '出具结论', english: 'Final verdict', duration: 3000 },
-];
-
-const evidences = [
-  { name: '实体语义不合理', appearAt: 4200 },
-  { name: '局部纹理异常', appearAt: 8300 },
-  { name: '物体关系违背常识', appearAt: 12000 },
+const logsData = [
+  { time: 200, text: '初始化图像取证引擎...' },
+  { time: 800, text: '加载通用检测与靶向适配专家权重...' },
+  { time: 1400, text: '建立与知识图谱 (ConceptNet) 的连接...' },
+  { time: 2100, text: '尝试提取 EXIF 元数据... [失败] 平台已剥离元数据。' },
+  { time: 2800, text: '[空域分析] 多尺度卷积网络检测局部篡改...' },
+  { time: 3500, text: '[频域分析] 快速傅里叶变换完成，提取高频异常分布...' },
+  { time: 4200, text: '[语义对齐] CLIP 与 Grounding DINO 启动...' },
+  { time: 5100, text: '[警告] 检测到全局逻辑矛盾: 塑料盆置于明火。' },
+  { time: 6400, text: '[门控协同] 动态激活靶向专家...' },
+  { time: 7200, text: '[LoRA 适配] 注入 Nano Banana Pro 专用模型权重...' },
+  { time: 8500, text: '[大模型推理] 校验时空因果与常识逻辑...' },
+  { time: 9800, text: '证据聚合计算完成。' },
+  { time: 10500, text: '[最终结论] 确认内容为 AI 生成/篡改。' },
 ];
 
 const marks = [
-  { x: 28, y: 46, w: 23, h: 25, label: 'M-01', confidence: 0.91, appearAt: 4200, clue: '塑料盆位置异常' },
-  { x: 56, y: 50, w: 14, h: 15, label: 'M-02', confidence: 0.87, appearAt: 8300, clue: '石头质感不合常理' },
-  { x: 73, y: 37, w: 18, h: 21, label: 'M-03', confidence: 0.79, appearAt: 12000, clue: '光影方向偏离' },
+  { id: '全局常识冲突', x: 35, y: 45, w: 35, h: 40, title: '物理逻辑矛盾', desc: '塑料盆置于明火', appearAt: 5100, tooltip: '【全局语义违和】SGG提取三元组〈塑料盆, 在上方, 火〉。知识图谱计算语义距离 E_KG 极高，LLM输出逻辑违和度 0.90。' },
+  { id: '局部重绘异常', x: 45, y: 45, w: 15, h: 15, title: '实体不匹配', desc: '异常的石块纹理', appearAt: 6800, tooltip: '【局部像素异常】该区域图像噪声梯度与全局分布完全断裂，大概率为生成模型局部重绘(Inpainting)强行插入的实体。' },
+  { id: '光影残差定位', x: 25, y: 5, w: 20, h: 25, title: '光源方向背离', desc: '面部高光位置错误', appearAt: 8400, tooltip: '【全局-局部一致性】空域专家通过多尺度特征提取，发现人物面部的高频残差所反映的光源方向，与环境主光源呈明显背离。' },
 ];
 
-const tabs = [
-  { key: 'flow', index: '01', cn: '流程', en: 'Flow' },
-  { key: 'semantic', index: '02', cn: '语义链', en: 'Chain' },
-  { key: 'experts', index: '03', cn: '专家', en: 'Experts' },
-] satisfies Array<{ key: RightTab; index: string; cn: string; en: string }>;
+const totalDuration = 11000;
 
-const completedTime = steps.reduce<number[]>((acc, step, index) => {
-  acc[index] = (acc[index - 1] ?? 0) + step.duration;
-  return acc;
-}, []);
-
-const totalDuration = completedTime[completedTime.length - 1] + 400;
-
-function StatusDot({ status }: { status: StepStatus }) {
-  if (status === 'done') return <span className={styles.dotDone}>✓</span>;
-  if (status === 'active') {
-    return (
-      <motion.span className={styles.dotActive} animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}>
-        ⋯
-      </motion.span>
-    );
-  }
-  return <span className={styles.dotPending}>○</span>;
-}
-
-function StepItem({ index, name, english, status, time }: { index: string; name: string; english: string; status: StepStatus; time?: string }) {
-  return (
-    <li className={`${styles.step} ${styles[status]}`}>
-      <span className={styles.stepIndex}>{index}</span>
-      <span className={styles.stepBody}>
-        <strong>{name}</strong>
-        <em>{english}</em>
-        <span className={styles.stepState}>{status === 'done' ? `✓ ${time}` : status === 'active' ? '⋯ 进行中' : '○ 等待'}</span>
-      </span>
-    </li>
-  );
-}
-
-function FlowPanel({ elapsed }: { elapsed: number }) {
-  const activeStep = completedTime.findIndex((time) => elapsed < time);
-  return (
-    <motion.div className={styles.panelInner} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.3 }}>
-      <header className={styles.panelHeader}>
-        <h2>正在显影</h2>
-        <p>─ Developing</p>
-      </header>
-      <ul className={styles.stepList}>
-        {steps.map((step, index) => (
-          <StepItem
-            key={step.name}
-            index={String(index + 1).padStart(2, '0')}
-            name={step.name}
-            english={step.english}
-            status={elapsed >= completedTime[index] ? 'done' : index === activeStep ? 'active' : 'pending'}
-            time={`${(step.duration / 1000).toFixed(1)}s`}
-          />
-        ))}
-      </ul>
-    </motion.div>
-  );
-}
-
-function ChainStep({ index, cn, en, status, children }: { index: string; cn: string; en: string; status: StepStatus; children: ReactNode }) {
-  return (
-    <div className={`${styles.chainStep} ${styles[`status${status}`]}`}>
-      <header className={styles.chainStepHeader}>
-        <span className={styles.chainStepIdx}>{index}</span>
-        <span className={styles.chainStepTitles}>
-          <strong>{cn}</strong>
-          <em>{en}</em>
-        </span>
-        <StatusDot status={status} />
-      </header>
-      <div className={styles.chainStepBody}>{children}</div>
-    </div>
-  );
-}
-
-function ChainConnector({ active = false }: { active?: boolean }) {
-  return <span className={`${styles.chainConnector} ${active ? styles.chainConnectorActive : ''}`} />;
-}
-
-function SceneMatchViz() {
-  return (
-    <div className={styles.sceneMatch}>
-      <div className={styles.sceneCandidates}>
-        <span className={styles.sceneTag}>厨房</span>
-        {['客厅', '森林', '花园', '天空', '海洋'].map((item) => (
-          <span key={item} className={`${styles.sceneTag} ${styles.faded}`}>{item}</span>
-        ))}
-      </div>
-      <div className={styles.sceneResult}>
-        <span>命中</span>
-        <span>─</span>
-        <strong>厨房</strong>
-        <em>0.91</em>
-      </div>
-    </div>
-  );
-}
-
-function ObjectDetectViz() {
-  const objects = [
-    { name: '锅', outlier: false },
-    { name: '人', outlier: false },
-    { name: '青菜', outlier: false },
-    { name: '塑料盆', outlier: true },
-    { name: '石头', outlier: true },
-    { name: '火', outlier: false },
-  ];
-  return (
-    <div className={styles.objectDetect}>
-      <div className={styles.objectsRow}>
-        {objects.map((item) => (
-          <span key={item.name} className={`${styles.objectChip} ${item.outlier ? styles.objectChipOutlier : ''}`}>{item.name}</span>
-        ))}
-      </div>
-      <div className={styles.outlierNote}>
-        <span>!</span>
-        <strong>2 个语义离群</strong>
-      </div>
-    </div>
-  );
-}
-
-function LogicCheckViz() {
-  return (
-    <div className={styles.logicCheck}>
-      <div className={styles.triplesRow}>
-        <span>SGG</span>
-        <strong>〈塑料盆, 在上方, 火〉</strong>
-      </div>
-      <div className={styles.triplesRow}>
-        <span>SGG</span>
-        <strong>〈翻炒, 作用于, 石头〉</strong>
-      </div>
-      <div className={styles.llmResult}>
-        <span>LLM 评分</span>
-        <span>─</span>
-        <strong>0.90</strong>
-        <em>荒谬</em>
-      </div>
-    </div>
-  );
-}
-
-function VerdictPreview({ done }: { done: boolean }) {
-  return (
-    <div className={`${styles.verdictPreview} ${done ? styles.verdictReady : ''}`}>
-      {done ? <strong>AI 生成 · 93%</strong> : <span>⋯ 等待证据综合</span>}
-    </div>
-  );
-}
-
-function SemanticChainPanel({ done }: { done: boolean }) {
-  return (
-    <motion.div className={styles.panelInner} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.3 }}>
-      <header className={styles.panelHeader}>
-        <h2>语义思维链</h2>
-        <p>─ Semantic Chain of Thought</p>
-      </header>
-      <div className={styles.chainSteps}>
-        <ChainStep index="01" cn="全局语义浓缩" en="Scene" status="done"><SceneMatchViz /></ChainStep>
-        <ChainConnector active />
-        <ChainStep index="02" cn="一致性校验" en="Consistency" status="done"><ObjectDetectViz /></ChainStep>
-        <ChainConnector active />
-        <ChainStep index="03" cn="逻辑校验" en="Logic" status={done ? 'done' : 'active'}><LogicCheckViz /></ChainStep>
-        <ChainConnector active={done} />
-        <ChainStep index="04" cn="判决" en="Verdict" status={done ? 'done' : 'pending'}><VerdictPreview done={done} /></ChainStep>
-      </div>
-    </motion.div>
-  );
-}
-
-interface Expert {
-  cn: string;
-  en: string;
-  activated: boolean;
-  weight: number;
-}
-
-function ExpertGroup({ groupName, groupEn, experts }: { groupName: string; groupEn: string; experts: Expert[] }) {
-  const max = Math.max(...experts.map((expert) => expert.weight), 0.01);
-  return (
-    <section className={styles.expertGroup}>
-      <header className={styles.expertGroupHeader}>
-        <strong>{groupName}</strong>
-        <em>{groupEn}</em>
-        <span>{experts.filter((expert) => expert.activated).length} / {experts.length}</span>
-      </header>
-      <ul className={styles.expertList}>
-        {experts.map((expert) => (
-          <li key={expert.en} className={`${styles.expertItem} ${expert.activated ? styles.expertItemActive : ''}`}>
-            <span className={`${styles.expertDot} ${expert.activated ? styles.expertDotOn : ''}`} />
-            <span className={styles.expertCn}>{expert.cn}</span>
-            {expert.activated ? (
-              <>
-                <span className={styles.contributionBar}>
-                  <motion.span className={styles.contributionFill} initial={{ width: 0 }} animate={{ width: `${(expert.weight / max) * 100}%` }} transition={{ duration: 0.6, ease: 'easeOut' }} />
-                </span>
-                <span className={styles.contributionValue}>{Math.round(expert.weight * 100)}%</span>
-              </>
-            ) : (
-              <span className={styles.expertSkipped}>未激活</span>
-            )}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function GatingDecision() {
-  return (
-    <section className={styles.gatingBlock}>
-      <header>
-        <span>⊞</span>
-        <strong>门控决策</strong>
-        <em>Gating</em>
-      </header>
-      <p>自适应激活 <strong>5</strong> 位专家（共 <span>7</span> 位）</p>
-      <div className={styles.gatingGrid}>
-        {Array.from({ length: 7 }, (_, index) => (
-          <span key={index} className={index < 5 ? styles.gatingCellOn : ''} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function FinalVerdict() {
-  return (
-    <section className={styles.finalVerdict}>
-      <div>
-        <span>综合判决</span>
-        <strong>AI 生成</strong>
-      </div>
-      <p>─ 93% confidence</p>
-    </section>
-  );
-}
-
-function ExpertRoutingPanel() {
-  return (
-    <motion.div className={styles.panelInner} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.3 }}>
-      <header className={styles.panelHeader}>
-        <h2>异构专家协同</h2>
-        <p>─ Expert Routing & Contribution</p>
-      </header>
-      <ExpertGroup
-        groupName="通用专家"
-        groupEn="General"
-        experts={[
-          { cn: '空域', en: 'Spatial', activated: true, weight: 0.32 },
-          { cn: '频域', en: 'Frequency', activated: true, weight: 0.28 },
-          { cn: '风格', en: 'Style', activated: false, weight: 0 },
-          { cn: '语义', en: 'Semantic', activated: true, weight: 0.18 },
-        ]}
-      />
-      <ExpertGroup
-        groupName="靶向专家"
-        groupEn="Targeted"
-        experts={[
-          { cn: 'SD3', en: 'SD3 LoRA', activated: true, weight: 0.15 },
-          { cn: 'FLUX', en: 'FLUX LoRA', activated: false, weight: 0 },
-          { cn: 'DALL-E', en: 'DALL-E LoRA', activated: true, weight: 0.07 },
-        ]}
-      />
-      <GatingDecision />
-      <FinalVerdict />
-    </motion.div>
-  );
-}
-
-function TabBar({ activeTab, onTabChange }: { activeTab: RightTab; onTabChange: (tab: RightTab) => void }) {
-  return (
-    <div className={styles.tabBar}>
-      {tabs.map((tab) => (
-        <button key={tab.key} className={`${styles.tabBtn} ${activeTab === tab.key ? styles.tabBtnActive : ''}`} type="button" onClick={() => onTabChange(tab.key)}>
-          <span>{tab.index}</span>
-          <strong>{tab.cn}</strong>
-          <em>{tab.en}</em>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function DetectRight({ state, elapsed }: { state: ProcessState; elapsed: number }) {
-  const [activeTab, setActiveTab] = useState<RightTab>('flow');
+function TerminalLogs({ elapsed }: { elapsed: number }) {
+  const visibleLogs = logsData.filter(l => elapsed >= l.time);
+  const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (state === 'idle') return undefined;
-    if (state === 'done') {
-      window.setTimeout(() => setActiveTab('experts'), 400);
-      return undefined;
-    }
-    const cycle: RightTab[] = ['flow', 'semantic', 'experts'];
-    const interval = window.setInterval(() => {
-      setActiveTab((previous) => cycle[(cycle.indexOf(previous) + 1) % cycle.length]);
-    }, 6000);
-    return () => window.clearInterval(interval);
-  }, [state]);
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [visibleLogs.length]);
 
   return (
-    <aside className={styles.rightPanel}>
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className={styles.tabContent}>
-        <AnimatePresence mode="wait">
-          {activeTab === 'flow' ? <FlowPanel key="flow" elapsed={elapsed} /> : null}
-          {activeTab === 'semantic' ? <SemanticChainPanel key="semantic" done={state === 'done'} /> : null}
-          {activeTab === 'experts' ? <ExpertRoutingPanel key="experts" /> : null}
-        </AnimatePresence>
+    <div className={styles.terminal}>
+      <div className={styles.terminalHeader}>推 理 日 志 ─ Log</div>
+      <div className={styles.terminalBody}>
+        {visibleLogs.map((log, i) => (
+          <div key={i} className={log.text.includes('[警告]') || log.text.includes('[最终结论]') ? styles.logDanger : styles.logInfo}>
+            <span className={styles.logTimestamp}>{(log.time / 1000).toFixed(3)}s</span>
+            {log.text}
+          </div>
+        ))}
+        <div ref={endRef} />
       </div>
-    </aside>
+    </div>
+  );
+}
+
+function RightSidebar({ elapsed, hoveredMarkId, setHoveredMarkId }: { elapsed: number, hoveredMarkId: string | null, setHoveredMarkId: (id: string | null) => void }) {
+  return (
+    <motion.div className={styles.hudPanel} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+      
+      <div className={styles.hudSection}>
+        <div className={styles.sectionHeader}>重点证据锚点 (Anchors)</div>
+        <div className={styles.evidenceList}>
+          {marks.map((mark) => {
+            const isVisible = elapsed >= mark.appearAt;
+            const isActive = hoveredMarkId === mark.id;
+            return (
+              <div 
+                key={mark.id} 
+                className={`${styles.evidenceItem} ${isVisible ? styles.evidenceItemVisible : ''} ${isActive ? styles.evidenceItemActive : ''}`}
+                onMouseEnter={() => isVisible && setHoveredMarkId(mark.id)}
+                onMouseLeave={() => isVisible && setHoveredMarkId(null)}
+              >
+                <div className={styles.evidenceId}>{mark.id}</div>
+                <div className={styles.evidenceDetails}>
+                  <strong>{mark.title}</strong>
+                  <span>{mark.desc}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className={styles.hudSection}>
+        <div className={styles.sectionHeader}>异构专家网络 (Expert Routing)</div>
+        <div className={styles.expertGrid}>
+          <div className={`${styles.expertBox} ${elapsed > 1000 ? styles.expertActive : ''} ${styles.hasTooltip}`}>
+            <span>通用: 空域检测专家 <i className={styles.tooltipIcon}>?</i></span>
+            {elapsed > 1000 && <div className={styles.expertBar} style={{ width: '45%' }}/>}
+            <div className={styles.tooltipContent}>【像素空间分析】检测全局几何畸变与拼接伪影。当前贡献权重: 0.45</div>
+          </div>
+          <div className={`${styles.expertBox} ${elapsed > 1000 ? styles.expertActive : ''} ${styles.hasTooltip}`}>
+            <span>通用: 频域检测专家 <i className={styles.tooltipIcon}>?</i></span>
+            {elapsed > 1000 && <div className={styles.expertBar} style={{ width: '38%' }}/>}
+            <div className={styles.tooltipContent}>【信号频率分析】利用FFT计算高频噪声残差。当前贡献权重: 0.38</div>
+          </div>
+          <div className={`${styles.expertBox} ${elapsed > 4000 ? styles.expertActive : ''} ${styles.hasTooltip}`}>
+            <span>通用: 语义检测专家 <i className={styles.tooltipIcon}>?</i></span>
+            {elapsed > 4000 && <div className={styles.expertBar} style={{ width: '78%' }}/>}
+            <div className={styles.tooltipContent}>【认知逻辑分析】通过大模型提取场景与实体分布。当前贡献权重: 0.78</div>
+          </div>
+          <div className={`${styles.expertBox} ${elapsed > 7000 ? styles.expertTarget : ''} ${styles.hasTooltip}`}>
+            <span>靶向: Nano Banana 检测器 <i className={styles.tooltipIcon}>?</i></span>
+            {elapsed > 7000 && <div className={styles.expertBar} style={{ width: '92%' }}/>}
+            <div className={styles.tooltipContent}>【LoRA精准打击】挂载专用权重，极速匹配其底层生成指纹。置信度: 0.92</div>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.hudSection}>
+        <div className={styles.sectionHeader}>语义思维链 (Semantic Chain)</div>
+        <div className={styles.chainWrap}>
+          {elapsed > 4200 && (
+            <motion.div className={styles.chainStep} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div className={styles.chainTitle}>全局场景锚定</div>
+              <div className={styles.chainResult}>视觉编码命中: 厨房 (置信度 0.91)</div>
+            </motion.div>
+          )}
+          {elapsed > 5100 && (
+            <motion.div className={styles.chainStep} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div className={styles.chainTitle}>全局-局部一致性校验</div>
+              <div className={styles.chainResult}>实体解析: 锅, 人, 青菜, 塑料盆, 石头</div>
+              <div className={styles.chainDanger}>锁定语义离群点: [塑料盆, 石头]</div>
+            </motion.div>
+          )}
+          {elapsed > 8500 && (
+            <motion.div className={styles.chainStep} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div className={styles.chainTitle}>双分支逻辑校验</div>
+              <div className={styles.chainResult}>知识图谱: 〈塑料盆, 在上方, 火〉距离极高</div>
+              <div className={styles.chainDanger}>大模型评估: 荒谬 (0.90) - 违背物理常识</div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+
+      <div className={styles.hudSection}>
+        <div className={styles.sectionHeader}>底层物理特征 (Physical Data)</div>
+        <div className={styles.dataRow}><span>相机型号</span> <em>未定义</em></div>
+        <div className={styles.dataRow}><span>处理软件</span> <em>Adobe Photoshop 24.0</em></div>
+        <div className={styles.chartBox} style={{ marginTop: 12 }}>
+          {elapsed > 3500 ? (
+            <div className={styles.fftGraph}>
+              <div className={styles.fftBar} style={{ height: '30%' }} />
+              <div className={styles.fftBar} style={{ height: '45%' }} />
+              <div className={styles.fftBar} style={{ height: '80%' }} />
+              <div className={styles.fftBar} style={{ height: '60%' }} />
+              <div className={styles.fftBar} style={{ height: '90%' }} />
+              <div className={styles.fftBar} style={{ height: '40%' }} />
+            </div>
+          ) : (
+            <div className={styles.scanningText}>等待 FFT 转换...</div>
+          )}
+        </div>
+      </div>
+
+    </motion.div>
   );
 }
 
@@ -354,20 +165,20 @@ export function DetectImage() {
   const [state, setState] = useState<ProcessState>('idle');
   const [imageSrc, setImageSrc] = useState(demoImage);
   const [elapsed, setElapsed] = useState(0);
-  const [activeMark, setActiveMark] = useState<string | null>(null);
+  const [hoveredMarkId, setHoveredMarkId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const startProcessing = (src = demoImage) => {
     setImageSrc(src);
     setElapsed(0);
-    setActiveMark(null);
     setState('processing');
   };
 
   useEffect(() => {
-    if (state !== 'processing') return undefined;
+    if (state !== 'processing') return;
     const startedAt = Date.now();
-    const interval = window.setInterval(() => setElapsed(Date.now() - startedAt), 100);
+    const interval = window.setInterval(() => setElapsed(Date.now() - startedAt), 50);
     const doneTimer = window.setTimeout(() => setState('done'), totalDuration);
     return () => {
       window.clearInterval(interval);
@@ -375,77 +186,94 @@ export function DetectImage() {
     };
   }, [state]);
 
-  const visibleMarks = marks.filter((mark) => elapsed >= mark.appearAt || state === 'done');
-  const visibleEvidences = evidences.filter((evidence) => elapsed >= evidence.appearAt || state === 'done');
-
   const handleFile = (file?: File) => {
     if (!file) return;
     startProcessing(URL.createObjectURL(file));
   };
 
   return (
-    <main className={styles.detectPage}>
-      <UserTopbar title="图片鉴别" english="IMAGE" />
+    <div className={styles.detectPage}>
+      <UserTopbar title="图像取证" english="FORENSICS" />
+
       {state === 'idle' ? (
-        <section className={styles.idle}>
-          <button
-            className={styles.dropzone}
-            onClick={() => inputRef.current?.click()}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault();
-              handleFile(event.dataTransfer.files[0]);
-            }}
-            type="button"
-          >
-            <span>拖入或点击选择一张图片</span>
-            <em>─ Drop your image to begin ─</em>
-            <strong>支持 JPG · PNG · WebP</strong>
-          </button>
+        <div className={styles.idleState}>
+          <div className={styles.uploadBox} onClick={() => inputRef.current?.click()}>
+            <div className={styles.uploadIcon}>+</div>
+            <div className={styles.uploadText}>上传待核验样本</div>
+            <div className={styles.uploadSub}>支持 JPG · PNG · WebP 格式</div>
+          </div>
           <input ref={inputRef} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => handleFile(event.target.files?.[0])} />
-          <Button variant="text" prefix="─" suffix="→" onClick={() => startProcessing(demoImage)}>使用示例图</Button>
-        </section>
+          <button className={styles.demoBtn} onClick={() => startProcessing(demoImage)}>使用示例样本</button>
+        </div>
       ) : (
-        <section className={styles.detectMain}>
-          <div className={styles.detectLeft}>
-            <div className={styles.imagePanel}>
-              <div className={styles.imageWrap}>
-                <img src={imageSrc} alt="" />
+        <div className={styles.workspace}>
+          
+          <div className={styles.centerCanvas} style={{ justifyContent: 'flex-start' }}>
+            <div className={styles.canvasFrame} style={{ maxWidth: '100%', aspectRatio: '16/10' }}>
+              
+              <div className={styles.imageContainer}>
+                <img src={imageSrc} alt="Subject" className={styles.subjectImage} />
+                
+                {/* Scanner Effects */}
+                {state === 'processing' && (
+                  <>
+                    <div className={styles.scanLineVertical} />
+                    <div className={styles.scanGrid} />
+                  </>
+                )}
+
+                {/* Bounding Boxes */}
                 <AnimatePresence>
-                  {visibleMarks.map((mark) => (
-                    <ForensicMark key={mark.label} {...mark} active={activeMark === mark.label} />
+                  {marks.filter(m => elapsed >= m.appearAt).map((mark) => (
+                    <ForensicMark
+                      key={mark.id}
+                      x={mark.x}
+                      y={mark.y}
+                      w={mark.w}
+                      h={mark.h}
+                      label={mark.title}
+                      confidence={0.99}
+                      active={hoveredMarkId === mark.id}
+                    />
                   ))}
                 </AnimatePresence>
-                {state === 'done' ? <span className={styles.imageBadge}>FAKE</span> : null}
+
+                {state === 'done' && (
+                  <div className={styles.verdictOverlay}>
+                    <div className={styles.verdictStamp}>AI 生成</div>
+                  </div>
+                )}
               </div>
             </div>
-            <div className={styles.evidenceBar}>
-              <h2>已发现的线索</h2>
-              <div>
-                {evidences.map((evidence) => {
-                  const visible = visibleEvidences.includes(evidence);
-                  return (
-                    <motion.span key={evidence.name} className={visible ? styles.evidenceVisible : ''} initial={false} animate={visible ? { x: 0, opacity: 1 } : { x: 16, opacity: 0.45 }}>
-                      {visible ? '●' : '○'} {evidence.name}
-                    </motion.span>
-                  );
-                })}
+            
+            {state === 'done' && (
+              <div className={styles.actionsBox}>
+                <button className={styles.reportBtn} onClick={() => navigate('/detect/report/demo')}>查看详细报告</button>
+                <button className={styles.resetBtn} onClick={() => setState('idle')}>重新检测</button>
               </div>
-            </div>
-            {state === 'done' ? (
-              <div className={styles.doneActions}>
-                {marks.map((mark) => (
-                  <button key={mark.label} type="button" onMouseEnter={() => setActiveMark(mark.label)} onMouseLeave={() => setActiveMark(null)}>
-                    {mark.label} · {mark.clue}
-                  </button>
-                ))}
-                <Link to="/detect/report/demo">─ 查看完整报告 →</Link>
-              </div>
-            ) : null}
+            )}
           </div>
-          <DetectRight state={state} elapsed={elapsed} />
-        </section>
+
+          <RightSidebar elapsed={elapsed} hoveredMarkId={hoveredMarkId} setHoveredMarkId={setHoveredMarkId} />
+        </div>
       )}
-    </main>
+
+      {/* Bottom Console */}
+      <footer className={styles.bottomConsole}>
+        <div className={styles.timelineBox}>
+          <div className={styles.timelineBar}>
+            <div className={styles.timelineFill} style={{ width: `${Math.min(100, (elapsed / totalDuration) * 100)}%` }} />
+          </div>
+          <div className={styles.timelineLabels}>
+            <span>0%</span>
+            <span>分析进度</span>
+            <span>100%</span>
+          </div>
+        </div>
+        <div className={styles.terminalWrap}>
+          <TerminalLogs elapsed={elapsed} />
+        </div>
+      </footer>
+    </div>
   );
 }

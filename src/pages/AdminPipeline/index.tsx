@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/primitives';
 import styles from './AdminPipeline.module.css';
@@ -125,8 +125,38 @@ function ToggleOption({ checked, label }: { checked?: boolean; label: string }) 
 function ShowcaseCard({ title, english, description, thumbnail, to, disabled }: ShowcaseCardProps) {
   const navigate = useNavigate();
 
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 30 });
+  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 30 });
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], [10, -10]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], [-10, 10]);
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    const xPct = mouseX / width - 0.5;
+    const yPct = mouseY / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
   return (
-    <article className={`${styles.showcaseCard} ${disabled ? styles.disabledCard : ''}`} onClick={() => !disabled && navigate(to)}>
+    <motion.article 
+      className={`${styles.showcaseCard} ${disabled ? styles.disabledCard : ''}`} 
+      onClick={() => !disabled && navigate(to)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ rotateX, rotateY, transformPerspective: 1200 }}
+    >
       <div className={styles.showcaseThumb}>
         <img src={thumbnail} alt="" />
         <div className={styles.showcaseOverlay}>
@@ -147,7 +177,7 @@ function ShowcaseCard({ title, english, description, thumbnail, to, disabled }: 
           </span>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 

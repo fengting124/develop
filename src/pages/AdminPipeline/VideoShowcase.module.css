@@ -1,5 +1,5 @@
 .showcase {
-  height: 100vh;
+  height: 100%;
   display: grid;
   grid-template-rows: auto 1fr auto;
   background: var(--canvas);
@@ -184,7 +184,7 @@
   flex-direction: column;
   gap: 7px;
   padding: 16px 48px 12px;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .realZone,

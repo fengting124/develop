@@ -1,9 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button, EdgeRule, Modal, PageContainer, useToast } from '@/components/primitives';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
 import { imageDemo } from '@/data/mocks';
 import styles from './Report.module.css';
+
+function DecodedText({ text, duration = 1200 }: { text: string; duration?: number }) {
+  const [displayed, setDisplayed] = useState('');
+  useEffect(() => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
+    const totalFrames = duration / 30;
+    let frame = 0;
+    const interval = setInterval(() => {
+      frame++;
+      const progress = Math.min(frame / totalFrames, 1);
+      const revealedLength = Math.floor(text.length * progress);
+      const scrambledLength = text.length - revealedLength;
+      let scrambled = '';
+      for (let i = 0; i < scrambledLength; i++) {
+        scrambled += chars[Math.floor(Math.random() * chars.length)];
+      }
+      setDisplayed(text.substring(0, revealedLength) + scrambled);
+      if (progress >= 1) clearInterval(interval);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [text, duration]);
+  return <>{displayed}</>;
+}
 
 interface EvidenceItemProps {
   code: string;
@@ -71,8 +94,9 @@ export function Report() {
       />
       <EdgeRule position="top" />
 
-      <PageContainer width="narrow">
-      <article className={styles.paper}>
+      <PageContainer width="normal">
+      <div className={styles.dashboard}>
+        <div className={styles.leftPanel}>
         <header className={styles.reportHeader}>
           <p className={styles.italicQuote}>─ A report on visual authenticity ─</p>
           <div className={styles.titleBlock}>
@@ -114,7 +138,7 @@ export function Report() {
           <h2>二. 鉴别结论</h2>
           <div className={styles.verdictCardLarge}>
             <p className={styles.verdictCardLargeCn}>AI 生成</p>
-            <p className={styles.verdictCardLargeEn}>FAKE</p>
+            <p className={styles.verdictCardLargeEn}><DecodedText text="FAKE" duration={1500} /></p>
             <p className={styles.verdictCardLargeConf}>
               <span className={styles.verdictConfDash} />
               <span><span className={styles.verdictConfValue}>{Math.round(imageDemo.confidence * 100)}%</span> confidence</span>
@@ -122,11 +146,17 @@ export function Report() {
             </p>
           </div>
         </section>
+        </div>
 
-        <hr className={styles.sectionDivider} />
+        <footer className={styles.footer}>
+          <p>DEVELOP · 系统自动生成</p>
+          <p>2026.11.21 14:23:24</p>
+        </footer>
+        </div>
 
-        <section>
-          <h2>三. 三条关键证据</h2>
+        <div className={styles.rightPanel}>
+        <section className={styles.dashboardSection}>
+          <h2>关键证据</h2>
           <div className={styles.evidenceList}>
             {imageDemo.marks.map((mark) => (
               <EvidenceItem
@@ -140,10 +170,8 @@ export function Report() {
           </div>
         </section>
 
-        <hr className={styles.sectionDivider} />
-
-        <section>
-          <h2>四. 显影过程</h2>
+        <section className={styles.dashboardSection}>
+          <h2>显影过程</h2>
           <div className={styles.timelineLog}>
             {timelineEntries.map(([time, event, note]) => (
               <p key={`${time}-${event}`}>
@@ -154,14 +182,8 @@ export function Report() {
             ))}
           </div>
         </section>
-
-        <hr className={styles.sectionDivider} />
-
-        <footer className={styles.footer}>
-          <p>DEVELOP · 由系统自动生成 · 仅供参考</p>
-          <p>报告时间 ─ 2026.11.21 14:23:24</p>
-        </footer>
-      </article>
+        </div>
+      </div>
       </PageContainer>
 
       <EdgeRule position="bottom" />

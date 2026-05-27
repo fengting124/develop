@@ -1,12 +1,53 @@
 .page {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--canvas);
 }
 
-.paper {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 96px 0;
+.dashboard {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 480px minmax(0, 1fr);
+  gap: var(--space-6);
+  min-height: 0;
+  height: calc(100vh - 80px);
+  padding: var(--space-6) 0;
+}
+
+.leftPanel, .rightPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.leftPanel {
+  padding: 32px;
+  overflow-y: auto;
+}
+
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
+}
+
+.dashboardSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 32px;
+  background: var(--surface);
+}
+
+.dashboardSection + .dashboardSection {
+  border-top: 1px solid var(--rule);
 }
 
 .reportHeader {
@@ -100,16 +141,16 @@
 }
 
 .sectionDivider {
-  margin: var(--space-8) 0;
+  margin: var(--space-6) 0;
   border: 0;
   border-top: 1px solid var(--rule);
 }
 
-.paper h2 {
-  margin-bottom: var(--space-6);
+.leftPanel h2, .dashboardSection h2 {
+  margin-bottom: var(--space-5);
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 500;
 }
 
@@ -217,6 +258,10 @@
 .evidenceList {
   display: grid;
   gap: var(--space-3);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: 8px;
 }
 
 .evidenceItem {
@@ -261,6 +306,10 @@
 .timelineLog {
   display: grid;
   gap: var(--space-3);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: 8px;
 }
 
 .timelineLog p {
@@ -294,6 +343,8 @@
   color: var(--ink-3);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+  margin-top: auto;
+  padding-top: var(--space-5);
 }
 
 .confirm {

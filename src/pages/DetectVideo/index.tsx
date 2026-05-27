@@ -141,6 +141,7 @@ export function DetectVideo() {
   const [done, setDone] = useState(false);
   const [activeRange, setActiveRange] = useState<number | null>(null);
   const [videoReady, setVideoReady] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -165,6 +166,8 @@ export function DetectVideo() {
   const activeStep = stepEnds.findIndex((end) => elapsed < end);
   const fakeSeconds = videoDemoFull.fakeRanges.reduce((sum, range) => sum + range.end - range.start, 0);
   const fakePercent = Math.round((fakeSeconds / videoDemoFull.duration) * 100);
+  
+  const isWarning = revealedRanges.some((range) => currentTime >= range.start && currentTime <= range.end);
 
   const steps = useMemo(
     () => [
@@ -180,148 +183,174 @@ export function DetectVideo() {
   return (
     <main className={styles.page}>
       <UserTopbar title="视频检测台" english="VIDEO FORENSICS" />
-      <PageContainer width="wide">
+      <PageContainer width="wide" className={styles.pageContainerCustom}>
         <section className={styles.body}>
-          <section className={styles.videoSection}>
-            <div className={styles.videoMetaBar}>
-              <div className={styles.videoMetaLeft}>
-                <span className={styles.metaLabel}>送检材料</span>
-                <span className={styles.metaDash}>─</span>
-                <span className={styles.metaValue}>VIDEO · 30s · 1280×720</span>
-              </div>
-              <div className={styles.videoMetaRight}>
-                <span className={styles.metaPhase}>{phaseLabel(elapsed, done)}</span>
-              </div>
-            </div>
-            <div className={styles.videoFrame}>
-              <video
-                ref={videoRef}
-                src={videoDemoFull.src}
-                poster="/samples/09.jpg"
-                muted
-                loop
-                playsInline
-                onCanPlay={() => setVideoReady(true)}
-              />
-              {!videoReady ? (
-                <div className={styles.videoLoadingState}>
-                  <div className={styles.videoLoadingPulse} />
-                  <p className={styles.videoLoadingText}>─ Loading the material</p>
+          <div className={styles.leftCol}>
+            <section className={styles.videoSection}>
+              <div className={styles.videoMetaBar}>
+                <div className={styles.videoMetaLeft}>
+                  <span className={styles.metaLabel}>送检材料</span>
+                  <span className={styles.metaDash}>─</span>
+                  <span className={styles.metaValue}>VIDEO · 30s · 1280×720</span>
                 </div>
-              ) : null}
-            </div>
-          </section>
-
-          <section className={styles.timelineSection}>
-            <h2 className="section-mark">时间结构</h2>
-            <div className={styles.windowsBar}>
-              {videoDemoFull.windows.map((window, index) => {
-                const visible = done || elapsed >= windowDelays[index];
-                const analyzed = done || index < analyzedWindowCount;
-                return (
-                  <div
-                    key={`${window.start}-${window.end}`}
-                    className={`${styles.windowBlock} ${analyzed ? styles.windowDone : ''} ${index === currentWindow && !done ? styles.windowActive : ''}`}
-                    style={{
-                      left: `${(window.start / videoDemoFull.duration) * 100}%`,
-                      width: `${((window.end - window.start) / videoDemoFull.duration) * 100}%`,
-                      opacity: visible ? 1 : 0,
-                    }}
-                  >
-                    <span className={styles.windowLabel}>W-{String(index + 1).padStart(2, '0')}</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className={styles.keyframeStrip}>
-              {videoDemoFull.frames.map((frame) => {
-                const inActiveWindow = currentWindow >= 0 && frame.time >= videoDemoFull.windows[currentWindow].start && frame.time <= videoDemoFull.windows[currentWindow].end;
-                const inFakeRange = revealedRanges.some((range) => frame.time >= range.start && frame.time <= range.end);
-                return (
-                  <div
-                    key={`${frame.src}-${frame.time}`}
-                    className={`${styles.frameThumb} ${inActiveWindow && !done ? styles.beingScanned : ''} ${inFakeRange ? styles.frameFlagged : ''}`}
-                  >
-                    <img src={frame.src} alt="" loading="eager" />
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className={styles.timelineContainer}>
-              <div className={styles.ticks}>
-                {[0, 8, 16, 24, 30].map((tick) => <span key={tick}>{formatTime(tick)}</span>)}
+                <div className={styles.videoMetaRight}>
+                  <span className={styles.metaPhase}>{phaseLabel(elapsed, done)}</span>
+                </div>
               </div>
-              <div className={styles.timelineMain}>
-                {revealedRanges.map((range, index) => (
-                  <button
-                    key={`${range.start}-${range.end}`}
-                    type="button"
-                    className={`${styles.fakeRange} ${activeRange === index ? styles.fakeRangeActive : ''}`}
-                    style={{
-                      left: `${(range.start / videoDemoFull.duration) * 100}%`,
-                      width: `${((range.end - range.start) / videoDemoFull.duration) * 100}%`,
-                    }}
-                    onMouseEnter={() => {
-                      setActiveRange(index);
-                      videoRef.current?.pause();
-                      if (videoRef.current) videoRef.current.currentTime = range.start;
-                    }}
-                    onMouseLeave={() => setActiveRange(null)}
-                  >
-                    <span className={styles.rangeTag}>{(range.end - range.start).toFixed(1)}s</span>
-                  </button>
-                ))}
-                {!done ? <span className={styles.cursor} style={{ left: `${Math.min(scanTime / videoDemoFull.duration, 1) * 100}%` }} /> : null}
+              <div className={styles.videoFrame}>
+                <video
+                  ref={videoRef}
+                  src={videoDemoFull.src}
+                  poster="/samples/09.jpg"
+                  muted
+                  loop
+                  playsInline
+                  onCanPlay={() => setVideoReady(true)}
+                  onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime || 0)}
+                />
+                {!videoReady ? (
+                  <div className={styles.videoLoadingState}>
+                    <div className={styles.videoLoadingPulse} />
+                    <p className={styles.videoLoadingText}>─ Loading the material</p>
+                  </div>
+                ) : null}
+                {videoReady && (
+                  <div className={`${styles.hudOverlay} ${isWarning ? styles.hudWarningActive : ''}`}>
+                    {isWarning && (
+                      <div className={styles.warningAlert}>
+                        <span className={styles.warningIcon}>!</span>
+                        <span>SYNC WARNING: MANIPULATION DETECTED</span>
+                      </div>
+                    )}
+                    <div className={styles.hudCornerTopLeft} />
+                    <div className={styles.hudCornerTopRight} />
+                    <div className={styles.hudCornerBottomLeft} />
+                    <div className={styles.hudCornerBottomRight} />
+                    <div className={styles.hudCrosshair} />
+                  </div>
+                )}
               </div>
-              <div className={styles.candidateLayer}>
-                {visibleCandidates.map((candidate) => {
-                  const level = candidate.confidence > 0.7 ? 'high' : candidate.confidence > 0.4 ? 'mid' : 'low';
-                  const filtered = elapsed >= 5800 && candidate.confidence < 0.7 && !done;
+            </section>
+
+            <section className={styles.timelineSection}>
+              <h2 className="section-mark">时间结构</h2>
+              <div className={styles.windowsBar}>
+                {videoDemoFull.windows.map((window, index) => {
+                  const visible = done || elapsed >= windowDelays[index];
+                  const analyzed = done || index < analyzedWindowCount;
                   return (
-                    <span
-                      key={candidate.id}
-                      className={`${styles.candidate} ${styles[level]} ${filtered ? styles.candidateFiltered : ''}`}
+                    <div
+                      key={`${window.start}-${window.end}`}
+                      className={`${styles.windowBlock} ${analyzed ? styles.windowDone : ''} ${index === currentWindow && !done ? styles.windowActive : ''}`}
                       style={{
-                        left: `${(candidate.start / videoDemoFull.duration) * 100}%`,
-                        width: `${((candidate.end - candidate.start) / videoDemoFull.duration) * 100}%`,
+                        left: `${(window.start / videoDemoFull.duration) * 100}%`,
+                        width: `${((window.end - window.start) / videoDemoFull.duration) * 100}%`,
+                        opacity: visible ? 1 : 0,
                       }}
-                    />
+                    >
+                      <span className={styles.windowLabel}>W-{String(index + 1).padStart(2, '0')}</span>
+                    </div>
                   );
                 })}
               </div>
-            </div>
-          </section>
 
-          <section className={styles.analysisGrid}>
-            <div className={styles.evidencePane}>
-              <header className={styles.panelHeader}>
-                <h2>片段级证据</h2>
-                <p>EVIDENCE</p>
-              </header>
-              <div className={styles.fragmentList}>
-                {visibleEvidence.map((range, index) => (
-                  <FragmentEvidenceCard
-                    key={`${range.start}-${range.end}`}
-                    index={index}
-                    range={range}
-                    active={activeRange === index}
-                    onHover={(hovered) => {
-                      setActiveRange(hovered ? index : null);
-                      if (hovered && videoRef.current) videoRef.current.currentTime = range.start;
-                    }}
-                  />
-                ))}
-                {visibleEvidence.length === 0 ? (
-                  <div className={styles.evidencePlaceholder}>
-                    <p>候选片段正在生成</p>
-                    <span>证据卡将在筛选后显影</span>
-                  </div>
-                ) : null}
+              <div className={styles.keyframeStrip}>
+                {videoDemoFull.frames.map((frame) => {
+                  const inActiveWindow = currentWindow >= 0 && frame.time >= videoDemoFull.windows[currentWindow].start && frame.time <= videoDemoFull.windows[currentWindow].end;
+                  const inFakeRange = revealedRanges.some((range) => frame.time >= range.start && frame.time <= range.end);
+                  return (
+                    <div
+                      key={`${frame.src}-${frame.time}`}
+                      className={`${styles.frameThumb} ${inActiveWindow && !done ? styles.beingScanned : ''} ${inFakeRange ? styles.frameFlagged : ''}`}
+                    >
+                      <img src={frame.src} alt="" loading="eager" />
+                    </div>
+                  );
+                })}
               </div>
-            </div>
 
+              <div className={styles.timelineContainer}>
+                <div className={styles.ticks}>
+                  {[0, 8, 16, 24, 30].map((tick) => <span key={tick}>{formatTime(tick)}</span>)}
+                </div>
+                <div className={styles.timelineMain}>
+                  {revealedRanges.map((range, index) => (
+                    <button
+                      key={`${range.start}-${range.end}`}
+                      type="button"
+                      className={`${styles.fakeRange} ${activeRange === index ? styles.fakeRangeActive : ''}`}
+                      style={{
+                        left: `${(range.start / videoDemoFull.duration) * 100}%`,
+                        width: `${((range.end - range.start) / videoDemoFull.duration) * 100}%`,
+                      }}
+                      onMouseEnter={() => {
+                        setActiveRange(index);
+                        videoRef.current?.pause();
+                        if (videoRef.current) videoRef.current.currentTime = range.start;
+                      }}
+                      onMouseLeave={() => setActiveRange(null)}
+                    >
+                      <span className={styles.rangeTag}>{(range.end - range.start).toFixed(1)}s</span>
+                    </button>
+                  ))}
+                  {!done ? <span className={styles.cursor} style={{ left: `${Math.min(scanTime / videoDemoFull.duration, 1) * 100}%` }} /> : null}
+                </div>
+                <div className={styles.candidateLayer}>
+                  {visibleCandidates.map((candidate) => {
+                    const level = candidate.confidence > 0.7 ? 'high' : candidate.confidence > 0.4 ? 'mid' : 'low';
+                    const filtered = elapsed >= 5800 && candidate.confidence < 0.7 && !done;
+                    return (
+                      <span
+                        key={candidate.id}
+                        className={`${styles.candidate} ${styles[level]} ${filtered ? styles.candidateFiltered : ''}`}
+                        style={{
+                          left: `${(candidate.start / videoDemoFull.duration) * 100}%`,
+                          width: `${((candidate.end - candidate.start) / videoDemoFull.duration) * 100}%`,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+
+            {done ? (
+              <motion.section
+                className={styles.verdictSection}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+              >
+                <div className={styles.verdictDivider}>
+                  <span className={styles.dividerLine} />
+                  <span className={styles.dividerText}>综合结论</span>
+                  <span className={styles.dividerLine} />
+                </div>
+                <div className={styles.verdictGrid}>
+                  <VerdictCard verdict={videoDemoFull.verdict} confidence={videoDemoFull.confidence} />
+                  <div className={styles.verdictSummary}>
+                    <p className={styles.summaryLabel}>
+                      <span className={styles.summaryDash}>─</span>
+                      <span>系统判断</span>
+                    </p>
+                    <p className={styles.summaryText}>
+                      在这段 30 秒的视频中，共发现 <span className={styles.summaryNum}>{videoDemoFull.fakeRanges.length}</span> 个高风险伪造时段，
+                      总占比约 <span className={styles.summaryNum}>{fakePercent}%</span>。多位专家在这些时段达成共识，建议判定为 AI 生成内容。
+                    </p>
+                  </div>
+                  <div className={styles.verdictActions}>
+                    <Link className={styles.primaryBtn} to="/detect/report/video-demo">
+                      <span>查看完整报告</span>
+                      <span className={styles.btnArrow}>→</span>
+                    </Link>
+                    <button className={styles.secondaryBtn} type="button">导出鉴定结果</button>
+                  </div>
+                </div>
+              </motion.section>
+            ) : null}
+          </div>
+
+          <div className={styles.rightCol}>
             <aside className={styles.progressPane}>
               <header className={styles.panelHeader}>
                 <h2>{done ? '显影完成' : '正在显影'}</h2>
@@ -351,42 +380,34 @@ export function DetectVideo() {
                 ))}
               </div>
             </aside>
-          </section>
 
-          {done ? (
-            <motion.section
-              className={styles.verdictSection}
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-            >
-              <div className={styles.verdictDivider}>
-                <span className={styles.dividerLine} />
-                <span className={styles.dividerText}>综合结论</span>
-                <span className={styles.dividerLine} />
+            <div className={styles.evidencePane}>
+              <header className={styles.panelHeader}>
+                <h2>片段级证据</h2>
+                <p>EVIDENCE</p>
+              </header>
+              <div className={styles.fragmentList}>
+                {visibleEvidence.map((range, index) => (
+                  <FragmentEvidenceCard
+                    key={`${range.start}-${range.end}`}
+                    index={index}
+                    range={range}
+                    active={activeRange === index}
+                    onHover={(hovered) => {
+                      setActiveRange(hovered ? index : null);
+                      if (hovered && videoRef.current) videoRef.current.currentTime = range.start;
+                    }}
+                  />
+                ))}
+                {visibleEvidence.length === 0 ? (
+                  <div className={styles.evidencePlaceholder}>
+                    <p>候选片段正在生成</p>
+                    <span>证据卡将在筛选后显影</span>
+                  </div>
+                ) : null}
               </div>
-              <div className={styles.verdictGrid}>
-                <VerdictCard verdict={videoDemoFull.verdict} confidence={videoDemoFull.confidence} />
-                <div className={styles.verdictSummary}>
-                  <p className={styles.summaryLabel}>
-                    <span className={styles.summaryDash}>─</span>
-                    <span>系统判断</span>
-                  </p>
-                  <p className={styles.summaryText}>
-                    在这段 30 秒的视频中，共发现 <span className={styles.summaryNum}>{videoDemoFull.fakeRanges.length}</span> 个高风险伪造时段，
-                    总占比约 <span className={styles.summaryNum}>{fakePercent}%</span>。多位专家在这些时段达成共识，建议判定为 AI 生成内容。
-                  </p>
-                </div>
-                <div className={styles.verdictActions}>
-                  <Link className={styles.primaryBtn} to="/detect/report/video-demo">
-                    <span>查看完整报告</span>
-                    <span className={styles.btnArrow}>→</span>
-                  </Link>
-                  <button className={styles.secondaryBtn} type="button">导出鉴定结果</button>
-                </div>
-              </div>
-            </motion.section>
-          ) : null}
+            </div>
+          </div>
         </section>
       </PageContainer>
     </main>

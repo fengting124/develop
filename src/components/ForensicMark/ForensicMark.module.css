@@ -1,38 +1,137 @@
-.mark {
+.markWrapper {
   position: absolute;
-  border: 1.5px solid var(--accent);
-  background: transparent;
   pointer-events: none;
-  transform-origin: center;
+  z-index: 10;
 }
 
-.mark::after {
-  content: "";
+/* 科技感边角 */
+.cornerTL, .cornerTR, .cornerBL, .cornerBR {
   position: absolute;
-  right: -34px;
-  bottom: -18px;
-  width: 34px;
-  border-top: 1px dashed var(--accent);
+  width: 12px;
+  height: 12px;
+  border-color: var(--accent);
+  border-style: solid;
+  border-width: 0;
+  opacity: 0.6;
+  transition: all 0.3s ease;
 }
 
-.label {
+.active .cornerTL, .active .cornerTR, .active .cornerBL, .active .cornerBR {
+  opacity: 1;
+  width: 18px;
+  height: 18px;
+  border-color: var(--real);
+}
+
+.cornerTL { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
+.cornerTR { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
+.cornerBL { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
+.cornerBR { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
+
+/* 中心热点 */
+.centerHotspot {
   position: absolute;
-  left: calc(100% + 34px);
-  bottom: -27px;
-  white-space: nowrap;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+}
+
+.core {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.active .core {
+  background: var(--real);
+  box-shadow: 0 0 15px var(--real);
+}
+
+.ripple {
+  position: absolute;
+  top: -24px;
+  left: -24px;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  animation: sonarPing 2s ease-out infinite;
+}
+
+@keyframes sonarPing {
+  0% { transform: scale(0.2); opacity: 1; border-width: 2px; }
+  100% { transform: scale(2.5); opacity: 0; border-width: 1px; }
+}
+
+/* 引线与标签 */
+.callout {
+  position: absolute;
+  bottom: -15px;
+  right: -40px;
+}
+
+.calloutLineHorizontal {
+  position: absolute;
+  bottom: 12px;
+  right: 0;
+  width: 40px;
+  height: 1px;
+  background: var(--accent);
+  transform-origin: left;
+}
+
+.active .calloutLineHorizontal {
+  background: var(--real);
+}
+
+.labelWrapper {
+  position: absolute;
+  bottom: 0;
+  left: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  padding: 4px 8px;
+  border-radius: 2px;
   color: var(--accent);
+  white-space: nowrap;
+}
+
+.active .labelWrapper {
+  border-color: var(--real);
+  color: var(--real);
+}
+
+.labelIcon {
+  color: var(--accent);
+  font-size: 10px;
+}
+
+.active .labelIcon {
+  color: var(--real);
+}
+
+.labelTitle {
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1;
-  padding: 4px 6px;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.05em;
 }
 
-.active {
-  border-width: 2.5px;
-  outline: 8px solid var(--accent-soft);
+.labelConfidence {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
 }
 
-.active .label {
-  background: var(--accent);
-  color: white;
+.active .labelConfidence {
+  color: var(--real);
 }

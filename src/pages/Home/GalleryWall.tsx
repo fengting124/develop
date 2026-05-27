@@ -105,6 +105,13 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
         const gatherDelay = 3.25 + seeded(index, 14) * 0.12;
         const tint = 33 + Math.round(seeded(index, 21) * 28);
 
+        const startX = -80 + seeded(index, 31) * 160; // -80vw to 80vw
+        const startY = -80 + seeded(index, 32) * 160; // -80vh to 80vh
+        const startZ = 200 + seeded(index, 33) * 1200;
+        const startRotX = -360 + seeded(index, 34) * 720;
+        const startRotY = -360 + seeded(index, 35) * 720;
+        const startRotZ = -180 + seeded(index, 36) * 360;
+
         return {
           item,
           row,
@@ -115,6 +122,12 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
           flipDelay,
           gatherDelay,
           tint,
+          startX,
+          startY,
+          startZ,
+          startRotX,
+          startRotY,
+          startRotZ,
         };
       }),
     [centerCol, centerRow, columns, items],
@@ -129,20 +142,20 @@ export function GalleryWall({ phase, onReady }: GalleryWallProps) {
       transition={{ duration: phase === 'end' ? 0.4 : 0.3 }}
       aria-hidden="true"
     >
-      {prepared.map(({ item, appearDelay, stampDelay, rotate, flipDelay, gatherDelay, tint }, index) => (
+      {prepared.map(({ item, appearDelay, stampDelay, rotate, flipDelay, gatherDelay, tint, startX, startY, startZ, startRotX, startRotY, startRotZ }, index) => (
         <motion.div
           className={styles.cell}
           key={item.file}
-          initial={{ opacity: 0, scale: 0.95, x: 0, y: 0 }}
+          initial={{ opacity: 0, scale: 0.2, x: `${startX}vw`, y: `${startY}vh`, z: startZ, rotateX: startRotX, rotateY: startRotY, rotateZ: startRotZ }}
           animate={
             phase === 'end'
-              ? { opacity: 0, scale: 0, x: '0vw', y: '0vh' }
-              : { opacity: 1, scale: 1, x: 0, y: 0 }
+              ? { opacity: 0, scale: 0, x: 0, y: 0, z: -800, rotateX: 0, rotateY: 0, rotateZ: 0 }
+              : { opacity: 1, scale: 1, x: 0, y: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0 }
           }
           transition={
             phase === 'end'
-              ? { duration: 0.4, ease: [0.7, 0, 0.3, 1] }
-              : { delay: appearDelay, duration: 0.6, ease: 'easeOut' }
+              ? { duration: 0.6, ease: [0.7, 0, 0.3, 1] }
+              : { delay: appearDelay * 0.8, duration: 1.8, type: 'spring', bounce: 0.2, restDelta: 0.001 }
           }
         >
           <motion.div

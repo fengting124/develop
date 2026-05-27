@@ -3,26 +3,61 @@
   background: var(--canvas);
 }
 
+.pageContainerCustom {
+  max-width: 1600px !important;
+  height: calc(100vh - 64px);
+}
+
 .body {
   display: grid;
-  gap: var(--space-7);
-  padding: var(--space-7) 0;
+  grid-template-columns: minmax(0, 1.4fr) minmax(360px, 480px);
+  gap: var(--space-6);
+  height: 100%;
+  padding: var(--space-4) 0;
+  overflow: hidden;
+}
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  overflow-y: auto;
+  padding-right: var(--space-4);
+}
+
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  overflow-y: auto;
+  border-left: 1px solid var(--rule);
+  padding-left: var(--space-5);
+  padding-right: var(--space-2);
+}
+
+/* Custom scrollbar for columns */
+.leftCol::-webkit-scrollbar,
+.rightCol::-webkit-scrollbar {
+  width: 6px;
+}
+.leftCol::-webkit-scrollbar-thumb,
+.rightCol::-webkit-scrollbar-thumb {
+  background: var(--rule);
+  border-radius: 3px;
 }
 
 .videoSection,
 .timelineSection,
-.analysisGrid,
 .verdictSection {
-  width: min(1120px, 100%);
-  margin: 0 auto;
+  width: 100%;
 }
 
 .videoMetaBar {
   display: flex;
-  width: min(720px, 100%);
+  width: 100%;
   align-items: center;
   justify-content: space-between;
-  margin: 0 auto var(--space-3);
+  margin: 0 0 var(--space-3) 0;
   padding: var(--space-2) 4px;
   color: var(--ink-2);
   font-family: var(--font-mono);
@@ -47,9 +82,8 @@
 
 .videoFrame {
   position: relative;
-  width: min(720px, 100%);
+  width: 100%;
   aspect-ratio: 16 / 9;
-  margin: 0 auto;
   border: 1px solid var(--rule);
   background: var(--ink-deep);
   overflow: hidden;
@@ -97,8 +131,7 @@
 .windowsBar,
 .keyframeStrip,
 .timelineContainer {
-  width: min(720px, 100%);
-  margin: 0 auto;
+  width: 100%;
 }
 
 .windowsBar {
@@ -144,8 +177,16 @@
 
 .keyframeStrip {
   display: flex;
-  gap: 2px;
+  gap: 4px;
   overflow: hidden;
+  padding: 6px 0;
+  background: var(--ink-deep);
+  background-image: 
+    linear-gradient(90deg, transparent 50%, var(--canvas) 50%),
+    linear-gradient(90deg, transparent 50%, var(--canvas) 50%);
+  background-size: 16px 3px;
+  background-repeat: repeat-x;
+  background-position: top, bottom;
 }
 
 .frameThumb {
@@ -173,16 +214,15 @@
 
 .frameFlagged {
   border: 1.5px solid var(--accent);
+  animation: glitch-anim 2s infinite linear alternate-reverse;
 }
 
-.frameFlagged::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--accent);
+@keyframes glitch-anim {
+  0% { transform: translate(0) }
+  2% { transform: translate(-2px, 1px) }
+  4% { transform: translate(-2px, -1px); filter: hue-rotate(90deg) contrast(150%) }
+  6% { transform: translate(0); filter: none }
+  100% { transform: translate(0) }
 }
 
 .ticks {
@@ -196,17 +236,18 @@
 
 .timelineMain {
   position: relative;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--rule);
+  height: 8px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, var(--rule) 0px, var(--rule) 2px, transparent 2px, transparent 4px);
 }
 
 .fakeRange {
   position: absolute;
   top: 0;
-  height: 6px;
-  border-radius: 3px;
+  height: 8px;
+  border-radius: 2px;
   background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
   transition: height 160ms ease-out, top 160ms ease-out, background 160ms ease-out;
 }
 
@@ -229,8 +270,8 @@
 }
 
 .fakeRangeActive {
-  top: -3px;
-  height: 12px;
+  top: -4px;
+  height: 16px;
   background: var(--fake);
 }
 
@@ -249,10 +290,12 @@
 .cursor {
   position: absolute;
   top: -8px;
-  width: 1.5px;
-  height: 22px;
-  background: var(--accent);
+  width: 2px;
+  height: 24px;
+  background: white;
+  box-shadow: 0 0 8px white, 0 0 15px var(--accent);
   transform: translateX(-50%);
+  z-index: 2;
 }
 
 .candidateLayer {
@@ -294,12 +337,9 @@
 }
 
 .analysisGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.8fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--space-6);
-  align-items: start;
-  border-top: 1px solid var(--rule);
-  padding-top: var(--space-6);
 }
 
 .panelHeader {
@@ -335,20 +375,48 @@
   grid-template-columns: 150px minmax(220px, 1fr) 210px;
   gap: var(--space-5);
   align-items: stretch;
-  border: 1px solid var(--rule);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: rgba(22, 22, 20, 0.4);
+  backdrop-filter: blur(12px);
   padding: var(--space-5);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
   transition: background 200ms ease-out, border-color 200ms ease-out, transform 200ms ease-out;
+}
+
+.fragmentCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transform: translateY(-100%);
+  transition: opacity 0.2s;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.fragmentCard:hover::before {
+  opacity: 0.6;
+  animation: scanline 2s infinite linear;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-10px); }
+  100% { transform: translateY(200px); }
 }
 
 .fragmentCard:hover,
 .fragmentCardActive {
-  border-color: var(--ink-3);
-  background: var(--surface-2);
-  transform: translateX(2px);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(30, 30, 28, 0.6);
+  transform: translateX(4px);
 }
 
 .fragmentLeft {
@@ -667,10 +735,10 @@
 }
 
 .verdictGrid {
-  display: grid;
-  grid-template-columns: 320px 1fr 240px;
-  gap: var(--space-7);
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  align-items: stretch;
 }
 
 .verdictSummary {
@@ -771,10 +839,101 @@
   }
 }
 
+/* Tactical HUD Styles */
+.hudOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  z-index: 10;
+}
+
+.hudWarningActive {
+  box-shadow: inset 0 0 80px rgba(220, 38, 38, 0.4);
+  border-color: rgba(220, 38, 38, 0.8);
+}
+
+.warningAlert {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  border-radius: 2px;
+  animation: hudFlash 1s infinite alternate;
+}
+
+@keyframes hudFlash {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.hudCornerTopLeft, .hudCornerTopRight, .hudCornerBottomLeft, .hudCornerBottomRight {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: rgba(255, 255, 255, 0.5);
+  border-style: solid;
+  border-width: 0;
+  transition: border-color 0.3s ease;
+}
+
+.hudWarningActive .hudCornerTopLeft, 
+.hudWarningActive .hudCornerTopRight, 
+.hudWarningActive .hudCornerBottomLeft, 
+.hudWarningActive .hudCornerBottomRight {
+  border-color: var(--fake);
+}
+
+.hudCornerTopLeft { top: 8px; left: 8px; border-top-width: 2px; border-left-width: 2px; }
+.hudCornerTopRight { top: 8px; right: 8px; border-top-width: 2px; border-right-width: 2px; }
+.hudCornerBottomLeft { bottom: 8px; left: 8px; border-bottom-width: 2px; border-left-width: 2px; }
+.hudCornerBottomRight { bottom: 8px; right: 8px; border-bottom-width: 2px; border-right-width: 2px; }
+
+.hudCrosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 32px;
+  transform: translate(-50%, -50%);
+  opacity: 0.3;
+}
+
+.hudCrosshair::before, .hudCrosshair::after {
+  content: "";
+  position: absolute;
+  background: white;
+}
+
+.hudCrosshair::before { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+.hudCrosshair::after { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+
 @media (max-width: 1180px) {
-  .analysisGrid,
-  .verdictGrid {
+  .body {
     grid-template-columns: 1fr;
+    overflow-y: auto;
+    height: auto;
+  }
+  
+  .leftCol, .rightCol {
+    overflow-y: visible;
+  }
+  
+  .rightCol {
+    border-left: none;
+    border-top: 1px solid var(--rule);
+    padding-left: 0;
+    padding-top: var(--space-5);
   }
 
   .fragmentCard {

@@ -1,0 +1,13 @@
+{
+    "file": "5HHb5LPCE9I_30.000_40.000/real.mp4",
+    "original": "data/DDL/Raw-2/videos/train/5HHb5LPCE9I_30.000_40.000/5HHb5LPCE9I_30.000_40.000.mp4",
+    "split": "train",
+    "modify_type": "real",
+    "snum": 0,
+    "fake_segments": [],
+    "fps": 30,
+    "video_frames": 398,
+    "duration": 13.289,
+    "transcripts": "And in my head I paint a picture",
+    "fake_info": []
+}

@@ -1,8 +1,9 @@
 .layout {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   grid-template-columns: 64px 1fr;
   background: var(--canvas);
+  overflow: hidden;
 }
 
 .sidebar {
@@ -43,6 +44,21 @@
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
+  transition: filter 200ms ease-out;
+}
+
+.sidebar a:hover svg {
+  filter: drop-shadow(0 0 4px rgba(200, 65, 46, 0.6));
+  animation: iconGlitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+}
+
+@keyframes iconGlitch {
+  0% { transform: translate(0) }
+  20% { transform: translate(-0.5px, 0.5px) }
+  40% { transform: translate(-0.5px, -0.5px) }
+  60% { transform: translate(0.5px, 0.5px) }
+  80% { transform: translate(0.5px, -0.5px) }
+  100% { transform: translate(0) }
 }
 
 .sidebar span {
@@ -66,5 +82,8 @@
 }
 
 .main {
-  padding: 96px 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }

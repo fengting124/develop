@@ -124,6 +124,8 @@ p.lead {
 }
 
 .pageHeader .pageTitle {
+  position: relative;
+  display: inline-block;
   font-family: var(--font-serif);
   font-size: var(--text-3xl);
   font-weight: var(--weight-medium);
@@ -131,6 +133,18 @@ p.lead {
   margin-top: 0;
   margin-bottom: 8px;
   color: var(--ink);
+}
+
+.pageHeader .pageTitle::after {
+  content: '_';
+  color: var(--accent);
+  margin-left: 8px;
+  animation: cursorBlink 1.2s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 .pageHeader .pageEnglish {
