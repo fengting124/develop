@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { PageContainer } from '@/components/primitives';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
 import { VerdictCard } from '@/components/VerdictCard/VerdictCard';
