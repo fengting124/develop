@@ -241,7 +241,7 @@ export function DetectVideo() {
                 <div className={styles.videoMetaLeft}>
                   <span className={styles.metaLabel}>送检材料</span>
                   <span className={styles.metaDash}>─</span>
-                  <span className={styles.metaValue}>VIDEO · 30s · 1280×720</span>
+                  <span className={styles.metaValue}>VIDEO · 13s · 1280×720 · FAKE_SEG2</span>
                 </div>
                 <div className={styles.videoMetaRight}>
                   <span className={styles.metaPhase}>{phaseLabel(elapsed, done)}</span>
@@ -251,11 +251,15 @@ export function DetectVideo() {
                 <video
                   ref={videoRef}
                   src={videoDemoFull.src}
-                  poster="/samples/09.jpg"
+                  poster="/images/workflow-editor/fake_seg2/frame-01.jpg"
                   muted
                   loop
                   playsInline
-                  onCanPlay={() => setVideoReady(true)}
+                  autoPlay
+                  onCanPlay={() => {
+                    setVideoReady(true);
+                    videoRef.current?.play().catch(() => {});
+                  }}
                   onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime || 0)}
                 />
                 {!videoReady ? (

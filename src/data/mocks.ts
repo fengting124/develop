@@ -23,62 +23,75 @@ export const videoFrames = Array.from({ length: 30 }, (_, index) => ({
   time: index,
 }));
 
+// 视频检测台使用 workflow/fake_seg2.mp4（双段伪造，时长 13.289s）
+// 对应 fake_segments: [[1.796, 10.516], [11.9, 12.78]]
+const VIDEO_DURATION = 13.289;
+const VIDEO_FRAME_COUNT = 18; // workflow-editor 里的帧数
+
 export const videoDemoFull = {
   id: 'DV-2026-1121-V01',
-  src: '/videos/video-demo-01.mp4',
-  duration: 30,
+  src: '/videos/workflow/fake_seg2.mp4',
+  duration: VIDEO_DURATION,
   verdict: 'fake' as const,
   confidence: 0.91,
-  windows: [
-    { start: 0, end: 5 },
-    { start: 5, end: 10 },
-    { start: 10, end: 15 },
-    { start: 15, end: 20 },
-    { start: 20, end: 25 },
-    { start: 25, end: 30 },
-  ],
-  frames: Array.from({ length: 30 }, (_, index) => ({
-    time: index,
-    src: `/samples/${String((index % 54) + 1).padStart(2, '0')}.jpg`,
+  // 6 个时间窗口，均匀切分
+  windows: Array.from({ length: 6 }, (_, i) => ({
+    start: parseFloat(((i / 6) * VIDEO_DURATION).toFixed(2)),
+    end: parseFloat((((i + 1) / 6) * VIDEO_DURATION).toFixed(2)),
   })),
+  // 帧带：使用 workflow-editor/fake_seg2 的真实帧
+  frames: Array.from({ length: VIDEO_FRAME_COUNT }, (_, i) => ({
+    time: parseFloat(((i / (VIDEO_FRAME_COUNT - 1)) * VIDEO_DURATION).toFixed(2)),
+    src: `/images/workflow-editor/fake_seg2/frame-${String(i + 1).padStart(2, '0')}.jpg`,
+  })),
+  // 候选时段（覆盖两个真实伪造段 + 若干低置信噪声）
   candidates: [
-    { id: 'c1', start: 2.1, end: 3.5, confidence: 0.32 },
-    { id: 'c2', start: 4.8, end: 6.2, confidence: 0.45 },
-    { id: 'c3', start: 8.0, end: 14.9, confidence: 0.89 },
-    { id: 'c4', start: 15.5, end: 17.0, confidence: 0.28 },
-    { id: 'c5', start: 18.2, end: 19.5, confidence: 0.51 },
-    { id: 'c6', start: 20.8, end: 25.0, confidence: 0.83 },
-    { id: 'c7', start: 26.0, end: 27.5, confidence: 0.38 },
+    { id: 'c1', start: 0.5,  end: 1.5,  confidence: 0.28 },
+    { id: 'c2', start: 1.8,  end: 5.2,  confidence: 0.82 },
+    { id: 'c3', start: 5.2,  end: 7.8,  confidence: 0.76 },
+    { id: 'c4', start: 7.8,  end: 10.5, confidence: 0.88 },
+    { id: 'c5', start: 10.6, end: 11.8, confidence: 0.35 },
+    { id: 'c6', start: 11.9, end: 12.8, confidence: 0.79 },
+    { id: 'c7', start: 12.8, end: 13.2, confidence: 0.22 },
   ],
+  // 最终确认的高风险伪造时段（对齐 fake_seg2 的真实标注）
   fakeRanges: [
     {
-      start: 8.2,
-      end: 14.7,
-      reason: '跨帧身份漂移',
-      english: 'Cross-frame identity drift',
+      start: 1.796,
+      end: 10.516,
+      reason: '口型与语音不同步',
+      english: 'Lip-sync mismatch',
       confidence: 0.89,
-      keyframes: ['/samples/18.jpg', '/samples/19.jpg', '/samples/20.jpg'],
+      keyframes: [
+        '/images/workflow-editor/fake_seg2/frame-03.jpg',
+        '/images/workflow-editor/fake_seg2/frame-09.jpg',
+        '/images/workflow-editor/fake_seg2/frame-14.jpg',
+      ],
       expertVotes: [
-        { type: 'texture' as const, name: '纹理专家', intensity: 0.4 },
-        { type: 'frequency' as const, name: '谱纹专家', intensity: 0.85 },
-        { type: 'style' as const, name: '风格专家', intensity: 0.6 },
-        { type: 'semantic' as const, name: '语义专家', intensity: 0.92 },
-        { type: 'lora' as const, name: '靶向专家', intensity: 0.75 },
+        { type: 'texture' as const,   name: '纹理专家', intensity: 0.45 },
+        { type: 'frequency' as const, name: '谱纹专家', intensity: 0.82 },
+        { type: 'style' as const,     name: '风格专家', intensity: 0.58 },
+        { type: 'semantic' as const,  name: '语义专家', intensity: 0.91 },
+        { type: 'lora' as const,      name: '靶向专家', intensity: 0.74 },
       ],
     },
     {
-      start: 21.0,
-      end: 24.5,
-      reason: '口型不同步',
-      english: 'Lip-sync mismatch',
-      confidence: 0.83,
-      keyframes: ['/samples/31.jpg', '/samples/32.jpg', '/samples/33.jpg'],
+      start: 11.9,
+      end: 12.78,
+      reason: '语音片段替换痕迹',
+      english: 'Audio splice artifact',
+      confidence: 0.79,
+      keyframes: [
+        '/images/workflow-editor/fake_seg2/frame-16.jpg',
+        '/images/workflow-editor/fake_seg2/frame-17.jpg',
+        '/images/workflow-editor/fake_seg2/frame-18.jpg',
+      ],
       expertVotes: [
-        { type: 'texture' as const, name: '纹理专家', intensity: 0.3 },
-        { type: 'frequency' as const, name: '谱纹专家', intensity: 0.6 },
-        { type: 'style' as const, name: '风格专家', intensity: 0.55 },
-        { type: 'semantic' as const, name: '语义专家', intensity: 0.78 },
-        { type: 'lora' as const, name: '靶向专家', intensity: 0.5 },
+        { type: 'texture' as const,   name: '纹理专家', intensity: 0.3 },
+        { type: 'frequency' as const, name: '谱纹专家', intensity: 0.72 },
+        { type: 'style' as const,     name: '风格专家', intensity: 0.48 },
+        { type: 'semantic' as const,  name: '语义专家', intensity: 0.65 },
+        { type: 'lora' as const,      name: '靶向专家', intensity: 0.55 },
       ],
     },
   ],
