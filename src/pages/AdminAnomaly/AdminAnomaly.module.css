@@ -335,3 +335,246 @@
 .submitBtn:hover {
   background: var(--accent);
 }
+
+.submitBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: var(--ink);
+}
+
+.radioSelected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ━━━ 提交后联动面板 ━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.postFeedback {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 4px 0 20px;
+}
+
+/* 确认徽章 */
+.feedbackBadge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.feedbackVerdict {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  border: 2px solid;
+  padding: 3px 14px;
+  transform: rotate(-3deg);
+  display: inline-block;
+  letter-spacing: 0.06em;
+}
+.feedbackVerdictFake {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.88);
+}
+.feedbackVerdictReal {
+  color: var(--real);
+  border-color: var(--real);
+  background: rgba(255,255,255,0.88);
+}
+.feedbackId {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+
+/* 分割线 */
+.feedbackDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+}
+.feedbackDivider::before,
+.feedbackDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* 动作卡片 */
+.feedbackAction {
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feedbackActionHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.feedbackIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.feedbackActionLabel {
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  color: var(--ink);
+  letter-spacing: 0.03em;
+}
+.feedbackActionEn {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-3);
+  letter-spacing: 0.12em;
+}
+
+.feedbackActionDesc {
+  font-size: 11px;
+  color: var(--ink-3);
+  line-height: 1.6;
+  border-left: 2px solid var(--rule);
+  padding-left: 8px;
+}
+
+/* 同源扩充行 */
+.feedbackExpandRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.feedbackExpandNum {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.feedbackExpandUnit {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.feedbackExpandDots {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.feedbackExpandDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.7;
+  display: block;
+}
+
+/* 专家训练队列 */
+.feedbackExpertRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.feedbackExpertName {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+.feedbackExpertDelta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+  margin-left: auto;
+}
+
+.feedbackExpertBarWrap {
+  position: relative;
+  height: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+.feedbackExpertBarBase {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: var(--ink-3);
+}
+.feedbackExpertBarAdd {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--accent);
+}
+.feedbackExpertBarLabel {
+  position: absolute;
+  top: -18px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* 操作链路 */
+.feedbackChain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border: 1px dashed var(--rule);
+  background: var(--surface-2);
+}
+.feedbackChainItem {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+.feedbackChainArrow {
+  color: var(--rule);
+  font-size: 11px;
+}
+.feedbackChainItemTarget {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+}
+
+/* 底部提交后状态 */
+.submittedFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.submittedHint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+.submittedProgress {
+  height: 2px;
+  background: var(--accent);
+  animation: submittedShrink 2.8s linear forwards;
+}
+@keyframes submittedShrink {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
