@@ -160,12 +160,20 @@
   letter-spacing: 0.05em;
 }
 
-/* ── 证据锚点快捷栏 ──────────────────────────── */
+/* ── 证据锚点快捷栏 + 方向二溯源面板 ────────────── */
 .anchorRow {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   flex-shrink: 0;
+  align-items: flex-start;  /* 让溯源面板向下展开 */
+}
+
+/* 每个 chip 的外层容器，用于相对定位溯源面板 */
+.anchorChipWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .anchorChip {
@@ -209,6 +217,105 @@
 .anchorDesc {
   color: var(--ink-2);
   font-size: 11px;
+}
+
+/* 溯源图标（chip 右侧小图标） */
+.anchorProvenanceIcon {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-left: 2px;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.anchorChipActive .anchorProvenanceIcon {
+  color: var(--accent);
+}
+
+/* ── 方向二：标注溯源展开面板 ───────────────────── */
+.provenancePanel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  min-width: 230px;
+  border: 1px solid var(--accent);
+  background: var(--surface);
+  box-shadow: 0 4px 20px rgba(200, 65, 46, 0.12);
+  pointer-events: none;   /* hover 状态由父级控制，面板不遮挡 */
+}
+
+.provenanceHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: var(--accent-soft);
+  border-bottom: 1px solid var(--accent);
+}
+
+.provenanceTag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  font-weight: var(--weight-medium);
+}
+
+.provenanceTagEn {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
+}
+
+.provenanceRows {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.provenanceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.provenanceRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.provenanceKey {
+  color: var(--ink-3);
+  font-size: 10px;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.provenanceVal {
+  color: var(--ink);
+  font-size: 11px;
+  text-align: right;
+}
+
+.provenanceValAccent {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.provenanceValMono {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
 }
 
 /* ── 操作按钮行 ─────────────────────────────── */

@@ -38,8 +38,18 @@ const marks = [
     desc: '塑料盆置于明火',
     appearAt: 5100,
     tooltip: '【全局语义违和】SGG提取三元组〈塑料盆, 在上方, 火〉。知识图谱计算语义距离 E_KG 极高，LLM输出逻辑违和度 0.90。',
-    chainIndex: 2,        // 关联语义链节点索引
+    chainIndex: 2,
     expertKeys: ['semantic', 'lora'],
+    // 方向二：标注溯源信息
+    provenance: {
+      annotationType: 'semantic',
+      annotationLabel: '语义级标注',
+      sampleCount: 342,
+      sampleType: 'local_edit',
+      sourceDataset: 'COCO/val2017',
+      sampleId: 'local_coco_street_000128',
+      trainedIn: '训练集 v3.1',
+    },
   },
   {
     id: 'M-02',
@@ -50,6 +60,15 @@ const marks = [
     tooltip: '【局部像素异常】该区域图像噪声梯度与全局分布完全断裂，大概率为生成模型局部重绘(Inpainting)强行插入的实体。',
     chainIndex: 1,
     expertKeys: ['texture', 'frequency'],
+    provenance: {
+      annotationType: 'texture',
+      annotationLabel: '区域级标注',
+      sampleCount: 218,
+      sampleType: 'local_edit',
+      sourceDataset: 'RAISE / OpenImages',
+      sampleId: 'raise_texture_000847',
+      trainedIn: '训练集 v3.1',
+    },
   },
   {
     id: 'M-03',
@@ -60,6 +79,15 @@ const marks = [
     tooltip: '【全局-局部一致性】空域专家通过多尺度特征提取，发现人物面部的高频残差所反映的光源方向，与环境主光源呈明显背离。',
     chainIndex: 2,
     expertKeys: ['texture', 'style'],
+    provenance: {
+      annotationType: 'style',
+      annotationLabel: '区域级标注',
+      sampleCount: 156,
+      sampleType: 'full_generation',
+      sourceDataset: 'FODB / ImageNet',
+      sampleId: 'fodb_lighting_000392',
+      trainedIn: '训练集 v2.8',
+    },
   },
 ];
 
@@ -778,24 +806,74 @@ export function DetectImage() {
               )}
             </div>
 
-            {/* 证据锚点快捷入口（图片下方，可 hover 联动） */}
+            {/* 证据锚点快捷入口（图片下方，hover 联动 + 方向二：溯源展开层） */}
             {(state === 'processing' || state === 'done') && (
               <div className={styles.anchorRow}>
                 {marks.map(mark => {
                   const isVisible = elapsed >= mark.appearAt;
                   const isActive = activeMarkId === mark.id;
                   return (
-                    <button
-                      key={mark.id}
-                      type="button"
-                      className={`${styles.anchorChip} ${isVisible ? styles.anchorChipVisible : ''} ${isActive ? styles.anchorChipActive : ''}`}
-                      onMouseEnter={() => isVisible && setActiveMarkId(mark.id)}
-                      onMouseLeave={() => isVisible && setActiveMarkId(null)}
-                      disabled={!isVisible}
-                    >
-                      <span className={styles.anchorId}>{mark.id}</span>
-                      <span className={styles.anchorDesc}>{mark.desc}</span>
-                    </button>
+                    <div key={mark.id} className={styles.anchorChipWrap}>
+                      <button
+                        type="button"
+                        className={`${styles.anchorChip} ${isVisible ? styles.anchorChipVisible : ''} ${isActive ? styles.anchorChipActive : ''}`}
+                        onMouseEnter={() => isVisible && setActiveMarkId(mark.id)}
+                        onMouseLeave={() => isVisible && setActiveMarkId(null)}
+                        disabled={!isVisible}
+                      >
+                        <span className={styles.anchorId}>{mark.id}</span>
+                        <span className={styles.anchorDesc}>{mark.desc}</span>
+                        {isVisible && (
+                          <span className={styles.anchorProvenanceIcon} title="查看标注溯源">⊕</span>
+                        )}
+                      </button>
+                      {/* 方向二：溯源展开层 — active 时显示 */}
+                      <AnimatePresence>
+                        {isActive && isVisible && (
+                          <motion.div
+                            className={styles.provenancePanel}
+                            initial={{ opacity: 0, y: -6, scaleY: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                            exit={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
+                            style={{ transformOrigin: 'top center' }}
+                          >
+                            <div className={styles.provenanceHeader}>
+                              <span className={styles.provenanceTag}>标注溯源</span>
+                              <span className={styles.provenanceTagEn}>ANNOTATION PROVENANCE</span>
+                            </div>
+                            <div className={styles.provenanceRows}>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>标注类型</span>
+                                <span className={styles.provenanceVal}>{mark.provenance.annotationLabel}</span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>训练依据</span>
+                                <span className={`${styles.provenanceVal} ${styles.provenanceValAccent}`}>
+                                  {mark.provenance.annotationType} 样本 × {mark.provenance.sampleCount}
+                                </span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>样本类型</span>
+                                <span className={styles.provenanceVal}>{mark.provenance.sampleType}</span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>来源数据集</span>
+                                <span className={styles.provenanceVal}>{mark.provenance.sourceDataset}</span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>样本 ID</span>
+                                <span className={`${styles.provenanceVal} ${styles.provenanceValMono}`}>{mark.provenance.sampleId}</span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>写入版本</span>
+                                <span className={styles.provenanceVal}>{mark.provenance.trainedIn}</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   );
                 })}
               </div>
