@@ -5,6 +5,7 @@ import { PageContainer } from '@/components/primitives';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
 import { VerdictCard } from '@/components/VerdictCard/VerdictCard';
 import { videoDemoFull } from '@/data/mocks';
+import { saveVideoReport } from '@/data/reportStore';
 import styles from './DetectVideo.module.css';
 
 const scanDuration = 7800;
@@ -393,7 +394,7 @@ export function DetectVideo() {
                     </p>
                   </div>
                   <div className={styles.verdictActions}>
-                    <Link className={styles.primaryBtn} to="/detect/report/video-demo">
+                    <Link className={styles.primaryBtn} to="/detect/report/video-demo" onClick={() => saveVideoReport()}>
                       <span>查看完整报告</span>
                       <span className={styles.btnArrow}>→</span>
                     </Link>

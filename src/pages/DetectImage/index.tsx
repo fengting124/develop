@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
 import { ForensicMark } from '@/components/ForensicMark/ForensicMark';
+import { saveImageReport } from '@/data/reportStore';
 import styles from './DetectImage.module.css';
 
 type ProcessState = 'idle' | 'processing' | 'done';
@@ -27,6 +28,11 @@ const logsData = [
 ];
 
 const totalDuration = 11000;
+
+function formatBytes(size: number) {
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+}
 
 // ─── 证据锚点（红框） ─────────────────────────────────────
 // 每个 mark 关联 chainIndex（语义链节点）和 expertKeys（激活的专家）
@@ -690,13 +696,19 @@ function RightPanel({
 export function DetectImage() {
   const [state, setState] = useState<ProcessState>('idle');
   const [imageSrc, setImageSrc] = useState(demoImage);
+  const [sourceName, setSourceName] = useState('demo-image.png');
+  const [sourceSize, setSourceSize] = useState('front-end sample');
+  const [dimensions, setDimensions] = useState('detecting');
   const [elapsed, setElapsed] = useState(0);
   const [activeMarkId, setActiveMarkId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  const startProcessing = (src = demoImage) => {
+  const startProcessing = (src = demoImage, meta?: { name?: string; size?: string }) => {
     setImageSrc(src);
+    setSourceName(meta?.name ?? 'demo-image.png');
+    setSourceSize(meta?.size ?? 'front-end sample');
+    setDimensions('detecting');
     setElapsed(0);
     setActiveMarkId(null);
     setState('processing');
@@ -715,7 +727,24 @@ export function DetectImage() {
 
   const handleFile = (file?: File) => {
     if (!file) return;
-    startProcessing(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => {
+      startProcessing(String(reader.result), {
+        name: file.name,
+        size: formatBytes(file.size),
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const openReport = () => {
+    const reportId = saveImageReport({
+      src: imageSrc,
+      sourceName,
+      sizeLabel: sourceSize,
+      dimensions,
+    });
+    navigate(`/detect/report/${reportId}`);
   };
 
   // 当 hover mark 时，同步切换图片上红框高亮 + 右侧联动
@@ -765,7 +794,15 @@ export function DetectImage() {
           {/* 左侧：图片画布 */}
           <div className={styles.canvasCol}>
             <div className={styles.imageWrap}>
-              <img src={imageSrc} alt="待核验样本" className={styles.subjectImage} />
+              <img
+                src={imageSrc}
+                alt="待核验样本"
+                className={styles.subjectImage}
+                onLoad={(event) => {
+                  const target = event.currentTarget;
+                  setDimensions(`${target.naturalWidth} x ${target.naturalHeight}`);
+                }}
+              />
 
               {/* 扫描线 */}
               {state === 'processing' && (
@@ -889,7 +926,7 @@ export function DetectImage() {
               >
                 <button
                   className={styles.reportBtn}
-                  onClick={() => navigate('/detect/report/demo')}
+                  onClick={openReport}
                 >
                   查看详细报告 →
                 </button>
