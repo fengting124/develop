@@ -12,6 +12,23 @@ export interface ReportEvidence {
   timeRange?: string;
 }
 
+export interface ReportSemanticNode {
+  index: string;
+  label: string;
+  english: string;
+  result: string;
+  danger?: string;
+}
+
+export interface ReportExpertNode {
+  key: string;
+  label: string;
+  english: string;
+  weight: number;
+  target?: boolean;
+  summary: string;
+}
+
 export interface DetectionReport {
   id: string;
   kind: ReportKind;
@@ -25,12 +42,82 @@ export interface DetectionReport {
   confidence: number;
   materialMeta: Array<[string, string]>;
   evidence: ReportEvidence[];
+  semanticChain?: ReportSemanticNode[];
+  expertNetwork?: ReportExpertNode[];
   timeline: Array<[string, string, string]>;
 }
 
 const STORAGE_PREFIX = 'develop-report:';
 const LATEST_IMAGE_ID = 'image-latest';
 const VIDEO_DEMO_ID = 'video-demo';
+
+const imageSemanticChain: ReportSemanticNode[] = [
+  {
+    index: '01',
+    label: '全局场景锚定',
+    english: 'Global Scene',
+    result: '视觉编码命中：农家厨房与烹饪场景，置信度 0.91。',
+  },
+  {
+    index: '02',
+    label: '局部实体解析',
+    english: 'Entity Parsing',
+    result: '识别人物、明火、盆碗、炒锅、青菜和墙面挂件。',
+    danger: '锁定语义离群点：塑料材质容器置于明火上方。',
+  },
+  {
+    index: '03',
+    label: '逻辑与常识校验',
+    english: 'Logic Validation',
+    result: '知识图谱给出〈塑料盆, 在上方, 明火〉语义距离 0.93。',
+    danger: '大模型评估：物理矛盾 0.90；面部光照反向 0.83。',
+  },
+  {
+    index: '04',
+    label: '证据融合与判决',
+    english: 'Evidence Fusion',
+    result: '三处异常区域触发告警，区域证据、语义链和专家网络共同支撑结论。',
+  },
+];
+
+const imageExpertNetwork: ReportExpertNode[] = [
+  {
+    key: 'texture',
+    label: '纹理专家',
+    english: 'Texture',
+    weight: 0.45,
+    summary: '负责局部纹理、边缘过渡和重绘痕迹检查，支撑 M-02 与 M-03。',
+  },
+  {
+    key: 'frequency',
+    label: '频域专家',
+    english: 'Frequency',
+    weight: 0.38,
+    summary: '负责 FFT 高频残差与周期噪声检查，主要支撑 M-03。',
+  },
+  {
+    key: 'style',
+    label: '风格专家',
+    english: 'Style',
+    weight: 0.42,
+    summary: '负责材质、笔触和光照风格一致性检查，主要支撑 M-02。',
+  },
+  {
+    key: 'semantic',
+    label: '语义专家',
+    english: 'Semantic',
+    weight: 0.78,
+    summary: '负责场景关系与常识约束，主要支撑 M-01 的物理矛盾判断。',
+  },
+  {
+    key: 'lora',
+    label: 'Nano Banana',
+    english: 'Targeted',
+    weight: 0.92,
+    target: true,
+    summary: '靶向专家命中生成模型残差，提升本次图像判定置信度。',
+  },
+];
 
 function pad(value: number) {
   return String(value).padStart(2, '0');
@@ -88,6 +175,8 @@ export function saveImageReport(input: {
       ['大小', input.sizeLabel || '前端样本'],
       ['送检', createdAt],
     ],
+    semanticChain: imageSemanticChain,
+    expertNetwork: imageExpertNetwork,
     evidence: imageDemo.marks.map((mark) => ({
       code: mark.label,
       name: mark.name,
@@ -171,6 +260,8 @@ function fallbackImageReport(): DetectionReport {
       ['尺寸', '1920 x 1080'],
       ['送检', 'Demo fallback'],
     ],
+    semanticChain: imageSemanticChain,
+    expertNetwork: imageExpertNetwork,
     evidence: imageDemo.marks.map((mark) => ({
       code: mark.label,
       name: mark.name,

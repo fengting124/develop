@@ -3,7 +3,13 @@ import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button, EdgeRule, Modal, PageContainer, useToast } from '@/components/primitives';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
-import { readReport, type DetectionReport, type ReportEvidence } from '@/data/reportStore';
+import {
+  readReport,
+  type DetectionReport,
+  type ReportEvidence,
+  type ReportExpertNode,
+  type ReportSemanticNode,
+} from '@/data/reportStore';
 import styles from './Report.module.css';
 
 function DecodedText({ text, duration = 1200 }: { text: string; duration?: number }) {
@@ -85,6 +91,92 @@ function MaterialPreview({ report }: { report: DetectionReport }) {
   }
 
   return <img src={report.sourceSrc} className={styles.thumb} alt={report.sourceName} />;
+}
+
+function SemanticChainSection({ nodes }: { nodes: ReportSemanticNode[] }) {
+  return (
+    <section className={styles.dashboardSection}>
+      <h2>语义链</h2>
+      <div className={styles.chainList}>
+        {nodes.map((node) => (
+          <motion.article
+            key={node.index}
+            className={styles.chainCard}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className={styles.chainHead}>
+              <span className={styles.chainIndex}>{node.index}</span>
+              <strong>{node.label}</strong>
+              <em>{node.english}</em>
+            </div>
+            <p>{node.result}</p>
+            {node.danger ? <small>{node.danger}</small> : null}
+          </motion.article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ExpertNetworkSection({ experts }: { experts: ReportExpertNode[] }) {
+  const points = experts.map((expert, index) => {
+    const angle = -Math.PI / 2 + (index / experts.length) * Math.PI * 2;
+    const radius = 42 * expert.weight;
+    return {
+      expert,
+      x: 50 + Math.cos(angle) * radius,
+      y: 50 + Math.sin(angle) * radius,
+      axisX: 50 + Math.cos(angle) * 42,
+      axisY: 50 + Math.sin(angle) * 42,
+    };
+  });
+  const polygon = points.map((point) => `${point.x},${point.y}`).join(' ');
+
+  return (
+    <section className={styles.dashboardSection}>
+      <h2>专家网络</h2>
+      <div className={styles.expertSummary}>
+        <svg viewBox="0 0 100 100" className={styles.expertRadar} aria-label="专家网络贡献雷达图">
+          {[0.35, 0.68, 1].map((scale) => (
+            <polygon
+              key={scale}
+              points={points.map((point) => `${50 + (point.axisX - 50) * scale},${50 + (point.axisY - 50) * scale}`).join(' ')}
+              className={styles.radarGrid}
+            />
+          ))}
+          {points.map((point) => (
+            <line key={point.expert.key} x1="50" y1="50" x2={point.axisX} y2={point.axisY} className={styles.radarAxis} />
+          ))}
+          <polygon points={polygon} className={styles.radarFill} />
+          {points.map((point) => (
+            <circle
+              key={point.expert.key}
+              cx={point.x}
+              cy={point.y}
+              r={point.expert.target ? 3 : 2.2}
+              className={point.expert.target ? styles.radarPointTarget : styles.radarPoint}
+            />
+          ))}
+        </svg>
+        <div className={styles.expertRows}>
+          {experts.map((expert) => (
+            <article key={expert.key} className={expert.target ? styles.expertRowTarget : styles.expertRow}>
+              <div className={styles.expertRowHead}>
+                <strong>{expert.label}</strong>
+                <span>{Math.round(expert.weight * 100)}%</span>
+              </div>
+              <div className={styles.expertBar}>
+                <span style={{ width: `${Math.round(expert.weight * 100)}%` }} />
+              </div>
+              <p>{expert.summary}</p>
+              <em>{expert.english}</em>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export function Report() {
@@ -180,6 +272,14 @@ export function Report() {
           </div>
 
           <div className={styles.rightPanel}>
+            {report.kind === 'image' && report.semanticChain?.length ? (
+              <SemanticChainSection nodes={report.semanticChain} />
+            ) : null}
+
+            {report.kind === 'image' && report.expertNetwork?.length ? (
+              <ExpertNetworkSection experts={report.expertNetwork} />
+            ) : null}
+
             <section className={styles.dashboardSection}>
               <h2>关键证据</h2>
               <div className={styles.evidenceList}>
