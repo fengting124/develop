@@ -4,6 +4,7 @@ import { EdgeRule } from '@/components/primitives';
 import { GalleryWall } from './GalleryWall';
 import { HeroTitle } from './HeroTitle';
 import { EntryCards } from './EntryCards';
+import { AboutOverlay } from './AboutOverlay';
 import styles from './Home.module.css';
 
 type Phase = 'intro' | 'end';
@@ -11,6 +12,7 @@ type Phase = 'intro' | 'end';
 export function Home() {
   const [phase, setPhase] = useState<Phase>('intro');
   const [imagesReady, setImagesReady] = useState(false);
+  const [overlayOpen, setOverlayOpen] = useState(false);
 
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
@@ -77,6 +79,18 @@ export function Home() {
           <div className={styles.hero}>
             <HeroTitle active={phase === 'end'} />
             <EntryCards active={phase === 'end'} />
+            {/* 功能导览触发按钮 — 在入口卡出现后 0.4s 渐显 */}
+            <motion.button
+              className={styles.overviewBtn}
+              onClick={() => setOverlayOpen(true)}
+              initial={{ opacity: 0 }}
+              animate={phase === 'end' ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ duration: 0.4, delay: phase === 'end' ? 1.5 : 0, ease: 'easeOut' }}
+              type="button"
+              aria-label="打开功能导览"
+            >
+              ──{'  '}功能导览{'  '}OVERVIEW{'  '}──
+            </motion.button>
           </div>
           <EdgeRule
             position="bottom"
@@ -85,6 +99,9 @@ export function Home() {
           />
         </section>
       </motion.div>
+
+      {/* 导览覆盖层放在旋转 div 外部，避免 3D perspective 传播 */}
+      <AboutOverlay isOpen={overlayOpen} onClose={() => setOverlayOpen(false)} />
     </motion.main>
   );
 }

@@ -397,16 +397,17 @@ function ZoneDivider() {
   );
 }
 
-function ScanLine({ scanTime, duration }: { scanTime: number; duration: number }) {
+function ScanLine({ scanTime, duration, inSegment }: { scanTime: number; duration: number; inSegment: boolean }) {
   return (
     <div className={styles.scanLine} style={{ left: `calc(188px + (100% - 236px) * ${scanTime / duration})` }}>
-      <span className={styles.scanTimeBadge}>{formatTime(scanTime)}</span>
-      <span className={styles.scanLineBody} />
+      <span className={`${styles.scanTimeBadge} ${inSegment ? styles.scanTimeBadgeAlert : ''}`}>{formatTime(scanTime)}</span>
+      <span className={`${styles.scanLineBody} ${inSegment ? styles.scanLineBodyAlert : ''}`} />
     </div>
   );
 }
 
 function ShowcaseStage({ data, scanTime }: { data: ShowcaseData; scanTime: number }) {
+  const currentSegment = activeSegment(scanTime, data.segments);
   return (
     <motion.main
       key={data.key}
@@ -448,12 +449,42 @@ function ShowcaseStage({ data, scanTime }: { data: ShowcaseData; scanTime: numbe
           </TrackRow>
         </div>
       )}
-      <ScanLine scanTime={scanTime} duration={data.duration} />
+      <ScanLine scanTime={scanTime} duration={data.duration} inSegment={!!currentSegment} />
+      {currentSegment && (
+        <div className={styles.syncWarning}>
+          <span className={styles.syncWarningIcon}>!</span>
+          SYNC WARNING: MANIPULATION DETECTED
+        </div>
+      )}
     </motion.main>
   );
 }
 
-function ShowcaseFooter({ scanTime, duration, segment, isPlaying, onPlayToggle, onSeek }: { scanTime: number; duration: number; segment?: FakeSegment; isPlaying: boolean; onPlayToggle: () => void; onSeek: (time: number) => void }) {
+function ShowcaseFooter({ scanTime, duration, segment, isPlaying, onPlayToggle, onSeek, versionKey }: { scanTime: number; duration: number; segment?: FakeSegment; isPlaying: boolean; onPlayToggle: () => void; onSeek: (time: number) => void; versionKey: VersionKey }) {
+  const [showJson, setShowJson] = useState(false);
+
+  const annotationLevels = [
+    { label: '视频级', en: 'Video', active: true },
+    { label: '片段级', en: 'Segment', active: !!segment },
+    { label: '内容级', en: 'Content', active: versionKey !== 'real' },
+    { label: '过程级', en: 'Process', active: versionKey !== 'real' },
+  ];
+
+  const jsonPreview = versionKey === 'real' ? `{
+  "sample_id": "real_video_001",
+  "is_fake": 0,
+  "type": "original",
+  "duration": ${duration.toFixed(3)}
+}` : `{
+  "sample_id": "fake_${versionKey}_001",
+  "is_fake": 1,
+  "type": "${versionKey}",
+  "duration": ${duration.toFixed(3)},
+  "segments": ${JSON.stringify(versionSegments[versionKey].map(s => ({ start: s.start, end: s.end })))},
+  "model": "sonic_v2",
+  "quality_status": "approved"
+}`;
+
   return (
     <footer className={styles.footer}>
       <div className={styles.footerInfo}>
@@ -471,11 +502,47 @@ function ShowcaseFooter({ scanTime, duration, segment, isPlaying, onPlayToggle, 
           </>
         ) : null}
       </div>
+
+      {/* 标注层级指示 */}
+      <div className={styles.annotationLevels}>
+        {annotationLevels.map(level => (
+          <span
+            key={level.en}
+            className={`${styles.annotationLevelBadge} ${level.active ? styles.annotationLevelActive : ''}`}
+          >
+            <span className={styles.annotationLevelDot} />
+            <span>{level.label}</span>
+          </span>
+        ))}
+      </div>
+
       <div className={styles.footerControls}>
+        {/* JSON 预览按钮 */}
+        <button
+          className={`${styles.controlBtn} ${showJson ? styles.controlBtnActive : ''}`}
+          type="button"
+          onClick={() => setShowJson(v => !v)}
+          title="查看 JSON 标注"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 3h2v2H5v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4h2v2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0-2-2v-2a2 2 0 0 0 2-2V5a2 2 0 0 1 2-2m14 0a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2v2a2 2 0 0 0-2 2v3a2 2 0 0 1-2 2h-2v-2h2v-4a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5h-2V3h2z" />
+          </svg>
+        </button>
         <button className={styles.controlBtn} type="button" onClick={onPlayToggle}>{isPlaying ? <PauseIcon /> : <PlayIcon />}</button>
         <button className={styles.controlBtn} type="button" onClick={() => onSeek(0)}><RewindIcon /></button>
         <span className={styles.controlLabel}>{isPlaying ? '播放中' : '已暂停'} · {Math.round((scanTime / duration) * 100)}%</span>
       </div>
+
+      {/* JSON 预览面板 */}
+      {showJson && (
+        <div className={styles.jsonPreviewPanel}>
+          <div className={styles.jsonPreviewHeader}>
+            <span className={styles.jsonPreviewTitle}>sample_annotation.json</span>
+            <button type="button" className={styles.jsonPreviewClose} onClick={() => setShowJson(false)}>×</button>
+          </div>
+          <pre className={styles.jsonPreviewBody}>{jsonPreview}</pre>
+        </div>
+      )}
     </footer>
   );
 }
@@ -494,7 +561,7 @@ export function VideoShowcase() {
     <div className={styles.showcase}>
       <ShowcaseHeader selectedVersion={version} onVersionChange={changeVersion} />
       <ShowcaseStage data={data} scanTime={scan.scanTime} />
-      <ShowcaseFooter scanTime={scan.scanTime} duration={data.duration} segment={segment} isPlaying={scan.isPlaying} onPlayToggle={scan.togglePlay} onSeek={scan.seek} />
+      <ShowcaseFooter scanTime={scan.scanTime} duration={data.duration} segment={segment} isPlaying={scan.isPlaying} onPlayToggle={scan.togglePlay} onSeek={scan.seek} versionKey={version} />
     </div>
   );
 }

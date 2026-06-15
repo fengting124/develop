@@ -12,8 +12,15 @@ const scanDuration = 7800;
 const stepEnds = [1500, 2300, 5500, 6700, 7500];
 const windowDelays = [1600, 1700, 1800, 1900, 2000, 2100];
 const candidateDelays = [2700, 3000, 3500, 4000, 4400, 4700, 5100];
-const rangeDelays = [6000, 6300];
-const evidenceDelays = [6800, 7100];
+// 新视频只有 1 段伪造区间
+const rangeDelays = [6000];
+const evidenceDelays = [6800];
+
+// 波形可视化：32 根柱，对应 fake_seg1s__ 的音频谱纹数据
+// 真实段 bars 0-4 & bars 15-31（低振幅）；伪造段 bars 5-14（高振幅+异常）
+const WAVEFORM_BARS = 32;
+const FAKE_BAR_START = Math.floor(1.837 / (videoDemoFull.duration / WAVEFORM_BARS)); // ≈ 5
+const FAKE_BAR_END   = Math.ceil(5.277  / (videoDemoFull.duration / WAVEFORM_BARS)); // ≈ 14
 
 type ExpertVote = (typeof videoDemoFull.fakeRanges)[number]['expertVotes'][number];
 
@@ -135,6 +142,15 @@ function FragmentEvidenceCard({
   active: boolean;
   onHover: (hovered: boolean) => void;
 }) {
+  // ─ 转录高亮：切分 fake words ─
+  const { fullTranscript: transcript, fakeWords } = range;
+  const fakeIdx = transcript.indexOf(fakeWords);
+  const transcriptParts = fakeIdx >= 0 ? [
+    { text: transcript.slice(0, fakeIdx),                 isFake: false },
+    { text: fakeWords,                                     isFake: true  },
+    { text: transcript.slice(fakeIdx + fakeWords.length), isFake: false },
+  ] : [{ text: transcript, isFake: false }];
+
   return (
     <motion.article
       className={`${styles.fragmentCard} ${active ? styles.fragmentCardActive : ''}`}
@@ -144,6 +160,7 @@ function FragmentEvidenceCard({
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
     >
+      {/* ── 头部：时间段 + 修改类型徽章 ── */}
       <div className={styles.fragmentLeft}>
         <span className={styles.fragmentIndex}>E-{String(index + 1).padStart(2, '0')}</span>
         <div className={styles.fragmentTime}>
@@ -152,20 +169,64 @@ function FragmentEvidenceCard({
           <span>{formatTime(range.end)}</span>
         </div>
         <p className={styles.fragmentDuration}>{(range.end - range.start).toFixed(1)}s</p>
+        <span className={styles.modifyTypeBadge}>⧐ {range.modifyType.toUpperCase()}</span>
       </div>
 
-      <div className={styles.fragmentKeyframes}>
-        <p className={styles.keyframesLabel}>关键证据帧</p>
-        <div className={styles.keyframesRow}>
-          {range.keyframes.map((src, frameIndex) => (
-            <div key={src} className={styles.keyframeBox}>
-              <img src={src} alt="" />
-              <span className={styles.keyframeIdx}>K-{frameIndex + 1}</span>
-            </div>
-          ))}
+      {/* ── 转录高亮面板 ── */}
+      <div className={styles.transcriptPanel}>
+        <div className={styles.transcriptPanelHeader}>
+          <span className={styles.transcriptLabel}>全文转录 ─ TRANSCRIPT</span>
+          <span className={styles.transcriptLang}>EN</span>
+        </div>
+        <p className={styles.transcriptText}>
+          {transcriptParts.map((part, i) =>
+            part.isFake ? (
+              <mark key={i} className={styles.transcriptFake}>
+                <span className={styles.transcriptFakeTag}>FAKE</span>
+                {part.text}
+              </mark>
+            ) : (
+              <span key={i} className={styles.transcriptNormal}>{part.text}</span>
+            )
+          )}
+        </p>
+        <div className={styles.transcriptFooter}>
+          <span className={styles.transcriptNote}>
+            ⚠ 替换片段：&ldquo;{fakeWords}&rdquo;
+          </span>
         </div>
       </div>
 
+      {/* ── 谱纹异常波形可视化 ── */}
+      <div className={styles.waveformPanel}>
+        <div className={styles.waveformHeader}>
+          <span className={styles.waveformLabel}>谱纹分析 ─ SPECTRUM</span>
+          <span className={styles.waveformBadge}>FREQ ANOMALY</span>
+        </div>
+        <div className={styles.waveformBars} role="img" aria-label="音频谱纹波形，红色段为伪造区间">
+          {Array.from({ length: WAVEFORM_BARS }, (_, i) => {
+            const isFake = i >= FAKE_BAR_START && i < FAKE_BAR_END;
+            const seed = (i * 7 + 11) % 13;
+            const height = isFake ? 55 + (seed * 30) / 13 : 14 + (seed * 26) / 13;
+            return (
+              <div
+                key={i}
+                className={`${styles.waveformBar} ${isFake ? styles.waveformBarFake : styles.waveformBarReal}`}
+                style={{ height: `${Math.round(height)}%` }}
+              />
+            );
+          })}
+        </div>
+        <div className={styles.waveformScale}>
+          <span>0:00</span>
+          <span className={styles.waveformScaleFake}>
+            {formatTime(range.start)} ─ {formatTime(range.end)}
+          </span>
+          <span>{formatTime(videoDemoFull.duration)}</span>
+        </div>
+      </div>
+
+      {/* ── 底部：判断原因 + 专家共识 + 置信度 ── */}
       <div className={styles.fragmentRight}>
         <p className={styles.fragmentReason}>
           <span className={styles.reasonDash}>─</span>
@@ -242,7 +303,7 @@ export function DetectVideo() {
                 <div className={styles.videoMetaLeft}>
                   <span className={styles.metaLabel}>送检材料</span>
                   <span className={styles.metaDash}>─</span>
-                  <span className={styles.metaValue}>VIDEO · 13s · 1280×720 · FAKE_SEG2</span>
+                  <span className={styles.metaValue}>AUDIO/VIDEO · 11.7s · 30fps · FAKE_SEG1S</span>
                 </div>
                 <div className={styles.videoMetaRight}>
                   <span className={styles.metaPhase}>{phaseLabel(elapsed, done)}</span>
@@ -252,7 +313,7 @@ export function DetectVideo() {
                 <video
                   ref={videoRef}
                   src={videoDemoFull.src}
-                  poster="/images/workflow-editor/fake_seg2/frame-01.jpg"
+                  poster="/samples/frames/frame-01.jpg"
                   muted
                   loop
                   playsInline
@@ -274,7 +335,7 @@ export function DetectVideo() {
                     {isWarning && (
                       <div className={styles.warningAlert}>
                         <span className={styles.warningIcon}>!</span>
-                        <span>SYNC WARNING: MANIPULATION DETECTED</span>
+                        <span>AUDIO ANOMALY · VOICE REPLACEMENT DETECTED</span>
                       </div>
                     )}
                     <div className={styles.hudCornerTopLeft} />
@@ -326,7 +387,7 @@ export function DetectVideo() {
 
               <div className={styles.timelineContainer}>
                 <div className={styles.ticks}>
-                  {[0, 8, 16, 24, 30].map((tick) => <span key={tick}>{formatTime(tick)}</span>)}
+                  {[0, 3, 6, 9, 12].map((tick) => <span key={tick}>{formatTime(tick)}</span>)}
                 </div>
                 <div className={styles.timelineMain}>
                   {revealedRanges.map((range, index) => (
@@ -389,8 +450,10 @@ export function DetectVideo() {
                       <span>系统判断</span>
                     </p>
                     <p className={styles.summaryText}>
-                      在这段 30 秒的视频中，共发现 <span className={styles.summaryNum}>{videoDemoFull.fakeRanges.length}</span> 个高风险伪造时段，
-                      总占比约 <span className={styles.summaryNum}>{fakePercent}%</span>。多位专家在这些时段达成共识，建议判定为 AI 生成内容。
+                      在这段 <span className={styles.summaryNum}>{videoDemoFull.duration.toFixed(1)}</span> 秒的视频中，
+                      共发现 <span className={styles.summaryNum}>{videoDemoFull.fakeRanges.length}</span> 个高风险音频篡改时段，
+                      占比约 <span className={styles.summaryNum}>{fakePercent}%</span>。
+                      谱纹专家与靶向专家于该时段达成最高共识，检出音频内容克隆替换特征，建议判定为 AI 合成内容。
                     </p>
                   </div>
                   <div className={styles.verdictActions}>

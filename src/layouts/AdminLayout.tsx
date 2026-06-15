@@ -1,7 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import styles from './AdminLayout.module.css';
 import { GlobalHUD } from '@/components/GlobalHUD';
-import { BootSequence } from '@/components/BootSequence';
 
 function AdminIcon({ type }: { type: 'overview' | 'pipeline' | 'experts' | 'anomaly' }) {
   return (
@@ -35,7 +34,6 @@ const nav = [
 export function AdminLayout() {
   return (
     <>
-      <BootSequence />
       <GlobalHUD />
       <div className={styles.layout}>
         <aside className={styles.sidebar}>

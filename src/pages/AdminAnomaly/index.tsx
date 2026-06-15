@@ -45,7 +45,6 @@ function PostSubmitFeedback({ sampleId, judgement }: { sampleId: string; judgeme
 
   // 专家进度从初始值动画到 +addedProgress
   useEffect(() => {
-    const target = linkedActions.expertQueue.initialProgress + linkedActions.expertQueue.addedProgress;
     let start: number | null = null;
     const duration = 1200;
     const tick = (ts: number) => {
@@ -335,7 +334,7 @@ export function AdminAnomaly() {
                     type="button"
                     disabled={!judgement}
                   >
-                    <span>提交并触发同源样本扩充</span>
+                    <span>{judgement === 'fake' ? '确认伪造并提取为 LoRA 训练样本' : '提交复核意见'}</span>
                     <span>→</span>
                   </button>
                 ) : (

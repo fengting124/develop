@@ -215,9 +215,9 @@
 
 .frameThumb {
   position: relative;
-  width: 48px;
+  flex: 1;          /* 自动撑满帧带宽度，不再固定 48px */
+  min-width: 0;
   height: 32px;
-  flex: 0 0 auto;
   border: 1px solid transparent;
   background: var(--surface-2);
   transition: transform 300ms ease-out, border-color 300ms ease-out, box-shadow 300ms ease-out;
@@ -555,6 +555,201 @@
   font-weight: var(--weight-medium);
   letter-spacing: 0.05em;
   padding: 1px 4px;
+}
+
+/* ── 修改类型徽章 ── */
+.modifyTypeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: rgba(200, 65, 46, 0.09);
+  border: 1px solid rgba(200, 65, 46, 0.28);
+  border-radius: 2px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* ── 转录高亮面板 ── */
+.transcriptPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--canvas);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.transcriptPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transcriptLabel {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.transcriptLang {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  border: 1px solid var(--rule);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+.transcriptText {
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+.transcriptNormal {
+  color: var(--ink-2);
+}
+
+.transcriptFake {
+  display: inline;
+  position: relative;
+  background: rgba(200, 65, 46, 0.10);
+  border-bottom: 2px solid var(--accent);
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  padding: 0 3px 1px;
+  border-radius: 2px 2px 0 0;
+  margin: 0 1px;
+  /* 去掉 mark 默认样式 */
+  text-decoration: none;
+}
+
+.transcriptFakeTag {
+  display: inline-block;
+  margin-right: 4px;
+  padding: 0 4px;
+  background: var(--accent);
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border-radius: 1px;
+  vertical-align: middle;
+  line-height: 14px;
+}
+
+.transcriptFooter {
+  margin-top: 2px;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--rule);
+}
+
+.transcriptNote {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+}
+
+/* ── 谱纹异常波形 ── */
+.waveformPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.waveformHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.waveformLabel {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.waveformBadge {
+  padding: 2px 7px;
+  background: rgba(200, 65, 46, 0.1);
+  border: 1px solid rgba(200, 65, 46, 0.3);
+  border-radius: 2px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.14em;
+  animation: waveformPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes waveformPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+.waveformBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 48px;
+  width: 100%;
+  padding: 0 2px;
+  background: var(--canvas);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.waveformBar {
+  flex: 1;
+  min-width: 2px;
+  border-radius: 1px 1px 0 0;
+  transition: height 0.5s ease-out;
+}
+
+.waveformBarReal {
+  background: var(--ink-3);
+  opacity: 0.35;
+}
+
+.waveformBarFake {
+  background: var(--accent);
+  opacity: 0.8;
+  box-shadow: 0 0 4px rgba(200, 65, 46, 0.5);
+}
+
+.waveformScale {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  padding: 0 2px;
+}
+
+.waveformScaleFake {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  padding: 1px 6px;
+  background: rgba(200, 65, 46, 0.08);
+  border-radius: 2px;
 }
 
 .fragmentRight {

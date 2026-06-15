@@ -1,0 +1,526 @@
+/* ═══════════════════════════════════════════════════
+   AboutOverlay — 功能导览全屏覆盖层
+   三段结构：GOVERN 治理侧 → DETECT 鉴别侧 → GOVERN 闭环反馈
+   风格：1px rule，serif+mono，0 radius，暗背景高对比
+═══════════════════════════════════════════════════ */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--ink-deep);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── 接触印相纸纹理 ── */
+.texture {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  pointer-events: none;
+}
+
+.texture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.045;
+  filter: grayscale(100%);
+  user-select: none;
+}
+
+/* ── 可滚动内容区 ── */
+.scrollBody {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6) var(--space-8);
+}
+
+.scrollBody::-webkit-scrollbar { width: 3px; }
+.scrollBody::-webkit-scrollbar-track { background: transparent; }
+.scrollBody::-webkit-scrollbar-thumb { background: rgba(216, 209, 192, 0.2); }
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid rgba(216, 209, 192, 0.18);
+  margin-bottom: var(--space-8);
+}
+
+.headerBrand {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-variant: small-caps;
+  letter-spacing: 0.2em;
+  color: rgba(248, 246, 242, 0.9);
+}
+
+.headerVersion {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  color: rgba(216, 209, 192, 0.38);
+  margin-right: auto;
+}
+
+.closeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  cursor: pointer;
+  color: rgba(216, 209, 192, 0.5);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid rgba(216, 209, 192, 0.18);
+  transition: color 180ms ease-out, border-color 180ms ease-out;
+}
+
+.closeBtn:hover {
+  color: var(--accent);
+  border-color: rgba(200, 65, 46, 0.4);
+}
+
+.closeBtn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.escHint { font-size: 9px; letter-spacing: 0.1em; opacity: 0.7; }
+
+/* ── Hero ── */
+.heroSection {
+  text-align: center;
+  padding: var(--space-7) 0 var(--space-8);
+  border-bottom: 1px solid rgba(216, 209, 192, 0.12);
+  margin-bottom: var(--space-7);
+}
+
+.heroHeadline {
+  font-family: var(--font-serif);
+  font-size: clamp(18px, 2.6vw, 34px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: rgba(248, 246, 242, 0.95);
+  margin: 0 0 var(--space-4) 0;
+  line-height: 1.4;
+}
+
+.heroSub {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--text-base);
+  color: rgba(216, 209, 192, 0.5);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+/* ── 系统闭环流程容器 ── */
+.systemFlow {
+  max-width: 760px;
+  margin: 0 auto var(--space-8);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═══ 路径分区标题 ═══ */
+.sectionBanner {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: var(--space-5) 0 var(--space-4);
+  background: rgba(255, 253, 250, 0.05);
+  border: 1px solid rgba(216, 209, 192, 0.18);
+}
+
+.sectionBannerDetect {
+  background: rgba(200, 65, 46, 0.06);
+  border-color: rgba(200, 65, 46, 0.28);
+}
+
+/* 左侧彩条 */
+.sectionBannerBar {
+  width: 4px;
+  flex-shrink: 0;
+  background: rgba(216, 209, 192, 0.5);
+  align-self: stretch;
+}
+
+.sectionBannerDetect .sectionBannerBar {
+  background: var(--accent);
+  opacity: 0.85;
+}
+
+.sectionBannerBody {
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sectionBannerRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.sectionBannerSide {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: rgba(216, 209, 192, 0.5);
+}
+
+.sectionBannerDetect .sectionBannerSide {
+  color: rgba(200, 65, 46, 0.8);
+}
+
+.sectionBannerCn {
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 400;
+  color: rgba(248, 246, 242, 0.95);
+  letter-spacing: 0.05em;
+}
+
+.sectionBannerSub {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: rgba(216, 209, 192, 0.6);
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+/* ═══ 流程卡片 ═══ */
+.flowCard {
+  position: relative;
+  border: 1px solid rgba(216, 209, 192, 0.25);
+  background: rgba(255, 253, 250, 0.05);
+  overflow: hidden;
+  transition: background 200ms ease-out;
+}
+
+.flowCard:hover {
+  background: rgba(248, 246, 242, 0.09);
+}
+
+.flowCard::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 0; height: 1px;
+  background: var(--accent);
+  transition: width 300ms ease-out;
+}
+
+.flowCard:hover::after { width: 100%; }
+
+.flowCardDetect {
+  border-color: rgba(200, 65, 46, 0.38);
+  background: rgba(200, 65, 46, 0.05);
+}
+
+.flowCardDetect:hover {
+  background: rgba(200, 65, 46, 0.09);
+}
+
+/* 卡片内部 Link 撑满整张卡 */
+.cardLink {
+  display: block;
+  padding: var(--space-6);
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── 卡片头部：图标 + 标题组 + 箭头 ── */
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.cardIconBox {
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(216, 209, 192, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: rgba(216, 209, 192, 0.6);
+  transition: color 200ms ease-out, border-color 200ms ease-out;
+}
+
+.flowCardDetect .cardIconBox {
+  border-color: rgba(200, 65, 46, 0.3);
+  color: rgba(200, 65, 46, 0.7);
+}
+
+.flowDualCard .cardIconBox {
+  border-color: rgba(200, 65, 46, 0.3);
+  color: rgba(200, 65, 46, 0.7);
+}
+
+.flowCard:hover .cardIconBox {
+  color: rgba(248, 246, 242, 0.85);
+  border-color: rgba(248, 246, 242, 0.35);
+}
+
+.flowDualCard:hover .cardIconBox {
+  color: rgba(248, 246, 242, 0.85);
+  border-color: rgba(248, 246, 242, 0.35);
+}
+
+.cardIconBox svg { width: 21px; height: 21px; }
+
+.cardTitleGroup {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cardStep {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: rgba(216, 209, 192, 0.38);
+}
+
+/* GOVERN / DETECT 标签 */
+.cardBadge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  padding: 2px 8px;
+  border: 1px solid rgba(216, 209, 192, 0.22);
+  color: rgba(216, 209, 192, 0.55);
+  flex-shrink: 0;
+}
+
+.cardBadgeDetect {
+  border-color: rgba(200, 65, 46, 0.4);
+  color: rgba(200, 65, 46, 0.85);
+}
+
+/* 卡片中文大标题 */
+.cardCn {
+  font-family: var(--font-serif);
+  font-size: clamp(19px, 2.2vw, 26px);
+  font-weight: 400;
+  color: rgba(248, 246, 242, 0.97);
+  margin: 0;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.cardEn {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(216, 209, 192, 0.35);
+}
+
+.cardEnter {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: rgba(200, 65, 46, 0.5);
+  flex-shrink: 0;
+  margin-top: 5px;
+  display: inline-block;
+  transition: color 150ms ease-out, transform 150ms ease-out;
+}
+
+.flowCard:hover .cardEnter,
+.flowDualCard:hover .cardEnter {
+  color: var(--accent);
+  transform: translateX(4px);
+}
+
+/* 卡片描述 */
+.cardDesc {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.75;
+  color: rgba(222, 216, 202, 0.88);
+  margin: 0 0 var(--space-4) 0;
+}
+
+/* 细节列表 */
+.cardBullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cardBullets li {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(216, 209, 192, 0.6);
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.55;
+}
+
+.cardBullets li::before {
+  content: '·';
+  position: absolute;
+  left: 2px;
+  color: rgba(200, 65, 46, 0.5);
+}
+
+/* ═══ 节点间连接线 ═══ */
+.connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2) 0;
+  gap: 4px;
+}
+
+.connectorLine {
+  display: block;
+  width: 1px;
+  height: 24px;
+  background: rgba(216, 209, 192, 0.2);
+}
+
+.connectorLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+  color: rgba(216, 209, 192, 0.72);
+  text-align: center;
+  padding: 1px var(--space-3);
+}
+
+.connectorArrow {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: rgba(216, 209, 192, 0.3);
+}
+
+/* 回路连接线 */
+.connectorLoop .connectorLabel {
+  color: rgba(200, 65, 46, 0.65);
+}
+
+.connectorLoopArrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.08em;
+  color: rgba(200, 65, 46, 0.7);
+  text-align: center;
+}
+
+/* ═══ 双列检测节点（图像 | 视频）═══ */
+.flowDual {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  border: 1px solid rgba(200, 65, 46, 0.38);
+  background: rgba(200, 65, 46, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.flowDualDivider {
+  background: rgba(200, 65, 46, 0.2);
+  align-self: stretch;
+}
+
+.flowDualCard {
+  display: block;
+  padding: var(--space-6);
+  color: inherit;
+  text-decoration: none;
+  background: transparent;
+  transition: background 200ms ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.flowDualCard:hover {
+  background: rgba(200, 65, 46, 0.08);
+}
+
+.flowDualCard::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 0; height: 1px;
+  background: var(--accent);
+  transition: width 300ms ease-out;
+}
+
+.flowDualCard:hover::after { width: 100%; }
+
+/* ── Footer CTA ── */
+.overlayFooter {
+  padding: var(--space-8) 0 var(--space-7);
+  text-align: center;
+  border-top: 1px solid rgba(216, 209, 192, 0.12);
+}
+
+.ctaLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.2em;
+  color: rgba(248, 246, 242, 0.55);
+  text-decoration: none;
+  transition: color 200ms ease-out;
+}
+
+.ctaLink:hover { color: var(--accent); }
+
+.ctaArrow {
+  display: inline-block;
+  transition: transform 200ms ease-out;
+}
+
+.ctaLink:hover .ctaArrow { transform: translateX(4px); }
+
+/* ── 响应式 ── */
+@media (max-width: 860px) {
+  .scrollBody { padding: var(--space-5); }
+  .cardLink { padding: var(--space-5); }
+  .flowDualCard { padding: var(--space-5); }
+}
+
+@media (max-width: 640px) {
+  .flowDual {
+    grid-template-columns: 1fr;
+  }
+  .flowDualDivider {
+    height: 1px;
+    width: 100%;
+    align-self: auto;
+  }
+  .heroHeadline { font-size: clamp(16px, 5vw, 22px); }
+  .sectionBannerCn { font-size: 18px; }
+  .cardCn { font-size: 18px; }
+  .cardDesc { font-size: 13px; }
+}

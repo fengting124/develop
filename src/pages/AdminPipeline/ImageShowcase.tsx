@@ -40,7 +40,8 @@ const pathInfo = {
 };
 
 // ─── 示例图片 ─────────────────────────────────────────────
-const sourceImage = '/images/图片检测示例图/image.png';
+// image_标注.png：城市街道场景（居民楼、路边停车、行道树）
+const sourceImage = '/images/图片检测示例图/image_标注.png';
 const editedImage = '/images/pipeline-products/local_edited.png';
 const candidateImages = [
   { src: '/images/pipeline-products/product-01.png', model: 'SD3',    conf: 0.91 },
@@ -49,30 +50,35 @@ const candidateImages = [
   { src: '/images/pipeline-products/product-07.png', model: 'MJv6',   conf: 0.82 },
 ];
 
+// 区域候选：对应 image_标注.png 街道场景内容
+// 图像内容：左侧行道树，右前景停放的灰色轿车，中景多辆停车，右侧居民楼
 const regionCandidates = [
-  { id: 'R-01', x: 56, y: 52, w: 38, h: 40, label: '车辆',  method: '目标检测', category: 'vehicle', color: 'accent' },
-  { id: 'R-02', x: 40, y: 0,  w: 40, h: 20, label: '天空',  method: '语义分割', category: 'sky',     color: 'real' },
-  { id: 'R-03', x: 32, y: 49, w: 15, h: 7,  label: '远景车', method: '目标检测', category: 'vehicle', color: 'low-conf' },
+  { id: 'R-01', x: 52, y: 48, w: 42, h: 46, label: '前景轿车', method: '目标检测', category: 'vehicle', color: 'accent' },
+  { id: 'R-02', x: 28, y: 0,  w: 50, h: 22, label: '天空云层', method: '语义分割', category: 'sky',     color: 'real' },
+  { id: 'R-03', x: 30, y: 38, w: 20, h: 16, label: '中景停车', method: '目标检测', category: 'vehicle', color: 'low-conf' },
 ];
 
 // ─── 方向一：阶段06的取证框数据 ─────────────────────────────
 // 标注区域 → 映射为检测台 ForensicMark 的参数
+// 对应 image_标注.png 城市街道场景
 const annotationMarksAsForensic = [
   {
     id: 'A-01',
-    x: 34, y: 44, w: 36, h: 42,
-    label: 'A-01 · 物理逻辑矛盾',
-    confidence: 0.90,
+    // 前景灰色轿车 — 局部 Inpaint 替换目标，图片右下区域
+    x: 52, y: 48, w: 42, h: 46,
+    label: 'A-01 · 局部 Inpaint 替换',
+    confidence: 0.91,
     annotationType: 'semantic',
-    annotationLabel: '语义级标注',
+    annotationLabel: '区域级标注',
     color: 'accent',
-    trainingNote: '训练依据：semantic 类样本 × 342',
+    trainingNote: '训练依据：semantic inpaint 样本 × 342',
     sourceDataset: 'COCO/val2017',
   },
   {
     id: 'A-02',
-    x: 44, y: 44, w: 16, h: 16,
-    label: 'A-02 · 局部纹理异常',
+    // 中景停车区域 — 车辆边缘与路面接缝处像素断裂
+    x: 30, y: 38, w: 22, h: 18,
+    label: 'A-02 · 边缘像素断裂',
     confidence: 0.76,
     annotationType: 'texture',
     annotationLabel: '区域级标注',
@@ -82,13 +88,14 @@ const annotationMarksAsForensic = [
   },
   {
     id: 'A-03',
-    x: 24, y: 4,  w: 21, h: 26,
-    label: 'A-03 · 光影方向偏离',
+    // 天空云层区域 — 光源方向与地面阴影不一致
+    x: 30, y: 0, w: 48, h: 22,
+    label: 'A-03 · 光影一致性偏离',
     confidence: 0.83,
     annotationType: 'style',
     annotationLabel: '区域级标注',
     color: 'accent',
-    trainingNote: '训练依据：style 类样本 × 156',
+    trainingNote: '训练依据：style 光照样本 × 156',
     sourceDataset: 'FODB / ImageNet',
   },
 ];
@@ -100,16 +107,16 @@ const verifyMetrics = {
 };
 
 const jsonAnnotation = `{
-  "sample_id": "local_coco_street_000128",
+  "sample_id": "local_street_inpaint_000342",
   "is_fake": 1,
   "fake_type": "local_edit",
-  "source_image": "images/original/local_coco_street_000128.png",
-  "generated_image": "images/generated/local_coco_street_000128.png",
-  "mask_path": "masks/local_coco_street_000128.png",
-  "bbox": [573, 532, 962, 942],
-  "mask_area_ratio": 0.245,
-  "edit_instruction": "将路边车辆替换为消防车",
-  "edit_model": "inpainting_model",
+  "source_image": "images/original/local_street_inpaint_000342.png",
+  "generated_image": "images/generated/local_street_inpaint_000342.png",
+  "mask_path": "masks/local_street_inpaint_000342.png",
+  "bbox": [624, 492, 1024, 960],
+  "mask_area_ratio": 0.237,
+  "edit_instruction": "将前景停放轿车替换为AI生成运动款车型",
+  "edit_model": "stable-diffusion-xl-inpaint",
   "change_level": "high",
   "quality_status": "approved"
 }`;
@@ -122,9 +129,9 @@ const exportLists = [
 ];
 
 const archiveInfo = {
-  id: 'IMG-2026-0527-0047', source: 'COCO/val2017',
+  id: 'IMG-2026-0527-0342', source: 'COCO/val2017',
   real: 4160, fullGen: 8320, localEdit: 5760, review: 342,
-  tags: ['物理矛盾', '纹理伪造', '光影异常', 'SD3指纹', '局部Inpaint'],
+  tags: ['局部Inpaint', '边缘断裂', '光影不一致', 'SDXL指纹', '车辆替换'],
   addedTo: '训练集 v3.1',
 };
 

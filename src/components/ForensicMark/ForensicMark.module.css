@@ -4,29 +4,44 @@
   z-index: 10;
 }
 
+/* 半透明填充框 */
+.markWrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(200, 65, 46, 0.05);
+  border: 1px solid rgba(200, 65, 46, 0.7);
+  pointer-events: none;
+  border-radius: 0;
+}
+.active::before {
+  background: rgba(200, 65, 46, 0.13);
+  border-color: rgba(200, 65, 46, 0.7);
+}
+
 /* 科技感边角 */
 .cornerTL, .cornerTR, .cornerBL, .cornerBR {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   border-color: var(--accent);
   border-style: solid;
   border-width: 0;
-  opacity: 0.6;
+  opacity: 0.85;
   transition: all 0.3s ease;
 }
 
 .active .cornerTL, .active .cornerTR, .active .cornerBL, .active .cornerBR {
   opacity: 1;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-color: var(--real);
 }
 
-.cornerTL { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
-.cornerTR { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
-.cornerBL { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
-.cornerBR { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
+.cornerTL { top: 0; left: 0; border-top-width: 2.5px; border-left-width: 2.5px; }
+.cornerTR { top: 0; right: 0; border-top-width: 2.5px; border-right-width: 2.5px; }
+.cornerBL { bottom: 0; left: 0; border-bottom-width: 2.5px; border-left-width: 2.5px; }
+.cornerBR { bottom: 0; right: 0; border-bottom-width: 2.5px; border-right-width: 2.5px; }
 
 /* 中心热点 */
 .centerHotspot {
@@ -69,7 +84,7 @@
   100% { transform: scale(2.5); opacity: 0; border-width: 1px; }
 }
 
-/* 引线与标签 */
+/* 引线与标签 — 默认从右下角引出，向右延伸 */
 .callout {
   position: absolute;
   bottom: -15px;
@@ -99,10 +114,12 @@
   gap: 6px;
   background: var(--surface);
   border: 1px solid var(--accent);
-  padding: 4px 8px;
-  border-radius: 2px;
+  padding: 6px 12px;
+  border-radius: 0;
   color: var(--accent);
   white-space: nowrap;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 1px var(--surface);
 }
 
 .active .labelWrapper {
@@ -110,9 +127,26 @@
   color: var(--real);
 }
 
+/* 标签向左翻转 — 用于靠近右边缘的标记 */
+.calloutLeft {
+  right: auto;
+  left: -40px;
+}
+
+.calloutLeft .calloutLineHorizontal {
+  right: auto;
+  left: 0;
+  transform-origin: right;
+}
+
+.calloutLeft .labelWrapper {
+  left: auto;
+  right: 100%;
+}
+
 .labelIcon {
   color: var(--accent);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .active .labelIcon {
@@ -121,14 +155,14 @@
 
 .labelTitle {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: var(--weight-bold);
   letter-spacing: 0.05em;
 }
 
 .labelConfidence {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 16px;
   color: var(--accent);
 }
 

@@ -16,15 +16,17 @@ const logsData = [
   { time: 800,  text: '加载通用检测与靶向适配专家权重...' },
   { time: 1400, text: '建立与知识图谱 (ConceptNet) 的连接...' },
   { time: 2100, text: '尝试提取 EXIF 元数据... [失败] 平台已剥离元数据。' },
-  { time: 2800, text: '[空域分析] 多尺度卷积网络检测局部篡改...' },
-  { time: 3500, text: '[频域分析] 快速傅里叶变换完成，提取高频异常分布...' },
-  { time: 4200, text: '[语义对齐] CLIP 与 Grounding DINO 启动...' },
-  { time: 5100, text: '[警告] 检测到全局逻辑矛盾: 塑料盆置于明火。' },
-  { time: 6400, text: '[门控协同] 动态激活靶向专家...' },
+  { time: 2800, text: '[空域分析] 多尺度卷积网络扫描局部篡改区域...' },
+  { time: 3500, text: '[频域分析] 快速傅里叶变换完成，检出厨房背景高频周期噪声。' },
+  { time: 4200, text: '[语义对齐] CLIP 与 Grounding DINO 启动场景理解...' },
+  { time: 5100, text: '[警告] 检测到物理逻辑矛盾: 塑料制品盆碗直接置于明火上方。' },
+  { time: 5900, text: '[空域专家] 锁定人物面部区域，光源方向与环境主光不一致。' },
+  { time: 6400, text: '[门控协同] 动态激活靶向专家 Nano Banana Pro...' },
   { time: 7200, text: '[LoRA 适配] 注入 Nano Banana Pro 专用模型权重...' },
-  { time: 8500, text: '[大模型推理] 校验时空因果与常识逻辑...' },
-  { time: 9800, text: '证据聚合计算完成。' },
-  { time: 10500, text: '[最终结论] 确认内容为 AI 生成/篡改。' },
+  { time: 7800, text: '[频域专家] 墙面纹理 FFT 残差显示生成模型周期性指纹。' },
+  { time: 8500, text: '[大模型推理] 校验厨房场景三元组常识逻辑...' },
+  { time: 9800, text: '证据聚合计算完成，三处异常区域均触发告警。' },
+  { time: 10500, text: '[最终结论] 确认内容为 AI 生成/篡改。置信度 0.94。' },
 ];
 
 const totalDuration = 11000;
@@ -36,34 +38,64 @@ function formatBytes(size: number) {
 
 // ─── 证据锚点（红框） ─────────────────────────────────────
 // 每个 mark 关联 chainIndex（语义链节点）和 expertKeys（激活的专家）
+// 图像内容：农家厨房，女性正在明火上翻炒，疑似塑料盆放于火苗之上
+//
+// 坐标说明（相对于图片容器百分比）：
+//   M-01: 白色盆碗+明火区域，图片中心偏下，label 落在右侧 56%×76%
+//   M-02: 人物面部区域，图片右侧上方，控制右边界≤78% 防止 label 溢出
+//   M-03: 上方旧石墙+挂件区域，左上角集中，label 落在 45%×37%
 const marks = [
   {
     id: 'M-01',
-    x: 35, y: 45, w: 35, h: 40,
+    // 白色盆碗 + 明火叠加区 — center of image
+    // left:20% top:30% width:36% height:46% → 右下角落在 (56%, 76%)，label 清晰可见
+    x: 20, y: 30, w: 36, h: 46,
     title: '物理逻辑矛盾',
-    desc: '塑料盆置于明火',
+    desc: '塑料盆直接置于明火之上',
     appearAt: 5100,
-    tooltip: '【全局语义违和】SGG提取三元组〈塑料盆, 在上方, 火〉。知识图谱计算语义距离 E_KG 极高，LLM输出逻辑违和度 0.90。',
+    tooltip: '【全局语义违和】SGG 提取场景三元组〈塑料盆/碗, 在上方, 明火〉。知识图谱计算〈塑料, 耐热性〉语义距离极高（E_KG = 0.93）。LLM 常识校验输出逻辑违和度 0.90，与物理规律严重矛盾。',
     chainIndex: 2,
     expertKeys: ['semantic', 'lora'],
-    // 方向二：标注溯源信息
     provenance: {
       annotationType: 'semantic',
       annotationLabel: '语义级标注',
       sampleCount: 342,
       sampleType: 'local_edit',
       sourceDataset: 'COCO/val2017',
-      sampleId: 'local_coco_street_000128',
+      sampleId: 'local_kitchen_edit_000342',
       trainedIn: '训练集 v3.1',
     },
   },
   {
     id: 'M-02',
-    x: 45, y: 45, w: 15, h: 15,
-    title: '实体不匹配',
-    desc: '异常的石块纹理',
-    appearAt: 6800,
-    tooltip: '【局部像素异常】该区域图像噪声梯度与全局分布完全断裂，大概率为生成模型局部重绘(Inpainting)强行插入的实体。',
+    // 女性面部 — 图片右侧，头顶黑色发髻至颈部约 y:6-36%
+    // 右边界控制在 78% (58+20=78)，label 不溢出图片右边缘
+    x: 58, y: 6, w: 20, h: 30,
+    title: '光源方向不一致',
+    desc: '面部高光与环境主光源背离',
+    appearAt: 5900,
+    tooltip: '【全局-局部一致性】空域专家多尺度特征提取发现：人物面部高频残差所反映的高光方向来自右侧，而厨房明火（左下角主光源）应产生左侧高光。光源方向背离角度约 110°，触发光照一致性告警。',
+    chainIndex: 1,
+    expertKeys: ['texture', 'style'],
+    provenance: {
+      annotationType: 'style',
+      annotationLabel: '区域级标注',
+      sampleCount: 156,
+      sampleType: 'full_generation',
+      sourceDataset: 'FODB / ImageNet',
+      sampleId: 'fodb_lighting_kitchen_000156',
+      trainedIn: '训练集 v2.8',
+    },
+  },
+  {
+    id: 'M-03',
+    // 旧石墙 + 挂件区 — 图片左上角，炊具悬挂密集区
+    // 右下角落在 (45%, 37%)，label 居中可见
+    x: 5, y: 4, w: 40, h: 33,
+    title: '纹理生成指纹',
+    desc: '背景墙面含生成模型周期噪声',
+    appearAt: 7800,
+    tooltip: '【频域异常】对墙面区域执行 FFT 分析，高频残差图中检测到规律性周期噪声分布，与扩散模型（Stable Diffusion / FLUX）去噪步骤产生的频域指纹高度吻合。局部噪声梯度与真实摄影图像的自然分布完全断裂。',
     chainIndex: 1,
     expertKeys: ['texture', 'frequency'],
     provenance: {
@@ -72,27 +104,8 @@ const marks = [
       sampleCount: 218,
       sampleType: 'local_edit',
       sourceDataset: 'RAISE / OpenImages',
-      sampleId: 'raise_texture_000847',
+      sampleId: 'raise_kitchen_wall_000218',
       trainedIn: '训练集 v3.1',
-    },
-  },
-  {
-    id: 'M-03',
-    x: 25, y: 5, w: 20, h: 25,
-    title: '光源方向背离',
-    desc: '面部高光位置错误',
-    appearAt: 8400,
-    tooltip: '【全局-局部一致性】空域专家通过多尺度特征提取，发现人物面部的高频残差所反映的光源方向，与环境主光源呈明显背离。',
-    chainIndex: 2,
-    expertKeys: ['texture', 'style'],
-    provenance: {
-      annotationType: 'style',
-      annotationLabel: '区域级标注',
-      sampleCount: 156,
-      sampleType: 'full_generation',
-      sourceDataset: 'FODB / ImageNet',
-      sampleId: 'fodb_lighting_000392',
-      trainedIn: '训练集 v2.8',
     },
   },
 ];
@@ -103,7 +116,7 @@ const chainNodes = [
     index: 0,
     label: '全局场景锚定',
     en: 'Global Scene',
-    result: '视觉编码命中：厨房（置信度 0.91）',
+    result: '视觉编码命中：农家厨房·烹饪场景（置信度 0.91）',
     danger: null,
     appearAt: 4200,
   },
@@ -111,23 +124,23 @@ const chainNodes = [
     index: 1,
     label: '局部实体解析',
     en: 'Entity Parsing',
-    result: '识别：锅、人、青菜、塑料盆、石头',
-    danger: '锁定语义离群点：[塑料盆, 石头]',
+    result: '识别：人物、明火、盆碗、炒锅、青菜、墙面挂件',
+    danger: '锁定语义离群点：[塑料材质容器 置于 明火上方]',
     appearAt: 5100,
   },
   {
     index: 2,
     label: '逻辑与常识校验',
     en: 'Logic Validation',
-    result: '知识图谱：〈塑料盆, 在上方, 火〉距离极高',
-    danger: '大模型评估：荒谬 (0.90) — 违背物理常识',
+    result: '知识图谱：〈塑料盆, 在上方, 明火〉语义距离 0.93',
+    danger: '大模型评估：物理矛盾 (0.90)；面部光照反向 (0.83)',
     appearAt: 8500,
   },
   {
     index: 3,
     label: '证据融合 · 判决',
     en: 'Evidence Fusion',
-    result: '多专家共识达成，综合置信度 0.94',
+    result: '三处异常区域触发告警，综合置信度 0.94',
     danger: null,
     appearAt: 9800,
   },
@@ -196,7 +209,6 @@ function ExpertRadar({
   elapsed: number;
   activeExpertKeys: string[] | null;
 }) {
-  const size = 100;
   const cx = 50;
   const cy = 54;     // 稍微偏下，留顶部标签空间
 
@@ -573,7 +585,7 @@ function RightPanel({
                     >
                       <div className={styles.expertRowHead}>
                         <span className={styles.expertRowName}>{e.label}</span>
-                        {e.isTarget && <span className={styles.targetBadge}>靶向</span>}
+                        {e.isTarget && <span className={styles.targetBadge}>[TARGET ACTIVATED] 靶向</span>}
                         {isVisible && (
                           <span className={styles.expertRowWeight}>
                             {Math.round(e.weight * 100)}%
@@ -672,7 +684,7 @@ function RightPanel({
         >
           <div className={styles.physicsRow}>
             <span className={styles.physicsLabel}>EXIF 来源</span>
-            <span className={styles.physicsValue}>Adobe Photoshop 24.0</span>
+            <span className={styles.physicsValue}>Stable Diffusion XL · 已剥离</span>
           </div>
           <div className={styles.physicsRow}>
             <span className={styles.physicsLabel}>FFT 高频残差</span>
@@ -826,6 +838,8 @@ export function DetectImage() {
                       label={`${mark.id} · ${mark.title}`}
                       confidence={0.94}
                       active={activeMarkId === mark.id}
+                      // M-02 在图片右侧，标签向左翻转避免溢出
+                      calloutSide={mark.id === 'M-02' ? 'left' : 'right'}
                     />
                   ))}
               </AnimatePresence>

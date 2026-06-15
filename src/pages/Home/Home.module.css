@@ -37,6 +37,25 @@
   pointer-events: auto;
 }
 
+/* ── 功能导览触发按钮 ── */
+.overviewBtn {
+  pointer-events: auto;    /* 覆盖父级 pointer-events:none */
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.25em;
+  color: var(--ink-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-3) var(--space-4);
+  transition: color 200ms ease-out;
+  margin-top: var(--space-3);
+}
+
+.overviewBtn:hover {
+  color: var(--accent);
+}
+
 @media (max-width: 960px) {
   .content {
     padding: var(--space-5);

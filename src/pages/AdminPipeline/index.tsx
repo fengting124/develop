@@ -298,16 +298,24 @@ function UploadCardBatch({ title, english, description, acceptType, disabled }: 
         onChange={(event) => addFilesToQueue(Array.from(event.target.files ?? []))}
       />
 
-      {acceptType === 'video' ? (
-        <div className={styles.uploadOptions}>
-          <p className={styles.optionsLabel}>默认参数</p>
-          <div className={styles.optionsRow}>
-            <ToggleOption checked label="音轨替换" />
-            <ToggleOption checked label="唇形对齐" />
-            <ToggleOption label="帧插值" />
-          </div>
+      <div className={styles.uploadOptions}>
+        <p className={styles.optionsLabel}>默认参数</p>
+        <div className={styles.optionsRow}>
+          {acceptType === 'video' ? (
+            <>
+              <ToggleOption checked label="音轨替换" />
+              <ToggleOption checked label="唇形对齐" />
+              <ToggleOption label="帧插值" />
+            </>
+          ) : (
+            <>
+              <ToggleOption checked label="局部编辑" />
+              <ToggleOption checked label="全图生成" />
+              <ToggleOption checked label="自动标注" />
+            </>
+          )}
         </div>
-      ) : null}
+      </div>
     </article>
   );
 }
@@ -356,17 +364,15 @@ export function AdminPipeline() {
             <ShowcaseCard
               title="样例可视化"
               english="Process Showcase"
-              description="图片样例可视化模块开发中。"
+              description="查看真实图片入库、局部编辑掩码、全图生成和标注归档的完整工作流。"
               thumbnail="/images/图片检测示例图/image.png"
               to="/admin/pipeline/showcase/image"
-              disabled
             />
             <UploadCardBatch
               title="开始生成"
               english="Start Generating"
-              description="图片数据生成模块暂未开放。"
+              description="拖入单张或多张图片，系统将自动构造标注样本。"
               acceptType="image"
-              disabled
             />
           </DataBlock>
         </div>
