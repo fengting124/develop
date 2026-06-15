@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import styles from './AdminLayout.module.css';
+import { GlobalHUD } from '@/components/GlobalHUD';
 
 function AdminIcon({ type }: { type: 'overview' | 'pipeline' | 'experts' | 'anomaly' }) {
   return (
@@ -32,20 +33,23 @@ const nav = [
 
 export function AdminLayout() {
   return (
-    <div className={styles.layout}>
-      <aside className={styles.sidebar}>
-        <nav>
-          {nav.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => (isActive ? styles.active : '')}>
-              <AdminIcon type={item.icon} />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
-      </aside>
-      <main className={styles.main}>
-        <Outlet />
-      </main>
-    </div>
+    <>
+      <GlobalHUD />
+      <div className={styles.layout}>
+        <aside className={styles.sidebar}>
+          <nav>
+            {nav.map((item) => (
+              <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => (isActive ? styles.active : '')}>
+                <AdminIcon type={item.icon} />
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
+        </aside>
+        <main className={styles.main}>
+          <Outlet />
+        </main>
+      </div>
+    </>
   );
 }

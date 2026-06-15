@@ -23,62 +23,65 @@ export const videoFrames = Array.from({ length: 30 }, (_, index) => ({
   time: index,
 }));
 
+// 视频检测台使用 samples/fake_seg1s__.mp4（单段音频替换伪造，时长 11.744s）
+// 来源：fake_seg1s__.json — modify_type: replace
+//   fake_segments: [[1.837, 5.277]]
+//   fake_info:     ["shallow gasps as you inhale"]
+//   transcripts:   "Gotta take shallow gasps as you inhale 1, 2, 3 And then you'll hear a yodel if you listen close to me"
+const VIDEO_DURATION = 11.744;
+const VIDEO_FRAME_COUNT = 12;
+
 export const videoDemoFull = {
-  id: 'DV-2026-1121-V01',
-  src: '/videos/video-demo-01.mp4',
-  duration: 30,
+  id: 'DV-2026-0527-V01',
+  src: '/samples/fake_seg1s__.mp4',
+  duration: VIDEO_DURATION,
   verdict: 'fake' as const,
-  confidence: 0.91,
-  windows: [
-    { start: 0, end: 5 },
-    { start: 5, end: 10 },
-    { start: 10, end: 15 },
-    { start: 15, end: 20 },
-    { start: 20, end: 25 },
-    { start: 25, end: 30 },
-  ],
-  frames: Array.from({ length: 30 }, (_, index) => ({
-    time: index,
-    src: `/samples/${String((index % 54) + 1).padStart(2, '0')}.jpg`,
+  confidence: 0.87,
+  // 6 个时间窗口，均匀切分（每窗口约 1.96s）
+  windows: Array.from({ length: 6 }, (_, i) => ({
+    start: parseFloat(((i / 6) * VIDEO_DURATION).toFixed(2)),
+    end: parseFloat((((i + 1) / 6) * VIDEO_DURATION).toFixed(2)),
   })),
+  // 帧带：从 fake_seg1s__.mp4 实际抽取的 12 帧（均匀分布）
+  // 对应时间: 0.00, 1.07, 2.14, 3.20, 4.27, 5.34, 6.41, 7.47, 8.54, 9.61, 10.68, 11.50s
+  frames: Array.from({ length: VIDEO_FRAME_COUNT }, (_, i) => ({
+    time: parseFloat(((i / (VIDEO_FRAME_COUNT - 1)) * VIDEO_DURATION).toFixed(2)),
+    src: `/samples/frames/frame-${String(i + 1).padStart(2, '0')}.jpg`,
+  })),
+  // 候选时段：2 段高置信（覆盖真实伪造区间）+ 5 段低置信噪声
   candidates: [
-    { id: 'c1', start: 2.1, end: 3.5, confidence: 0.32 },
-    { id: 'c2', start: 4.8, end: 6.2, confidence: 0.45 },
-    { id: 'c3', start: 8.0, end: 14.9, confidence: 0.89 },
-    { id: 'c4', start: 15.5, end: 17.0, confidence: 0.28 },
-    { id: 'c5', start: 18.2, end: 19.5, confidence: 0.51 },
-    { id: 'c6', start: 20.8, end: 25.0, confidence: 0.83 },
-    { id: 'c7', start: 26.0, end: 27.5, confidence: 0.38 },
+    { id: 'c1', start: 0.0,  end: 1.3,  confidence: 0.21 },
+    { id: 'c2', start: 1.5,  end: 3.6,  confidence: 0.83 },  // 覆盖伪造段前半
+    { id: 'c3', start: 3.4,  end: 5.6,  confidence: 0.79 },  // 覆盖伪造段后半
+    { id: 'c4', start: 5.7,  end: 7.2,  confidence: 0.27 },
+    { id: 'c5', start: 7.3,  end: 8.9,  confidence: 0.18 },
+    { id: 'c6', start: 9.0,  end: 10.3, confidence: 0.23 },
+    { id: 'c7', start: 10.5, end: 11.7, confidence: 0.16 },
   ],
+  // 最终确认的高风险伪造时段（对齐 fake_seg1s__.json 标注）
   fakeRanges: [
     {
-      start: 8.2,
-      end: 14.7,
-      reason: '跨帧身份漂移',
-      english: 'Cross-frame identity drift',
-      confidence: 0.89,
-      keyframes: ['/samples/18.jpg', '/samples/19.jpg', '/samples/20.jpg'],
-      expertVotes: [
-        { type: 'texture' as const, name: '纹理专家', intensity: 0.4 },
-        { type: 'frequency' as const, name: '谱纹专家', intensity: 0.85 },
-        { type: 'style' as const, name: '风格专家', intensity: 0.6 },
-        { type: 'semantic' as const, name: '语义专家', intensity: 0.92 },
-        { type: 'lora' as const, name: '靶向专家', intensity: 0.75 },
+      start: 1.837,
+      end: 5.277,
+      reason: '音频语音克隆替换',
+      english: 'Voice clone replacement',
+      confidence: 0.87,
+      modifyType: 'replace' as const,
+      // 原始转录 & 伪造语段（直接来自 JSON）
+      fullTranscript: "Gotta take shallow gasps as you inhale 1, 2, 3 And then you'll hear a yodel if you listen close to me",
+      fakeWords: 'shallow gasps as you inhale',
+      // 关键证据帧：来自伪造时段 1.837–5.277s 内的实际视频帧
+      keyframes: [
+        '/samples/frames/frame-03.jpg',  // t≈2.14s — 伪造段前段
+        '/samples/frames/frame-04.jpg',  // t≈3.20s — 伪造段中段
+        '/samples/frames/frame-05.jpg',  // t≈4.27s — 伪造段后段
       ],
-    },
-    {
-      start: 21.0,
-      end: 24.5,
-      reason: '口型不同步',
-      english: 'Lip-sync mismatch',
-      confidence: 0.83,
-      keyframes: ['/samples/31.jpg', '/samples/32.jpg', '/samples/33.jpg'],
       expertVotes: [
-        { type: 'texture' as const, name: '纹理专家', intensity: 0.3 },
-        { type: 'frequency' as const, name: '谱纹专家', intensity: 0.6 },
-        { type: 'style' as const, name: '风格专家', intensity: 0.55 },
-        { type: 'semantic' as const, name: '语义专家', intensity: 0.78 },
-        { type: 'lora' as const, name: '靶向专家', intensity: 0.5 },
+        { type: 'texture'   as const, name: '纹理专家', intensity: 0.28 },
+        { type: 'frequency' as const, name: '谱纹专家', intensity: 0.91 },
+        { type: 'style'     as const, name: '风格专家', intensity: 0.44 },
+        { type: 'semantic'  as const, name: '语义专家', intensity: 0.76 },
+        { type: 'lora'      as const, name: '靶向专家', intensity: 0.83 },
       ],
     },
   ],

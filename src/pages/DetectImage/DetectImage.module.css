@@ -1,791 +1,1102 @@
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DetectImage — 图像取证工作台
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
 .detectPage {
   height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--canvas);
-}
-
-.idle {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: var(--space-5);
-  min-height: 0;
-  padding: var(--space-7) 0;
-}
-
-.dropzone {
-  display: grid;
-  width: min(800px, 86vw);
-  aspect-ratio: 4 / 3;
-  place-items: center;
-  align-content: center;
-  gap: var(--space-4);
-  border: 1.5px dashed var(--rule);
-  background: transparent;
-  text-align: center;
-  transition: border-color 160ms ease-out;
-}
-
-.dropzone:hover {
-  border-color: var(--accent);
-}
-
-.dropzone span {
-  font-family: var(--font-serif);
-  font-size: var(--text-xl);
   color: var(--ink);
+  font-family: var(--font-sans);
 }
 
-.dropzone em {
-  color: var(--ink-3);
-  font-family: var(--font-serif);
-  font-size: var(--text-sm);
-  font-style: italic;
-}
-
-.dropzone strong {
-  color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-}
-
-.detectMain {
+/* ── IDLE 上传区 ────────────────────────────── */
+.idleState {
   flex: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 480px;
-  gap: 32px;
-  min-height: 0;
-  padding: 14px 48px 0;
-}
-
-.detectLeft {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.uploadBox {
+  border: 1.5px dashed var(--rule);
+  background: var(--surface);
+  padding: 52px 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 14px;
-  min-height: 0;
+  cursor: pointer;
+  transition: border-color 0.25s, background 0.25s;
 }
 
-.imagePanel {
-  flex: 0 0 auto;
-  display: grid;
-  min-height: 0;
-  place-items: start center;
-  padding-top: 4px;
-}
-
-.imageWrap {
-  position: relative;
-  width: min(100%, 600px);
-  max-height: 100%;
-  overflow: visible;
+.uploadBox:hover {
+  border-color: var(--accent);
   background: var(--surface-2);
-  box-shadow: var(--shadow-2);
 }
 
-.imageWrap img {
-  display: block;
-  width: 100%;
-  max-height: 560px;
-  object-fit: contain;
+.uploadIconSvg {
+  width: 48px;
+  height: 48px;
+  color: var(--ink-3);
+  transition: color 0.25s;
 }
+.uploadBox:hover .uploadIconSvg { color: var(--accent); }
 
-.imageBadge {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  display: grid;
-  width: 42px;
-  height: 22px;
-  place-items: center;
-  border-radius: var(--radius-sm);
-  background: var(--fake);
-  color: white;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: var(--weight-medium);
-  transform: rotate(-2deg);
-}
-
-.evidenceBar {
-  flex-shrink: 0;
-  border-top: 1px solid var(--rule);
-  padding: 12px 0 6px;
-}
-
-.evidenceBar h2 {
-  margin-bottom: 10px;
-  color: var(--ink);
+.uploadText {
+  font-size: 18px;
+  letter-spacing: 0.08em;
   font-family: var(--font-serif);
-  font-size: var(--text-xl);
-  font-weight: var(--weight-medium);
+  color: var(--ink);
+}
+
+.uploadSub {
+  font-size: 12px;
+  color: var(--ink-3);
   letter-spacing: 0.04em;
 }
 
-.evidenceBar div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 26px;
-}
-
-.evidenceBar span {
-  color: var(--ink-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-base);
-  font-weight: var(--weight-medium);
-}
-
-.evidenceVisible {
-  color: var(--accent) !important;
-}
-
-.doneActions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 8px;
-}
-
-.doneActions button,
-.doneActions a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
+.demoBtn {
+  background: transparent;
   border: 1px solid var(--rule);
-  border-radius: var(--radius);
   color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  line-height: 1.2;
-  padding: 0 18px;
-  transition: all 200ms ease-out;
-}
-
-.doneActions button > *,
-.doneActions a > * {
-  transform: translateY(-1px);
-}
-
-.doneActions button:hover,
-.doneActions a:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.rightPanel {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-  background: var(--surface);
-  display: flex;
-  flex-direction: column;
-}
-
-.tabBar {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.tabBtn {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  border-right: 1px solid var(--rule);
-  background: var(--surface);
-  padding: 14px 12px;
-  transition: all 200ms ease-out;
-}
-
-.tabBtn:last-child {
-  border-right: none;
-}
-
-.tabBtn:hover {
-  background: var(--surface-2);
-}
-
-.tabBtn span {
-  color: var(--ink-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
+  padding: 8px 24px;
+  font-size: 12px;
   letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.demoBtn:hover {
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
-.tabBtn strong {
-  color: var(--ink-2);
+/* ── 工作台布局 ─────────────────────────────── */
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 520px;
+  gap: 0;
+  min-height: 0;
+  border-top: 1px solid var(--rule);
+}
+
+/* ── 左侧：图片画布列 ─────────────────────────── */
+.canvasCol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 24px 16px 28px;
+  min-height: 0;
+  border-right: 1px solid var(--rule);
+}
+
+.imageWrap {
+  flex: 1;
+  position: relative;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.subjectImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── 扫描线效果 ────────────────────────────── */
+.scanLineH {
+  position: absolute;
+  left: 0; right: 0;
+  top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: scanDown 2.8s ease-in-out infinite;
+  z-index: 3;
+  pointer-events: none;
+}
+
+@keyframes scanDown {
+  0%   { top: 0%; opacity: 0.9; }
+  90%  { top: 100%; opacity: 0.7; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.scanGrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(216, 209, 192, 0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 209, 192, 0.25) 1px, transparent 1px);
+  background-size: 36px 36px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ── 结论印章 ───────────────────────────────── */
+.verdictStampWrap {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.verdictStamp {
   font-family: var(--font-serif);
-  font-size: var(--text-base);
-  font-weight: var(--weight-medium);
+  font-size: 36px;
+  color: var(--accent);
+  border: 2.5px solid var(--accent);
+  padding: 6px 22px;
+  transform: rotate(-10deg);
+  background: rgba(255, 255, 255, 0.88);
   letter-spacing: 0.05em;
 }
 
-.tabBtn em {
-  color: var(--ink-3);
-  font-family: 'Instrument Serif', serif;
-  font-size: 11px;
-  font-style: italic;
-  letter-spacing: 0.1em;
+/* ── 证据锚点快捷栏 + 方向二溯源面板 ────────────── */
+.anchorRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: flex-start;  /* 让溯源面板向下展开 */
 }
 
-.tabBtnActive {
-  background: var(--canvas);
-}
-
-.tabBtnActive span {
-  color: var(--accent);
-}
-
-.tabBtnActive strong {
-  color: var(--ink);
-}
-
-.tabBtnActive::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: var(--accent);
-}
-
-.tabContent {
+/* 每个 chip 的外层容器，用于相对定位溯源面板 */
+.anchorChipWrap {
   position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.panelInner {
-  height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 20px 24px;
 }
 
-.panelHeader {
-  margin-bottom: 18px;
-}
-
-.panelHeader h2 {
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: var(--text-xl);
-  font-weight: var(--weight-medium);
-}
-
-.panelHeader p {
-  color: var(--ink-3);
-  font-family: 'Instrument Serif', serif;
-  font-size: var(--text-sm);
-  font-style: italic;
-}
-
-.stepList {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  justify-content: space-between;
-  list-style: none;
-}
-
-.step {
-  display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 10px;
-}
-
-.stepIndex {
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-}
-
-.stepBody strong {
-  display: block;
-  color: var(--ink);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-}
-
-.stepBody em,
-.stepState {
-  display: block;
-  color: var(--ink-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-style: italic;
-}
-
-.done .stepState {
-  color: var(--real);
-}
-
-.active .stepState {
-  color: var(--accent);
-  animation: breathe 1.2s ease-in-out infinite;
-}
-
-.chainSteps {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  flex-direction: column;
-}
-
-.chainStep {
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--canvas);
-  padding: 12px 14px;
-  transition: all 200ms ease-out;
-}
-
-.statusactive {
-  border-color: var(--accent);
-  background: var(--surface);
-}
-
-.statuspending {
-  opacity: 0.55;
-}
-
-.chainStepHeader {
+.anchorChip {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.chainStepIdx {
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.1em;
-}
-
-.chainStepTitles {
-  flex: 1;
-  display: grid;
-  gap: 1px;
-}
-
-.chainStepTitles strong {
-  color: var(--ink);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-}
-
-.chainStepTitles em {
-  color: var(--ink-3);
-  font-family: 'Instrument Serif', serif;
-  font-size: 10px;
-  font-style: italic;
-  letter-spacing: 0.1em;
-}
-
-.chainConnector {
-  position: relative;
-  width: 1.5px;
-  height: 13px;
-  margin: 0 auto;
-  background: var(--ink-3);
-}
-
-.chainConnector::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -1px;
-  transform: translateX(-50%);
-  border-left: 3px solid transparent;
-  border-right: 3px solid transparent;
-  border-top: 4px solid var(--ink-3);
-}
-
-.chainConnectorActive {
-  background: var(--accent);
-}
-
-.chainConnectorActive::after {
-  border-top-color: var(--accent);
-}
-
-.dotDone,
-.dotActive,
-.dotPending {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: var(--weight-bold);
-}
-
-.dotDone {
-  color: var(--real);
-}
-
-.dotActive {
-  color: var(--accent);
-}
-
-.dotPending {
-  color: var(--ink-3);
-}
-
-.sceneMatch,
-.objectDetect,
-.logicCheck {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.sceneCandidates,
-.objectsRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.sceneTag,
-.objectChip {
+  gap: 8px;
   border: 1px solid var(--rule);
-  border-radius: var(--radius-sm);
-  color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: var(--weight-medium);
-  padding: 2px 6px;
+  background: var(--surface);
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: all 0.2s;
+  pointer-events: none;
 }
 
-.sceneTag:not(.faded),
-.objectChipOutlier {
+.anchorChipVisible {
+  opacity: 0.75;
+  pointer-events: auto;
+}
+
+.anchorChipVisible:hover {
   border-color: var(--accent);
   background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.faded {
-  opacity: 0.5;
-}
-
-.sceneResult,
-.outlierNote,
-.llmResult {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  color: var(--ink-3);
-  font-family: var(--font-mono);
-  font-size: 10px;
-}
-
-.sceneResult strong,
-.llmResult strong {
-  color: var(--accent);
-  font-size: var(--text-sm);
-}
-
-.sceneResult em,
-.llmResult em {
-  margin-left: auto;
-  color: var(--accent);
-  font-family: 'Instrument Serif', serif;
-  font-style: italic;
-}
-
-.outlierNote span {
-  display: grid;
-  width: 14px;
-  height: 14px;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--accent);
-  color: white;
-  font-size: 10px;
-}
-
-.outlierNote strong {
-  color: var(--accent);
-}
-
-.triplesRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.triplesRow span {
-  border-radius: var(--radius-sm);
-  background: var(--ink);
-  color: var(--canvas);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: var(--weight-bold);
-  letter-spacing: 0.1em;
-  padding: 1px 5px;
-}
-
-.triplesRow strong {
-  color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: var(--weight-medium);
-}
-
-.llmResult {
-  margin-top: 2px;
-  border-top: 1px dashed var(--rule);
-  padding-top: 5px;
-}
-
-.verdictPreview {
-  color: var(--ink-3);
-  font-family: 'Instrument Serif', serif;
-  font-size: 12px;
-  font-style: italic;
-  text-align: center;
-}
-
-.verdictReady strong {
-  color: var(--fake);
-  font-family: var(--font-serif);
-  font-size: var(--text-base);
-  font-style: normal;
-}
-
-.expertGroup {
-  margin-bottom: 14px;
-}
-
-.expertGroupHeader {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 7px;
-  border-bottom: 1px dashed var(--rule);
-  padding-bottom: 5px;
-}
-
-.expertGroupHeader strong {
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-}
-
-.expertGroupHeader em {
-  color: var(--ink-3);
-  font-family: 'Instrument Serif', serif;
-  font-size: 10px;
-  font-style: italic;
-}
-
-.expertGroupHeader span {
-  margin-left: auto;
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: var(--weight-medium);
-}
-
-.expertList {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  list-style: none;
-}
-
-.expertItem {
-  display: grid;
-  grid-template-columns: 14px 56px 1fr 38px;
-  align-items: center;
-  gap: 8px;
-  opacity: 0.5;
-}
-
-.expertItemActive {
   opacity: 1;
 }
 
-.expertDot {
-  width: 8px;
-  height: 8px;
-  margin-left: 3px;
-  border: 1.5px solid var(--ink-3);
-  border-radius: 50%;
-}
-
-.expertDotOn {
+.anchorChipActive {
+  opacity: 1;
   border-color: var(--accent);
-  background: var(--accent);
+  background: var(--accent-soft);
 }
 
-.expertCn {
-  color: var(--ink);
-  font-family: var(--font-sans);
+.anchorId {
+  font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: var(--weight-medium);
-}
-
-.contributionBar {
-  height: 6px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--rule);
-}
-
-.contributionFill {
-  display: block;
-  height: 100%;
-  border-radius: 3px;
-  background: var(--accent);
-}
-
-.contributionValue {
   color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: var(--weight-medium);
-  text-align: right;
+  letter-spacing: 0.04em;
 }
 
-.expertSkipped {
-  grid-column: 3 / 5;
+.anchorDesc {
+  color: var(--ink-2);
+  font-size: 11px;
+}
+
+/* 溯源图标（chip 右侧小图标） */
+.anchorProvenanceIcon {
+  font-size: 12px;
   color: var(--ink-3);
+  margin-left: 2px;
+  transition: color 0.2s;
+  line-height: 1;
+}
+
+.anchorChipActive .anchorProvenanceIcon {
+  color: var(--accent);
+}
+
+/* ── 方向二：标注溯源展开面板 ───────────────────── */
+.provenancePanel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 100;
+  min-width: 230px;
+  border: 1px solid var(--accent);
+  background: var(--surface);
+  box-shadow: 0 4px 20px rgba(200, 65, 46, 0.12);
+  pointer-events: none;   /* hover 状态由父级控制，面板不遮挡 */
+}
+
+.provenanceHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: var(--accent-soft);
+  border-bottom: 1px solid var(--accent);
+}
+
+.provenanceTag {
   font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  font-weight: var(--weight-medium);
+}
+
+.provenanceTagEn {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
+}
+
+.provenanceRows {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.provenanceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.provenanceRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.provenanceKey {
+  color: var(--ink-3);
   font-size: 10px;
-  font-style: italic;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.provenanceVal {
+  color: var(--ink);
+  font-size: 11px;
   text-align: right;
 }
 
-.gatingBlock,
-.finalVerdict {
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--canvas);
-  padding: 11px 13px;
+.provenanceValAccent {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
 
-.gatingBlock header {
+.provenanceValMono {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+
+/* ── 操作按钮行 ─────────────────────────────── */
+.actionsRow {
   display: flex;
-  align-items: baseline;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.reportBtn {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 9px 20px;
+  font-size: 13px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+}
+.reportBtn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.resetBtn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-3);
+  padding: 9px 20px;
+  font-size: 13px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.2s;
+}
+.resetBtn:hover {
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+
+/* ━━━ 右侧面板 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.rightPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Tab 栏 ─────────────────────────────────── */
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid var(--rule);
+  flex-shrink: 0;
+  background: var(--surface);
+}
+
+.tabBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 0 8px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: 1px solid var(--rule);
+  color: var(--ink-3);
+  transition: color 0.2s, border-color 0.2s;
+}
+.tabBtn:last-child { border-right: none; }
+.tabBtn:hover { color: var(--ink-2); }
+
+.tabBtnActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tabBtnLabel {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  font-weight: var(--weight-medium);
+}
+
+.tabBtnEn {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+  opacity: 0.6;
+}
+
+/* ── Tab 内容区 ─────────────────────────────── */
+.tabContent {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.tabContent::-webkit-scrollbar { width: 3px; }
+.tabContent::-webkit-scrollbar-thumb { background: var(--rule); }
+
+.tabPane {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ━━━ 语义链节点图 ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.chainGraph {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.chainNodeGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 连接线 */
+.chainConnector {
+  width: 24px;
+  height: 28px;
+  margin-left: 10px;   /* 对齐节点圆心 */
+  flex-shrink: 0;
+}
+
+.chainConnectorSvg {
+  width: 2px;
+  height: 28px;
+}
+
+.chainLine {
+  stroke: var(--rule);
+  stroke-width: 1.5;
+  fill: none;
+  transition: stroke 0.4s;
+}
+
+.chainLineDone {
+  stroke: var(--accent);
+  opacity: 0.6;
+}
+
+.chainArrow {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  fill: none;
+  opacity: 0.6;
+}
+
+/* 节点卡片 */
+.chainNode {
+  width: 100%;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 10px 12px 10px 10px;
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.chainNodeActive {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.chainNodeDone {
+  border-color: var(--rule);
+  background: var(--surface);
+}
+
+.chainNodeHead {
+  display: flex;
+  align-items: center;
   gap: 8px;
   margin-bottom: 6px;
 }
 
-.gatingBlock header span {
-  color: var(--accent);
+/* 状态圆点 */
+.chainNodeDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
 }
 
-.gatingBlock header strong {
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+.chainNodeDotDone {
+  background: var(--real);
+  border: 1.5px solid var(--real);
 }
 
-.gatingBlock header em {
-  color: var(--ink-3);
-  font-family: 'Instrument Serif', serif;
+.chainNodeDotActive {
+  background: var(--accent);
+  border: 1.5px solid var(--accent);
+}
+
+/* 脉冲动画（激活态） */
+.chainDotPulse {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: dotPulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes dotPulse {
+  from { transform: scale(0.7); opacity: 0.8; }
+  to   { transform: scale(1.1); opacity: 1; }
+}
+
+/* 对勾 SVG */
+.chainCheckSvg {
+  width: 10px;
+  height: 10px;
+}
+
+.chainCheck {
+  stroke: #fff;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chainNodeIdx {
+  font-family: var(--font-mono);
   font-size: 10px;
-  font-style: italic;
-}
-
-.gatingBlock p {
-  margin-bottom: 8px;
-  color: var(--ink-2);
-  font-size: 11px;
-}
-
-.gatingBlock p strong {
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-}
-
-.gatingBlock p span {
   color: var(--ink-3);
-  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
-.gatingGrid {
-  display: flex;
-  gap: 3px;
-}
-
-.gatingGrid span {
+.chainNodeLabel {
+  font-size: 14px;
+  font-weight: var(--weight-medium);
+  color: var(--ink);
+  letter-spacing: 0.03em;
   flex: 1;
-  height: 6px;
-  border-radius: 1px;
-  background: var(--rule);
 }
 
-.gatingGrid .gatingCellOn {
+.chainNodeEn {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.chainNodeBody {
+  padding-left: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chainNodeResult {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.chainNodeDanger {
+  font-size: 13px;
+  color: var(--accent);
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  line-height: 1.5;
+}
+
+.chainDangerMark {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: var(--accent);
+  color: #fff;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* 待处理节点（灰色占位） */
+.chainNodePending {
+  width: 100%;
+  border: 1px dashed var(--rule);
+  background: transparent;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chainNodeDotPending {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--rule);
+  flex-shrink: 0;
+}
+
+/* 末节点结论徽章 */
+.chainConclusion {
+  margin-top: 12px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.conclusionStamp {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  padding: 4px 16px;
+  transform: rotate(-4deg);
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.conclusionConf {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+}
+
+/* ━━━ 专家雷达图 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.radarWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.radarSvg {
+  width: 180px;
+  height: 180px;
+  overflow: visible;
+}
+
+/* 网格多边形 */
+.radarGrid {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 0.8;
+}
+
+/* 轴线 */
+.radarAxis {
+  stroke: var(--rule);
+  stroke-width: 0.6;
+}
+
+/* 数据填充 */
+.radarFill {
+  fill: var(--accent);
+  fill-opacity: 0.12;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+  stroke-opacity: 0.7;
+}
+
+/* 轴端圆点 */
+.radarAxisDot {
+  fill: var(--rule);
+  transition: fill 0.3s;
+}
+.radarAxisDotVisible {
+  fill: var(--ink-3);
+}
+
+/* 数据点 */
+.radarDataDot {
+  fill: var(--ink-2);
+  transition: r 0.25s, fill 0.25s;
+}
+.radarDataDotTarget {
+  fill: var(--accent);
+}
+.radarDataDotActive {
+  fill: var(--accent);
+}
+
+/* 标签 */
+.radarLabel {
+  font-size: 7.5px;
+  font-family: var(--font-sans);
+  fill: var(--ink-3);
+  transition: fill 0.25s;
+}
+.radarLabelActive {
+  fill: var(--ink);
+  font-weight: 600;
+}
+.radarLabelTarget {
+  fill: var(--accent);
+}
+
+.radarCenter {
+  fill: var(--accent);
+  opacity: 0.5;
+}
+
+/* 图例 */
+.radarLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--ink-3);
+  opacity: 0.5;
+  transition: opacity 0.25s, color 0.25s;
+}
+
+.legendItemActive {
+  opacity: 1;
+  color: var(--ink-2);
+}
+
+.legendItemPending {
+  opacity: 0.3;
+}
+
+.legendItemTarget {
+  color: var(--accent);
+}
+
+.legendDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.legendLabel {
+  letter-spacing: 0.02em;
+}
+
+.legendWeight {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+
+/* ── 专家列表条形 ─────────────────────────────── */
+.expertList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.expertRow {
+  padding: 8px 10px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  opacity: 0.45;
+  transition: opacity 0.3s, border-color 0.25s, background 0.25s;
+}
+
+.expertRowVisible {
+  opacity: 0.8;
+}
+
+.expertRowHighlit {
+  opacity: 1;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.expertRowTarget.expertRowHighlit {
+  border-color: var(--accent);
+}
+
+.expertRowHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.expertRowName {
+  font-size: 12px;
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+  flex: 1;
+  letter-spacing: 0.03em;
+}
+
+.targetBadge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 1px 4px;
+  letter-spacing: 0.06em;
+}
+
+.expertRowWeight {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.expertBarWrap {
+  height: 3px;
+  background: var(--surface-2);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.expertBarFill {
+  height: 100%;
+  background: var(--ink-2);
+  border-radius: 1px;
+}
+
+.expertBarTarget {
   background: var(--accent);
 }
 
-.finalVerdict {
-  margin-top: 12px;
-  border-color: var(--fake);
-  background: var(--fake-soft);
+.expertBarPending {
+  width: 0;
+  height: 100%;
 }
 
-.finalVerdict div {
+/* ━━━ 证据锚点列表 ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.evidenceList {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.finalVerdict span {
-  color: var(--ink-2);
+.evidenceCard {
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 10px 12px;
+  opacity: 0.3;
+  cursor: default;
+  transition: opacity 0.3s, border-color 0.25s, background 0.25s;
+}
+
+.evidenceCardVisible {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.evidenceCardVisible:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  opacity: 1;
+}
+
+.evidenceCardActive {
+  opacity: 1;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.evidenceCardHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.evidenceId {
   font-family: var(--font-mono);
   font-size: 10px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 1px 5px;
+  letter-spacing: 0.06em;
+}
+
+.evidenceTitle {
+  font-size: 12px;
   font-weight: var(--weight-medium);
-  letter-spacing: 0.15em;
-}
-
-.finalVerdict strong {
-  color: var(--fake);
-  font-family: var(--font-serif);
-  font-size: var(--text-base);
-  font-weight: var(--weight-bold);
-}
-
-.finalVerdict p {
-  margin-top: 4px;
   color: var(--ink);
-  font-family: var(--font-mono);
+}
+
+.evidenceDesc {
   font-size: 11px;
-  font-weight: var(--weight-medium);
+  color: var(--ink-3);
+  margin-bottom: 6px;
 }
 
-@keyframes breathe {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+.evidenceTip {
+  font-size: 11px;
+  color: var(--ink-2);
+  line-height: 1.6;
+  border-left: 2px solid var(--accent);
+  padding-left: 8px;
+  margin-bottom: 6px;
+  overflow: hidden;
 }
 
-@media (max-width: 1180px) {
-  .detectMain {
-    grid-template-columns: minmax(0, 1fr) 420px;
-    gap: 24px;
-    padding-left: 32px;
-    padding-right: 32px;
-  }
+.evidenceExperts {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.evidenceExpertTag {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+  border: 1px solid var(--rule);
+  padding: 1px 5px;
+  letter-spacing: 0.04em;
+}
+
+.evidenceExpertTagTarget {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.evidencePending {
+  font-size: 12px;
+  color: var(--ink-3);
+  font-style: italic;
+  text-align: center;
+  padding: 24px 0;
+}
+
+/* ━━━ 底部物理数据栏 ━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.physicsPanel {
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 10px 16px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.physicsRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.physicsLabel {
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  min-width: 80px;
+}
+
+.physicsValue {
+  font-family: var(--font-mono);
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+/* FFT 条形图（迷你） */
+.fftMini {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 22px;
+  flex: 1;
+}
+
+.fftBar {
+  flex: 1;
+  background: var(--ink-3);
+  border-radius: 1px 1px 0 0;
+  animation: fftBounce 0.6s ease-in-out infinite alternate;
+}
+
+.fftBarAccent {
+  background: var(--accent);
+  animation-delay: 0.15s;
+}
+
+@keyframes fftBounce {
+  from { transform: scaleY(0.75); }
+  to   { transform: scaleY(1); }
+}
+
+/* ━━━ 底部进度条 + 日志 ━━━━━━━━━━━━━━━━━━━━━━ */
+.bottomBar {
+  flex-shrink: 0;
+  height: 140px;
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* 进度条 */
+.progressTrack {
+  position: relative;
+  height: 28px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--surface-2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.15;
+  transition: width 0.15s linear;
+}
+
+.progressPhase {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* 推理日志 */
+.terminal {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.terminalHeader {
+  background: var(--surface-2);
+  padding: 4px 16px;
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.12em;
+  border-bottom: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+
+.terminalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 16px 8px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: var(--font-mono);
+}
+
+.terminalBody::-webkit-scrollbar { width: 3px; }
+.terminalBody::-webkit-scrollbar-thumb { background: var(--rule); }
+
+.logInfo { color: var(--ink-3); }
+.logDanger { color: var(--accent); }
+
+.logTimestamp {
+  color: var(--ink-3);
+  margin-right: 10px;
+  opacity: 0.6;
 }

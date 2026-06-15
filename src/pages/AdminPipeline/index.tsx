@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '@/components/primitives';
 import styles from './AdminPipeline.module.css';
@@ -125,8 +125,38 @@ function ToggleOption({ checked, label }: { checked?: boolean; label: string }) 
 function ShowcaseCard({ title, english, description, thumbnail, to, disabled }: ShowcaseCardProps) {
   const navigate = useNavigate();
 
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseXSpring = useSpring(x, { stiffness: 300, damping: 30 });
+  const mouseYSpring = useSpring(y, { stiffness: 300, damping: 30 });
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], [10, -10]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], [-10, 10]);
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    const xPct = mouseX / width - 0.5;
+    const yPct = mouseY / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
   return (
-    <article className={`${styles.showcaseCard} ${disabled ? styles.disabledCard : ''}`} onClick={() => !disabled && navigate(to)}>
+    <motion.article 
+      className={`${styles.showcaseCard} ${disabled ? styles.disabledCard : ''}`} 
+      onClick={() => !disabled && navigate(to)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ rotateX, rotateY, transformPerspective: 1200 }}
+    >
       <div className={styles.showcaseThumb}>
         <img src={thumbnail} alt="" />
         <div className={styles.showcaseOverlay}>
@@ -147,7 +177,7 @@ function ShowcaseCard({ title, english, description, thumbnail, to, disabled }: 
           </span>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -268,16 +298,24 @@ function UploadCardBatch({ title, english, description, acceptType, disabled }: 
         onChange={(event) => addFilesToQueue(Array.from(event.target.files ?? []))}
       />
 
-      {acceptType === 'video' ? (
-        <div className={styles.uploadOptions}>
-          <p className={styles.optionsLabel}>默认参数</p>
-          <div className={styles.optionsRow}>
-            <ToggleOption checked label="音轨替换" />
-            <ToggleOption checked label="唇形对齐" />
-            <ToggleOption label="帧插值" />
-          </div>
+      <div className={styles.uploadOptions}>
+        <p className={styles.optionsLabel}>默认参数</p>
+        <div className={styles.optionsRow}>
+          {acceptType === 'video' ? (
+            <>
+              <ToggleOption checked label="音轨替换" />
+              <ToggleOption checked label="唇形对齐" />
+              <ToggleOption label="帧插值" />
+            </>
+          ) : (
+            <>
+              <ToggleOption checked label="局部编辑" />
+              <ToggleOption checked label="全图生成" />
+              <ToggleOption checked label="自动标注" />
+            </>
+          )}
         </div>
-      ) : null}
+      </div>
     </article>
   );
 }
@@ -326,17 +364,15 @@ export function AdminPipeline() {
             <ShowcaseCard
               title="样例可视化"
               english="Process Showcase"
-              description="图片样例可视化模块开发中。"
+              description="查看真实图片入库、局部编辑掩码、全图生成和标注归档的完整工作流。"
               thumbnail="/images/图片检测示例图/image.png"
               to="/admin/pipeline/showcase/image"
-              disabled
             />
             <UploadCardBatch
               title="开始生成"
               english="Start Generating"
-              description="图片数据生成模块暂未开放。"
+              description="拖入单张或多张图片，系统将自动构造标注样本。"
               acceptType="image"
-              disabled
             />
           </DataBlock>
         </div>

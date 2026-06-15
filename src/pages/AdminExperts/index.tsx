@@ -25,15 +25,16 @@ export function AdminExperts() {
         <h1 className="pageTitle">专 家 库</h1>
         <p className="pageEnglish">EXPERTS</p>
       </header>
-      <hr />
-      <section>
-        <h2 className={styles.groupTitle}>核心专家</h2>
+      
+      <div className={styles.dashboard}>
+      <section className={styles.colLeft}>
+        <h2 className={styles.groupTitle}>通用专家 (广域覆盖)</h2>
         <div className={styles.cards}>{expertsCore.map((item) => <ExpertCard key={item.name} type="core" {...item} />)}</div>
       </section>
-      <hr />
-      <section>
+
+      <section className={styles.colRight}>
         <header className={styles.sectionHead}>
-          <h2 className={styles.groupTitle}>靶向专家</h2>
+          <h2 className={styles.groupTitle}>专用专家 (靶向针对)</h2>
           <Button variant="text" prefix="+" onClick={() => setOpen(true)}>新增</Button>
         </header>
         <div className={styles.grid}>
@@ -43,9 +44,9 @@ export function AdminExperts() {
               <ExpertCard
                 type="lora"
                 id="α-05"
-                generatorName="GPT Image"
-                generatorShort="GPT-IMG"
-                logoSrc="/images/generators/gpt-image.png"
+                generatorName="Nano Banana Pro"
+                generatorShort="NBP"
+                logoSrc="/images/generators/nano-banana.png"
                 status="training"
                 trainingProgress={0.28}
               />
@@ -53,6 +54,7 @@ export function AdminExperts() {
           ) : null}
         </div>
       </section>
+      </div>
       <Modal isOpen={open} onClose={() => setOpen(false)} width={560}>
         <div className={styles.wizard}>
           <p>─ Bring a new expert to life ─</p>

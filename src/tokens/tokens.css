@@ -54,15 +54,15 @@
 
   /* 圆角 */
   --radius-none: 0;
-  --radius-sm: 2px;
-  --radius: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-sm: 0;
+  --radius: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
 
-  /* 阴影 */
-  --shadow-1: 0 1px 2px rgba(22, 22, 20, 0.04);
-  --shadow-2: 0 4px 12px rgba(22, 22, 20, 0.06);
-  --shadow-3: 0 12px 32px rgba(22, 22, 20, 0.08);
+  /* 阴影 (修改为1px实线，增强物理卷宗感) */
+  --shadow-1: 0 0 0 1px var(--rule);
+  --shadow-2: 0 0 0 1px var(--ink-3);
+  --shadow-3: 0 0 0 1px var(--ink-2);
 }
 
 /* 全局 reset */
@@ -124,6 +124,8 @@ p.lead {
 }
 
 .pageHeader .pageTitle {
+  position: relative;
+  display: inline-block;
   font-family: var(--font-serif);
   font-size: var(--text-3xl);
   font-weight: var(--weight-medium);
@@ -131,6 +133,18 @@ p.lead {
   margin-top: 0;
   margin-bottom: 8px;
   color: var(--ink);
+}
+
+.pageHeader .pageTitle::after {
+  content: '_';
+  color: var(--accent);
+  margin-left: 8px;
+  animation: cursorBlink 1.2s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 .pageHeader .pageEnglish {

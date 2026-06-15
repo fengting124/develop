@@ -1,0 +1,25 @@
+{
+    "file": "5HHb5LPCE9I_30.000_40.000/fake_seg2.mp4",
+    "original": "data/DDL/Raw-2/videos/train/5HHb5LPCE9I_30.000_40.000/5HHb5LPCE9I_30.000_40.000.mp4",
+    "split": "train",
+    "modify_type": "replace",
+    "snum": 2,
+    "fake_segments": [
+        [
+            1.796,
+            10.516
+        ],
+        [
+            11.9,
+            12.78
+        ]
+    ],
+    "fps": 30,
+    "video_frames": 398,
+    "duration": 13.289,
+    "transcripts": "And through my hands I sculpt a form",
+    "fake_info": [
+        "through my hands",
+        "sculpt a form"
+    ]
+}

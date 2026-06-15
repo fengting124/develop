@@ -1,373 +1,735 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button } from '@/components/primitives';
-import { ForensicMark } from '@/components/ForensicMark/ForensicMark';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
+import { ForensicMark } from '@/components/ForensicMark/ForensicMark';
+import { saveImageReport } from '@/data/reportStore';
 import styles from './DetectImage.module.css';
 
 type ProcessState = 'idle' | 'processing' | 'done';
-type RightTab = 'flow' | 'semantic' | 'experts';
-type StepStatus = 'done' | 'active' | 'pending';
 
 const demoImage = '/images/图片检测示例图/image.png';
 
-const steps = [
-  { name: '全局语义读取', english: 'Global semantic reading', duration: 2600 },
-  { name: '局部细节核查', english: 'Local detail review', duration: 3400 },
-  { name: '异构专家协同', english: 'Expert ensemble', duration: 5200 },
-  { name: '证据汇总', english: 'Evidence aggregation', duration: 4200 },
-  { name: '出具结论', english: 'Final verdict', duration: 3000 },
+// ─── 推理日志 ────────────────────────────────────────────
+const logsData = [
+  { time: 200,  text: '初始化图像取证引擎...' },
+  { time: 800,  text: '加载通用检测与靶向适配专家权重...' },
+  { time: 1400, text: '建立与知识图谱 (ConceptNet) 的连接...' },
+  { time: 2100, text: '尝试提取 EXIF 元数据... [失败] 平台已剥离元数据。' },
+  { time: 2800, text: '[空域分析] 多尺度卷积网络扫描局部篡改区域...' },
+  { time: 3500, text: '[频域分析] 快速傅里叶变换完成，检出厨房背景高频周期噪声。' },
+  { time: 4200, text: '[语义对齐] CLIP 与 Grounding DINO 启动场景理解...' },
+  { time: 5100, text: '[警告] 检测到物理逻辑矛盾: 塑料制品盆碗直接置于明火上方。' },
+  { time: 5900, text: '[空域专家] 锁定人物面部区域，光源方向与环境主光不一致。' },
+  { time: 6400, text: '[门控协同] 动态激活靶向专家 Nano Banana Pro...' },
+  { time: 7200, text: '[LoRA 适配] 注入 Nano Banana Pro 专用模型权重...' },
+  { time: 7800, text: '[频域专家] 墙面纹理 FFT 残差显示生成模型周期性指纹。' },
+  { time: 8500, text: '[大模型推理] 校验厨房场景三元组常识逻辑...' },
+  { time: 9800, text: '证据聚合计算完成，三处异常区域均触发告警。' },
+  { time: 10500, text: '[最终结论] 确认内容为 AI 生成/篡改。置信度 0.94。' },
 ];
 
-const evidences = [
-  { name: '实体语义不合理', appearAt: 4200 },
-  { name: '局部纹理异常', appearAt: 8300 },
-  { name: '物体关系违背常识', appearAt: 12000 },
-];
+const totalDuration = 11000;
 
+function formatBytes(size: number) {
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+// ─── 证据锚点（红框） ─────────────────────────────────────
+// 每个 mark 关联 chainIndex（语义链节点）和 expertKeys（激活的专家）
+// 图像内容：农家厨房，女性正在明火上翻炒，疑似塑料盆放于火苗之上
+//
+// 坐标说明（相对于图片容器百分比）：
+//   M-01: 白色盆碗+明火区域，图片中心偏下，label 落在右侧 56%×76%
+//   M-02: 人物面部区域，图片右侧上方，控制右边界≤78% 防止 label 溢出
+//   M-03: 上方旧石墙+挂件区域，左上角集中，label 落在 45%×37%
 const marks = [
-  { x: 28, y: 46, w: 23, h: 25, label: 'M-01', confidence: 0.91, appearAt: 4200, clue: '塑料盆位置异常' },
-  { x: 56, y: 50, w: 14, h: 15, label: 'M-02', confidence: 0.87, appearAt: 8300, clue: '石头质感不合常理' },
-  { x: 73, y: 37, w: 18, h: 21, label: 'M-03', confidence: 0.79, appearAt: 12000, clue: '光影方向偏离' },
+  {
+    id: 'M-01',
+    // 白色盆碗 + 明火叠加区 — center of image
+    // left:20% top:30% width:36% height:46% → 右下角落在 (56%, 76%)，label 清晰可见
+    x: 20, y: 30, w: 36, h: 46,
+    title: '物理逻辑矛盾',
+    desc: '塑料盆直接置于明火之上',
+    appearAt: 5100,
+    tooltip: '【全局语义违和】SGG 提取场景三元组〈塑料盆/碗, 在上方, 明火〉。知识图谱计算〈塑料, 耐热性〉语义距离极高（E_KG = 0.93）。LLM 常识校验输出逻辑违和度 0.90，与物理规律严重矛盾。',
+    chainIndex: 2,
+    expertKeys: ['semantic', 'lora'],
+    provenance: {
+      annotationType: 'semantic',
+      annotationLabel: '语义级标注',
+      sampleCount: 342,
+      sampleType: 'local_edit',
+      sourceDataset: 'COCO/val2017',
+      sampleId: 'local_kitchen_edit_000342',
+      trainedIn: '训练集 v3.1',
+    },
+  },
+  {
+    id: 'M-02',
+    // 女性面部 — 图片右侧，头顶黑色发髻至颈部约 y:6-36%
+    // 右边界控制在 78% (58+20=78)，label 不溢出图片右边缘
+    x: 58, y: 6, w: 20, h: 30,
+    title: '光源方向不一致',
+    desc: '面部高光与环境主光源背离',
+    appearAt: 5900,
+    tooltip: '【全局-局部一致性】空域专家多尺度特征提取发现：人物面部高频残差所反映的高光方向来自右侧，而厨房明火（左下角主光源）应产生左侧高光。光源方向背离角度约 110°，触发光照一致性告警。',
+    chainIndex: 1,
+    expertKeys: ['texture', 'style'],
+    provenance: {
+      annotationType: 'style',
+      annotationLabel: '区域级标注',
+      sampleCount: 156,
+      sampleType: 'full_generation',
+      sourceDataset: 'FODB / ImageNet',
+      sampleId: 'fodb_lighting_kitchen_000156',
+      trainedIn: '训练集 v2.8',
+    },
+  },
+  {
+    id: 'M-03',
+    // 旧石墙 + 挂件区 — 图片左上角，炊具悬挂密集区
+    // 右下角落在 (45%, 37%)，label 居中可见
+    x: 5, y: 4, w: 40, h: 33,
+    title: '纹理生成指纹',
+    desc: '背景墙面含生成模型周期噪声',
+    appearAt: 7800,
+    tooltip: '【频域异常】对墙面区域执行 FFT 分析，高频残差图中检测到规律性周期噪声分布，与扩散模型（Stable Diffusion / FLUX）去噪步骤产生的频域指纹高度吻合。局部噪声梯度与真实摄影图像的自然分布完全断裂。',
+    chainIndex: 1,
+    expertKeys: ['texture', 'frequency'],
+    provenance: {
+      annotationType: 'texture',
+      annotationLabel: '区域级标注',
+      sampleCount: 218,
+      sampleType: 'local_edit',
+      sourceDataset: 'RAISE / OpenImages',
+      sampleId: 'raise_kitchen_wall_000218',
+      trainedIn: '训练集 v3.1',
+    },
+  },
 ];
 
-const tabs = [
-  { key: 'flow', index: '01', cn: '流程', en: 'Flow' },
-  { key: 'semantic', index: '02', cn: '语义链', en: 'Chain' },
-  { key: 'experts', index: '03', cn: '专家', en: 'Experts' },
-] satisfies Array<{ key: RightTab; index: string; cn: string; en: string }>;
+// ─── 语义思维链节点 ───────────────────────────────────────
+const chainNodes = [
+  {
+    index: 0,
+    label: '全局场景锚定',
+    en: 'Global Scene',
+    result: '视觉编码命中：农家厨房·烹饪场景（置信度 0.91）',
+    danger: null,
+    appearAt: 4200,
+  },
+  {
+    index: 1,
+    label: '局部实体解析',
+    en: 'Entity Parsing',
+    result: '识别：人物、明火、盆碗、炒锅、青菜、墙面挂件',
+    danger: '锁定语义离群点：[塑料材质容器 置于 明火上方]',
+    appearAt: 5100,
+  },
+  {
+    index: 2,
+    label: '逻辑与常识校验',
+    en: 'Logic Validation',
+    result: '知识图谱：〈塑料盆, 在上方, 明火〉语义距离 0.93',
+    danger: '大模型评估：物理矛盾 (0.90)；面部光照反向 (0.83)',
+    appearAt: 8500,
+  },
+  {
+    index: 3,
+    label: '证据融合 · 判决',
+    en: 'Evidence Fusion',
+    result: '三处异常区域触发告警，综合置信度 0.94',
+    danger: null,
+    appearAt: 9800,
+  },
+];
 
-const completedTime = steps.reduce<number[]>((acc, step, index) => {
-  acc[index] = (acc[index - 1] ?? 0) + step.duration;
-  return acc;
-}, []);
+// ─── 专家网络 ─────────────────────────────────────────────
+// radar 坐标：cx/cy 是各顶点在 100×100 坐标系中的位置
+const experts = [
+  {
+    key: 'texture',
+    label: '纹理专家',
+    en: 'Texture',
+    cx: 50, cy: 8,        // 顶部
+    weight: 0.45,
+    appearAt: 1000,
+    isTarget: false,
+    tip: '空域多尺度分析，检测局部篡改与几何畸变。贡献权重 0.45',
+  },
+  {
+    key: 'frequency',
+    label: '频域专家',
+    en: 'Frequency',
+    cx: 92, cy: 65,       // 右下
+    weight: 0.38,
+    appearAt: 1000,
+    isTarget: false,
+    tip: 'FFT高频残差分析，识别生成模型周期性噪声。贡献权重 0.38',
+  },
+  {
+    key: 'style',
+    label: '风格专家',
+    en: 'Style',
+    cx: 68, cy: 97,       // 右底
+    weight: 0.42,
+    appearAt: 1000,
+    isTarget: false,
+    tip: '材质笔触分析，识别生成模型风格偏移。贡献权重 0.42',
+  },
+  {
+    key: 'semantic',
+    label: '语义专家',
+    en: 'Semantic',
+    cx: 32, cy: 97,       // 左底
+    weight: 0.78,
+    appearAt: 4000,
+    isTarget: false,
+    tip: '场景语义与常识校验，检测物体组合异常。贡献权重 0.78',
+  },
+  {
+    key: 'lora',
+    label: 'Nano Banana',
+    en: 'Targeted',
+    cx: 8, cy: 65,        // 左下
+    weight: 0.92,
+    appearAt: 7000,
+    isTarget: true,
+    tip: 'LoRA 靶向专家，精准匹配生成模型残留指纹。置信度 0.92',
+  },
+];
 
-const totalDuration = completedTime[completedTime.length - 1] + 400;
+// ─── 雷达图 SVG（纯手写，无库） ───────────────────────────
+function ExpertRadar({
+  elapsed,
+  activeExpertKeys,
+}: {
+  elapsed: number;
+  activeExpertKeys: string[] | null;
+}) {
+  const cx = 50;
+  const cy = 54;     // 稍微偏下，留顶部标签空间
 
-function StatusDot({ status }: { status: StepStatus }) {
-  if (status === 'done') return <span className={styles.dotDone}>✓</span>;
-  if (status === 'active') {
-    return (
-      <motion.span className={styles.dotActive} animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}>
-        ⋯
-      </motion.span>
-    );
+  // 五边形背景网格层（3层）
+  const gridLevels = [0.33, 0.66, 1.0];
+
+  // 计算每个专家从中心到其顶点的方向向量（归一化到 radius）
+  const radius = 38;
+  const activeExperts = experts.filter(e => elapsed >= e.appearAt);
+
+  // 构建雷达填充多边形的顶点
+  function expertPt(e: typeof experts[number], scale = 1) {
+    const dx = e.cx - cx;
+    const dy = e.cy - cy;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const nx = dx / len;
+    const ny = dy / len;
+    return {
+      x: cx + nx * radius * scale,
+      y: cy + ny * radius * scale,
+    };
   }
-  return <span className={styles.dotPending}>○</span>;
-}
 
-function StepItem({ index, name, english, status, time }: { index: string; name: string; english: string; status: StepStatus; time?: string }) {
-  return (
-    <li className={`${styles.step} ${styles[status]}`}>
-      <span className={styles.stepIndex}>{index}</span>
-      <span className={styles.stepBody}>
-        <strong>{name}</strong>
-        <em>{english}</em>
-        <span className={styles.stepState}>{status === 'done' ? `✓ ${time}` : status === 'active' ? '⋯ 进行中' : '○ 等待'}</span>
-      </span>
-    </li>
-  );
-}
+  // 网格五边形顶点（按固定角度）
+  function pentagonPts(r: number) {
+    return experts.map(e => expertPt(e, r / radius)).map(p => `${p.x},${p.y}`).join(' ');
+  }
 
-function FlowPanel({ elapsed }: { elapsed: number }) {
-  const activeStep = completedTime.findIndex((time) => elapsed < time);
+  // 数据填充多边形
+  const dataPolygon = activeExperts.length >= 2
+    ? experts.map(e => {
+        const isActive = elapsed >= e.appearAt;
+        const w = isActive ? e.weight : 0;
+        return expertPt(e, w);
+      }).map(p => `${p.x},${p.y}`).join(' ')
+    : '';
+
   return (
-    <motion.div className={styles.panelInner} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.3 }}>
-      <header className={styles.panelHeader}>
-        <h2>正在显影</h2>
-        <p>─ Developing</p>
-      </header>
-      <ul className={styles.stepList}>
-        {steps.map((step, index) => (
-          <StepItem
-            key={step.name}
-            index={String(index + 1).padStart(2, '0')}
-            name={step.name}
-            english={step.english}
-            status={elapsed >= completedTime[index] ? 'done' : index === activeStep ? 'active' : 'pending'}
-            time={`${(step.duration / 1000).toFixed(1)}s`}
+    <svg
+      viewBox="0 0 100 100"
+      className={styles.radarSvg}
+      aria-label="专家贡献雷达图"
+    >
+      {/* 网格层 */}
+      {gridLevels.map(level => (
+        <polygon
+          key={level}
+          points={pentagonPts(radius * level)}
+          className={styles.radarGrid}
+        />
+      ))}
+
+      {/* 轴线（中心 → 每个顶点） */}
+      {experts.map(e => {
+        const pt = expertPt(e, 1);
+        return (
+          <line
+            key={e.key}
+            x1={cx} y1={cy}
+            x2={pt.x} y2={pt.y}
+            className={styles.radarAxis}
           />
-        ))}
-      </ul>
-    </motion.div>
-  );
-}
+        );
+      })}
 
-function ChainStep({ index, cn, en, status, children }: { index: string; cn: string; en: string; status: StepStatus; children: ReactNode }) {
-  return (
-    <div className={`${styles.chainStep} ${styles[`status${status}`]}`}>
-      <header className={styles.chainStepHeader}>
-        <span className={styles.chainStepIdx}>{index}</span>
-        <span className={styles.chainStepTitles}>
-          <strong>{cn}</strong>
-          <em>{en}</em>
-        </span>
-        <StatusDot status={status} />
-      </header>
-      <div className={styles.chainStepBody}>{children}</div>
-    </div>
-  );
-}
+      {/* 数据填充区 */}
+      {dataPolygon && (
+        <polygon
+          points={dataPolygon}
+          className={styles.radarFill}
+        />
+      )}
 
-function ChainConnector({ active = false }: { active?: boolean }) {
-  return <span className={`${styles.chainConnector} ${active ? styles.chainConnectorActive : ''}`} />;
-}
+      {/* 专家顶点 */}
+      {experts.map(e => {
+        const isVisible = elapsed >= e.appearAt;
+        const pt = expertPt(e, 1);
+        const dataPt = expertPt(e, isVisible ? e.weight : 0);
+        const isHighlighted = activeExpertKeys
+          ? activeExpertKeys.includes(e.key)
+          : isVisible;
 
-function SceneMatchViz() {
-  return (
-    <div className={styles.sceneMatch}>
-      <div className={styles.sceneCandidates}>
-        <span className={styles.sceneTag}>厨房</span>
-        {['客厅', '森林', '花园', '天空', '海洋'].map((item) => (
-          <span key={item} className={`${styles.sceneTag} ${styles.faded}`}>{item}</span>
-        ))}
-      </div>
-      <div className={styles.sceneResult}>
-        <span>命中</span>
-        <span>─</span>
-        <strong>厨房</strong>
-        <em>0.91</em>
-      </div>
-    </div>
-  );
-}
-
-function ObjectDetectViz() {
-  const objects = [
-    { name: '锅', outlier: false },
-    { name: '人', outlier: false },
-    { name: '青菜', outlier: false },
-    { name: '塑料盆', outlier: true },
-    { name: '石头', outlier: true },
-    { name: '火', outlier: false },
-  ];
-  return (
-    <div className={styles.objectDetect}>
-      <div className={styles.objectsRow}>
-        {objects.map((item) => (
-          <span key={item.name} className={`${styles.objectChip} ${item.outlier ? styles.objectChipOutlier : ''}`}>{item.name}</span>
-        ))}
-      </div>
-      <div className={styles.outlierNote}>
-        <span>!</span>
-        <strong>2 个语义离群</strong>
-      </div>
-    </div>
-  );
-}
-
-function LogicCheckViz() {
-  return (
-    <div className={styles.logicCheck}>
-      <div className={styles.triplesRow}>
-        <span>SGG</span>
-        <strong>〈塑料盆, 在上方, 火〉</strong>
-      </div>
-      <div className={styles.triplesRow}>
-        <span>SGG</span>
-        <strong>〈翻炒, 作用于, 石头〉</strong>
-      </div>
-      <div className={styles.llmResult}>
-        <span>LLM 评分</span>
-        <span>─</span>
-        <strong>0.90</strong>
-        <em>荒谬</em>
-      </div>
-    </div>
-  );
-}
-
-function VerdictPreview({ done }: { done: boolean }) {
-  return (
-    <div className={`${styles.verdictPreview} ${done ? styles.verdictReady : ''}`}>
-      {done ? <strong>AI 生成 · 93%</strong> : <span>⋯ 等待证据综合</span>}
-    </div>
-  );
-}
-
-function SemanticChainPanel({ done }: { done: boolean }) {
-  return (
-    <motion.div className={styles.panelInner} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.3 }}>
-      <header className={styles.panelHeader}>
-        <h2>语义思维链</h2>
-        <p>─ Semantic Chain of Thought</p>
-      </header>
-      <div className={styles.chainSteps}>
-        <ChainStep index="01" cn="全局语义浓缩" en="Scene" status="done"><SceneMatchViz /></ChainStep>
-        <ChainConnector active />
-        <ChainStep index="02" cn="一致性校验" en="Consistency" status="done"><ObjectDetectViz /></ChainStep>
-        <ChainConnector active />
-        <ChainStep index="03" cn="逻辑校验" en="Logic" status={done ? 'done' : 'active'}><LogicCheckViz /></ChainStep>
-        <ChainConnector active={done} />
-        <ChainStep index="04" cn="判决" en="Verdict" status={done ? 'done' : 'pending'}><VerdictPreview done={done} /></ChainStep>
-      </div>
-    </motion.div>
-  );
-}
-
-interface Expert {
-  cn: string;
-  en: string;
-  activated: boolean;
-  weight: number;
-}
-
-function ExpertGroup({ groupName, groupEn, experts }: { groupName: string; groupEn: string; experts: Expert[] }) {
-  const max = Math.max(...experts.map((expert) => expert.weight), 0.01);
-  return (
-    <section className={styles.expertGroup}>
-      <header className={styles.expertGroupHeader}>
-        <strong>{groupName}</strong>
-        <em>{groupEn}</em>
-        <span>{experts.filter((expert) => expert.activated).length} / {experts.length}</span>
-      </header>
-      <ul className={styles.expertList}>
-        {experts.map((expert) => (
-          <li key={expert.en} className={`${styles.expertItem} ${expert.activated ? styles.expertItemActive : ''}`}>
-            <span className={`${styles.expertDot} ${expert.activated ? styles.expertDotOn : ''}`} />
-            <span className={styles.expertCn}>{expert.cn}</span>
-            {expert.activated ? (
-              <>
-                <span className={styles.contributionBar}>
-                  <motion.span className={styles.contributionFill} initial={{ width: 0 }} animate={{ width: `${(expert.weight / max) * 100}%` }} transition={{ duration: 0.6, ease: 'easeOut' }} />
-                </span>
-                <span className={styles.contributionValue}>{Math.round(expert.weight * 100)}%</span>
-              </>
-            ) : (
-              <span className={styles.expertSkipped}>未激活</span>
+        return (
+          <g key={e.key}>
+            {/* 轴点 */}
+            <circle
+              cx={pt.x} cy={pt.y} r="2.5"
+              className={`${styles.radarAxisDot} ${isVisible ? styles.radarAxisDotVisible : ''}`}
+            />
+            {/* 数据点 */}
+            {isVisible && (
+              <circle
+                cx={dataPt.x} cy={dataPt.y} r={isHighlighted ? 3.2 : 2}
+                className={`${styles.radarDataDot} ${e.isTarget ? styles.radarDataDotTarget : ''} ${isHighlighted ? styles.radarDataDotActive : ''}`}
+              />
             )}
-          </li>
-        ))}
-      </ul>
-    </section>
+            {/* 标签 */}
+            <text
+              x={e.cx}
+              y={e.cy < cy ? e.cy - 4 : e.cy + 8}
+              className={`${styles.radarLabel} ${isHighlighted && isVisible ? styles.radarLabelActive : ''} ${e.isTarget ? styles.radarLabelTarget : ''}`}
+              textAnchor={e.cx < 30 ? 'end' : e.cx > 70 ? 'start' : 'middle'}
+            >
+              {e.label}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* 中心点 */}
+      <circle cx={cx} cy={cy} r="2" className={styles.radarCenter} />
+    </svg>
   );
 }
 
-function GatingDecision() {
-  return (
-    <section className={styles.gatingBlock}>
-      <header>
-        <span>⊞</span>
-        <strong>门控决策</strong>
-        <em>Gating</em>
-      </header>
-      <p>自适应激活 <strong>5</strong> 位专家（共 <span>7</span> 位）</p>
-      <div className={styles.gatingGrid}>
-        {Array.from({ length: 7 }, (_, index) => (
-          <span key={index} className={index < 5 ? styles.gatingCellOn : ''} />
-        ))}
-      </div>
-    </section>
-  );
-}
+// ─── 语义链节点图 ─────────────────────────────────────────
+function SemanticChain({
+  elapsed,
+  activeNodeIndex,
+}: {
+  elapsed: number;
+  activeNodeIndex: number | null;
+}) {
+  const visibleNodes = chainNodes.filter(n => elapsed >= n.appearAt);
 
-function FinalVerdict() {
   return (
-    <section className={styles.finalVerdict}>
-      <div>
-        <span>综合判决</span>
-        <strong>AI 生成</strong>
-      </div>
-      <p>─ 93% confidence</p>
-    </section>
-  );
-}
+    <div className={styles.chainGraph}>
+      {chainNodes.map((node, i) => {
+        const isVisible = elapsed >= node.appearAt;
+        const isActive = activeNodeIndex === node.index;
+        const isDone = isVisible && (activeNodeIndex === null || activeNodeIndex !== node.index);
+        const isLast = i === chainNodes.length - 1;
+        const prevDone = i > 0 && elapsed >= chainNodes[i - 1].appearAt;
 
-function ExpertRoutingPanel() {
-  return (
-    <motion.div className={styles.panelInner} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.3 }}>
-      <header className={styles.panelHeader}>
-        <h2>异构专家协同</h2>
-        <p>─ Expert Routing & Contribution</p>
-      </header>
-      <ExpertGroup
-        groupName="通用专家"
-        groupEn="General"
-        experts={[
-          { cn: '空域', en: 'Spatial', activated: true, weight: 0.32 },
-          { cn: '频域', en: 'Frequency', activated: true, weight: 0.28 },
-          { cn: '风格', en: 'Style', activated: false, weight: 0 },
-          { cn: '语义', en: 'Semantic', activated: true, weight: 0.18 },
-        ]}
-      />
-      <ExpertGroup
-        groupName="靶向专家"
-        groupEn="Targeted"
-        experts={[
-          { cn: 'SD3', en: 'SD3 LoRA', activated: true, weight: 0.15 },
-          { cn: 'FLUX', en: 'FLUX LoRA', activated: false, weight: 0 },
-          { cn: 'DALL-E', en: 'DALL-E LoRA', activated: true, weight: 0.07 },
-        ]}
-      />
-      <GatingDecision />
-      <FinalVerdict />
-    </motion.div>
-  );
-}
+        return (
+          <div key={node.index} className={styles.chainNodeGroup}>
+            {/* 连接线（节点上方） */}
+            {i > 0 && (
+              <div className={`${styles.chainConnector} ${prevDone ? styles.chainConnectorDone : ''}`}>
+                <svg viewBox="0 0 2 24" className={styles.chainConnectorSvg}>
+                  <line x1="1" y1="0" x2="1" y2="24"
+                    className={`${styles.chainLine} ${prevDone ? styles.chainLineDone : ''}`}
+                    strokeDasharray={prevDone ? 'none' : '3 3'}
+                  />
+                  {prevDone && (
+                    <path d="M0,20 L1,24 L2,20" className={styles.chainArrow} />
+                  )}
+                </svg>
+              </div>
+            )}
 
-function TabBar({ activeTab, onTabChange }: { activeTab: RightTab; onTabChange: (tab: RightTab) => void }) {
-  return (
-    <div className={styles.tabBar}>
-      {tabs.map((tab) => (
-        <button key={tab.key} className={`${styles.tabBtn} ${activeTab === tab.key ? styles.tabBtnActive : ''}`} type="button" onClick={() => onTabChange(tab.key)}>
-          <span>{tab.index}</span>
-          <strong>{tab.cn}</strong>
-          <em>{tab.en}</em>
-        </button>
+            {/* 节点本体 */}
+            <AnimatePresence>
+              {isVisible && (
+                <motion.div
+                  className={`${styles.chainNode} ${isActive ? styles.chainNodeActive : ''} ${isDone && !isActive ? styles.chainNodeDone : ''}`}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                >
+                  {/* 节点头部 */}
+                  <div className={styles.chainNodeHead}>
+                    <span className={`${styles.chainNodeDot} ${isActive ? styles.chainNodeDotActive : styles.chainNodeDotDone}`}>
+                      {isActive ? (
+                        // 激活：脉冲圆
+                        <span className={styles.chainDotPulse} />
+                      ) : (
+                        // 完成：对勾
+                        <svg viewBox="0 0 10 10" className={styles.chainCheckSvg}>
+                          <polyline points="1.5,5 4,7.5 8.5,2.5" className={styles.chainCheck} />
+                        </svg>
+                      )}
+                    </span>
+                    <span className={styles.chainNodeIdx}>
+                      {String(node.index + 1).padStart(2, '0')}
+                    </span>
+                    <span className={styles.chainNodeLabel}>{node.label}</span>
+                    <span className={styles.chainNodeEn}>{node.en}</span>
+                  </div>
+
+                  {/* 节点详情（只有 active 或展开时显示） */}
+                  <div className={styles.chainNodeBody}>
+                    <p className={styles.chainNodeResult}>{node.result}</p>
+                    {node.danger && (
+                      <p className={styles.chainNodeDanger}>
+                        <span className={styles.chainDangerMark}>!</span>
+                        {node.danger}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 末节点下方：结论徽章 */}
+            {isLast && isVisible && (
+              <motion.div
+                className={styles.chainConclusion}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span className={styles.conclusionStamp}>AI 生成</span>
+                <span className={styles.conclusionConf}>置信度 0.94</span>
+              </motion.div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* 未出现节点的占位 */}
+      {chainNodes.filter(n => elapsed < n.appearAt).map((node, i) => (
+        <div key={`pending-${node.index}`} className={styles.chainNodeGroup}>
+          {(visibleNodes.length > 0 || i > 0) && (
+            <div className={styles.chainConnector}>
+              <svg viewBox="0 0 2 24" className={styles.chainConnectorSvg}>
+                <line x1="1" y1="0" x2="1" y2="24" className={styles.chainLine} strokeDasharray="3 3" />
+              </svg>
+            </div>
+          )}
+          <div className={styles.chainNodePending}>
+            <span className={styles.chainNodeDotPending} />
+            <span className={styles.chainNodeIdx} style={{ opacity: 0.4 }}>{String(node.index + 1).padStart(2, '0')}</span>
+            <span className={styles.chainNodeLabel} style={{ opacity: 0.35 }}>{node.label}</span>
+          </div>
+        </div>
       ))}
     </div>
   );
 }
 
-function DetectRight({ state, elapsed }: { state: ProcessState; elapsed: number }) {
-  const [activeTab, setActiveTab] = useState<RightTab>('flow');
+// ─── 推理日志 ─────────────────────────────────────────────
+function TerminalLogs({ elapsed }: { elapsed: number }) {
+  const visibleLogs = logsData.filter(l => elapsed >= l.time);
+  const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (state === 'idle') return undefined;
-    if (state === 'done') {
-      window.setTimeout(() => setActiveTab('experts'), 400);
-      return undefined;
-    }
-    const cycle: RightTab[] = ['flow', 'semantic', 'experts'];
-    const interval = window.setInterval(() => {
-      setActiveTab((previous) => cycle[(cycle.indexOf(previous) + 1) % cycle.length]);
-    }, 6000);
-    return () => window.clearInterval(interval);
-  }, [state]);
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [visibleLogs.length]);
 
   return (
-    <aside className={styles.rightPanel}>
-      <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className={styles.tabContent}>
-        <AnimatePresence mode="wait">
-          {activeTab === 'flow' ? <FlowPanel key="flow" elapsed={elapsed} /> : null}
-          {activeTab === 'semantic' ? <SemanticChainPanel key="semantic" done={state === 'done'} /> : null}
-          {activeTab === 'experts' ? <ExpertRoutingPanel key="experts" /> : null}
-        </AnimatePresence>
+    <div className={styles.terminal}>
+      <div className={styles.terminalHeader}>推 理 日 志 ─ Log</div>
+      <div className={styles.terminalBody}>
+        {visibleLogs.map((log, i) => (
+          <div
+            key={i}
+            className={
+              log.text.includes('[警告]') || log.text.includes('[最终结论]')
+                ? styles.logDanger
+                : styles.logInfo
+            }
+          >
+            <span className={styles.logTimestamp}>{(log.time / 1000).toFixed(3)}s</span>
+            {log.text}
+          </div>
+        ))}
+        <div ref={endRef} />
       </div>
-    </aside>
+    </div>
   );
 }
 
+// ─── 右侧面板（三 Tab） ────────────────────────────────────
+type TabKey = 'chain' | 'experts' | 'evidence';
+
+function RightPanel({
+  elapsed,
+  activeMarkId,
+  setActiveMarkId,
+}: {
+  elapsed: number;
+  activeMarkId: string | null;
+  setActiveMarkId: (id: string | null) => void;
+}) {
+  const [tab, setTab] = useState<TabKey>('chain');
+
+  // 当 hover 某个 mark 时，自动切换到对应 tab 并高亮
+  const activeMark = marks.find(m => m.id === activeMarkId);
+  const activeChainIndex = activeMark?.chainIndex ?? null;
+  const activeExpertKeys = activeMark?.expertKeys ?? null;
+
+  // 专家显示：激活哪些（用于雷达图高亮）
+  const highlightedExperts = activeExpertKeys;
+
+  const tabs: { key: TabKey; label: string; en: string }[] = [
+    { key: 'chain',   label: '语义链',  en: 'CHAIN'   },
+    { key: 'experts', label: '专家网络', en: 'EXPERTS' },
+    { key: 'evidence',label: '证据锚点', en: 'EVIDENCE'},
+  ];
+
+  return (
+    <motion.aside
+      className={styles.rightPanel}
+      initial={{ opacity: 0, x: 16 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.15, duration: 0.35 }}
+    >
+      {/* Tab 切换 */}
+      <div className={styles.tabBar}>
+        {tabs.map(t => (
+          <button
+            key={t.key}
+            className={`${styles.tabBtn} ${tab === t.key ? styles.tabBtnActive : ''}`}
+            onClick={() => setTab(t.key)}
+            type="button"
+          >
+            <span className={styles.tabBtnLabel}>{t.label}</span>
+            <span className={styles.tabBtnEn}>{t.en}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Tab 内容 */}
+      <div className={styles.tabContent}>
+        <AnimatePresence mode="wait">
+          {tab === 'chain' && (
+            <motion.div
+              key="chain"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+              className={styles.tabPane}
+            >
+              <SemanticChain elapsed={elapsed} activeNodeIndex={activeChainIndex} />
+            </motion.div>
+          )}
+
+          {tab === 'experts' && (
+            <motion.div
+              key="experts"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+              className={styles.tabPane}
+            >
+              <div className={styles.radarWrap}>
+                <ExpertRadar elapsed={elapsed} activeExpertKeys={highlightedExperts} />
+                <div className={styles.radarLegend}>
+                  {experts.map(e => {
+                    const isVisible = elapsed >= e.appearAt;
+                    const isHl = highlightedExperts
+                      ? highlightedExperts.includes(e.key)
+                      : isVisible;
+                    return (
+                      <div
+                        key={e.key}
+                        className={`${styles.legendItem} ${isHl && isVisible ? styles.legendItemActive : ''} ${!isVisible ? styles.legendItemPending : ''} ${e.isTarget ? styles.legendItemTarget : ''}`}
+                      >
+                        <span className={styles.legendDot} />
+                        <span className={styles.legendLabel}>{e.label}</span>
+                        {isVisible && (
+                          <span className={styles.legendWeight}>
+                            {Math.round(e.weight * 100)}%
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 专家详情列表 */}
+              <div className={styles.expertList}>
+                {experts.map(e => {
+                  const isVisible = elapsed >= e.appearAt;
+                  const isHl = highlightedExperts ? highlightedExperts.includes(e.key) : false;
+                  return (
+                    <div
+                      key={e.key}
+                      className={`${styles.expertRow} ${isVisible ? styles.expertRowVisible : ''} ${isHl ? styles.expertRowHighlit : ''} ${e.isTarget ? styles.expertRowTarget : ''}`}
+                    >
+                      <div className={styles.expertRowHead}>
+                        <span className={styles.expertRowName}>{e.label}</span>
+                        {e.isTarget && <span className={styles.targetBadge}>[TARGET ACTIVATED] 靶向</span>}
+                        {isVisible && (
+                          <span className={styles.expertRowWeight}>
+                            {Math.round(e.weight * 100)}%
+                          </span>
+                        )}
+                      </div>
+                      {isVisible && (
+                        <div className={styles.expertBarWrap}>
+                          <motion.div
+                            className={`${styles.expertBarFill} ${e.isTarget ? styles.expertBarTarget : ''}`}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${e.weight * 100}%` }}
+                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                          />
+                        </div>
+                      )}
+                      {!isVisible && (
+                        <div className={styles.expertBarWrap}>
+                          <div className={styles.expertBarPending} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {tab === 'evidence' && (
+            <motion.div
+              key="evidence"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+              className={styles.tabPane}
+            >
+              <div className={styles.evidenceList}>
+                {marks.map(mark => {
+                  const isVisible = elapsed >= mark.appearAt;
+                  const isActive = activeMarkId === mark.id;
+                  return (
+                    <div
+                      key={mark.id}
+                      className={`${styles.evidenceCard} ${isVisible ? styles.evidenceCardVisible : ''} ${isActive ? styles.evidenceCardActive : ''}`}
+                      onMouseEnter={() => isVisible && setActiveMarkId(mark.id)}
+                      onMouseLeave={() => isVisible && setActiveMarkId(null)}
+                    >
+                      <div className={styles.evidenceCardHead}>
+                        <span className={styles.evidenceId}>{mark.id}</span>
+                        <span className={styles.evidenceTitle}>{mark.title}</span>
+                      </div>
+                      <p className={styles.evidenceDesc}>{mark.desc}</p>
+                      {isActive && (
+                        <motion.p
+                          className={styles.evidenceTip}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {mark.tooltip}
+                        </motion.p>
+                      )}
+                      {/* 关联专家标签 */}
+                      {isVisible && (
+                        <div className={styles.evidenceExperts}>
+                          {mark.expertKeys.map(k => {
+                            const ex = experts.find(e => e.key === k);
+                            return ex ? (
+                              <span key={k} className={`${styles.evidenceExpertTag} ${ex.isTarget ? styles.evidenceExpertTagTarget : ''}`}>
+                                {ex.label}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {marks.every(m => elapsed < m.appearAt) && (
+                  <p className={styles.evidencePending}>证据锚点将在分析过程中逐步显影…</p>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* 底部数据栏 */}
+      {elapsed > 3500 && (
+        <motion.div
+          className={styles.physicsPanel}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className={styles.physicsRow}>
+            <span className={styles.physicsLabel}>EXIF 来源</span>
+            <span className={styles.physicsValue}>Stable Diffusion XL · 已剥离</span>
+          </div>
+          <div className={styles.physicsRow}>
+            <span className={styles.physicsLabel}>FFT 高频残差</span>
+            <div className={styles.fftMini}>
+              {[30, 45, 80, 60, 90, 40, 70, 55].map((h, i) => (
+                <span
+                  key={i}
+                  className={`${styles.fftBar} ${i % 2 === 0 ? styles.fftBarAccent : ''}`}
+                  style={{ height: `${h}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </motion.aside>
+  );
+}
+
+// ─── 主页面 ──────────────────────────────────────────────
 export function DetectImage() {
   const [state, setState] = useState<ProcessState>('idle');
   const [imageSrc, setImageSrc] = useState(demoImage);
+  const [sourceName, setSourceName] = useState('demo-image.png');
+  const [sourceSize, setSourceSize] = useState('front-end sample');
+  const [dimensions, setDimensions] = useState('detecting');
   const [elapsed, setElapsed] = useState(0);
-  const [activeMark, setActiveMark] = useState<string | null>(null);
+  const [activeMarkId, setActiveMarkId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
-  const startProcessing = (src = demoImage) => {
+  const startProcessing = (src = demoImage, meta?: { name?: string; size?: string }) => {
     setImageSrc(src);
+    setSourceName(meta?.name ?? 'demo-image.png');
+    setSourceSize(meta?.size ?? 'front-end sample');
+    setDimensions('detecting');
     setElapsed(0);
-    setActiveMark(null);
+    setActiveMarkId(null);
     setState('processing');
   };
 
   useEffect(() => {
-    if (state !== 'processing') return undefined;
+    if (state !== 'processing') return;
     const startedAt = Date.now();
-    const interval = window.setInterval(() => setElapsed(Date.now() - startedAt), 100);
+    const interval = window.setInterval(() => setElapsed(Date.now() - startedAt), 50);
     const doneTimer = window.setTimeout(() => setState('done'), totalDuration);
     return () => {
       window.clearInterval(interval);
@@ -375,77 +737,248 @@ export function DetectImage() {
     };
   }, [state]);
 
-  const visibleMarks = marks.filter((mark) => elapsed >= mark.appearAt || state === 'done');
-  const visibleEvidences = evidences.filter((evidence) => elapsed >= evidence.appearAt || state === 'done');
-
   const handleFile = (file?: File) => {
     if (!file) return;
-    startProcessing(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => {
+      startProcessing(String(reader.result), {
+        name: file.name,
+        size: formatBytes(file.size),
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
+  const openReport = () => {
+    const reportId = saveImageReport({
+      src: imageSrc,
+      sourceName,
+      sizeLabel: sourceSize,
+      dimensions,
+    });
+    navigate(`/detect/report/${reportId}`);
+  };
+
+  // 当 hover mark 时，同步切换图片上红框高亮 + 右侧联动
+  // （右侧面板通过 activeMarkId 联动）
+
   return (
-    <main className={styles.detectPage}>
-      <UserTopbar title="图片鉴别" english="IMAGE" />
+    <div className={styles.detectPage}>
+      <UserTopbar title="图像取证" english="FORENSICS" />
+
       {state === 'idle' ? (
-        <section className={styles.idle}>
-          <button
-            className={styles.dropzone}
+        /* ── IDLE ── */
+        <div className={styles.idleState}>
+          <div
+            className={styles.uploadBox}
             onClick={() => inputRef.current?.click()}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault();
-              handleFile(event.dataTransfer.files[0]);
+            onDragOver={e => e.preventDefault()}
+            onDrop={e => {
+              e.preventDefault();
+              handleFile(e.dataTransfer.files?.[0]);
             }}
-            type="button"
           >
-            <span>拖入或点击选择一张图片</span>
-            <em>─ Drop your image to begin ─</em>
-            <strong>支持 JPG · PNG · WebP</strong>
-          </button>
-          <input ref={inputRef} hidden type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => handleFile(event.target.files?.[0])} />
-          <Button variant="text" prefix="─" suffix="→" onClick={() => startProcessing(demoImage)}>使用示例图</Button>
-        </section>
-      ) : (
-        <section className={styles.detectMain}>
-          <div className={styles.detectLeft}>
-            <div className={styles.imagePanel}>
-              <div className={styles.imageWrap}>
-                <img src={imageSrc} alt="" />
-                <AnimatePresence>
-                  {visibleMarks.map((mark) => (
-                    <ForensicMark key={mark.label} {...mark} active={activeMark === mark.label} />
-                  ))}
-                </AnimatePresence>
-                {state === 'done' ? <span className={styles.imageBadge}>FAKE</span> : null}
-              </div>
+            <div className={styles.uploadIconSvg}>
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.2">
+                <rect x="8" y="12" width="32" height="28" rx="1" />
+                <line x1="24" y1="20" x2="24" y2="32" />
+                <polyline points="18,26 24,20 30,26" />
+                <line x1="14" y1="36" x2="34" y2="36" />
+              </svg>
             </div>
-            <div className={styles.evidenceBar}>
-              <h2>已发现的线索</h2>
-              <div>
-                {evidences.map((evidence) => {
-                  const visible = visibleEvidences.includes(evidence);
+            <div className={styles.uploadText}>上传待核验样本</div>
+            <div className={styles.uploadSub}>支持 JPG · PNG · WebP — 或拖拽至此</div>
+          </div>
+          <input
+            ref={inputRef}
+            hidden
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={e => handleFile(e.target.files?.[0])}
+          />
+          <button className={styles.demoBtn} onClick={() => startProcessing(demoImage)}>
+            使用示例样本
+          </button>
+        </div>
+      ) : (
+        /* ── PROCESSING / DONE ── */
+        <div className={styles.workspace}>
+          {/* 左侧：图片画布 */}
+          <div className={styles.canvasCol}>
+            <div className={styles.imageWrap}>
+              <img
+                src={imageSrc}
+                alt="待核验样本"
+                className={styles.subjectImage}
+                onLoad={(event) => {
+                  const target = event.currentTarget;
+                  setDimensions(`${target.naturalWidth} x ${target.naturalHeight}`);
+                }}
+              />
+
+              {/* 扫描线 */}
+              {state === 'processing' && (
+                <>
+                  <div className={styles.scanLineH} />
+                  <div className={styles.scanGrid} />
+                </>
+              )}
+
+              {/* 取证红框（联动 activeMarkId） */}
+              <AnimatePresence>
+                {marks
+                  .filter(m => elapsed >= m.appearAt)
+                  .map(mark => (
+                    <ForensicMark
+                      key={mark.id}
+                      x={mark.x}
+                      y={mark.y}
+                      w={mark.w}
+                      h={mark.h}
+                      label={`${mark.id} · ${mark.title}`}
+                      confidence={0.94}
+                      active={activeMarkId === mark.id}
+                      // M-02 在图片右侧，标签向左翻转避免溢出
+                      calloutSide={mark.id === 'M-02' ? 'left' : 'right'}
+                    />
+                  ))}
+              </AnimatePresence>
+
+              {/* 结论印章 */}
+              {state === 'done' && (
+                <motion.div
+                  className={styles.verdictStampWrap}
+                  initial={{ scale: 2, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                >
+                  <div className={styles.verdictStamp}>AI 生成</div>
+                </motion.div>
+              )}
+            </div>
+
+            {/* 证据锚点快捷入口（图片下方，hover 联动 + 方向二：溯源展开层） */}
+            {(state === 'processing' || state === 'done') && (
+              <div className={styles.anchorRow}>
+                {marks.map(mark => {
+                  const isVisible = elapsed >= mark.appearAt;
+                  const isActive = activeMarkId === mark.id;
                   return (
-                    <motion.span key={evidence.name} className={visible ? styles.evidenceVisible : ''} initial={false} animate={visible ? { x: 0, opacity: 1 } : { x: 16, opacity: 0.45 }}>
-                      {visible ? '●' : '○'} {evidence.name}
-                    </motion.span>
+                    <div key={mark.id} className={styles.anchorChipWrap}>
+                      <button
+                        type="button"
+                        className={`${styles.anchorChip} ${isVisible ? styles.anchorChipVisible : ''} ${isActive ? styles.anchorChipActive : ''}`}
+                        onMouseEnter={() => isVisible && setActiveMarkId(mark.id)}
+                        onMouseLeave={() => isVisible && setActiveMarkId(null)}
+                        disabled={!isVisible}
+                      >
+                        <span className={styles.anchorId}>{mark.id}</span>
+                        <span className={styles.anchorDesc}>{mark.desc}</span>
+                        {isVisible && (
+                          <span className={styles.anchorProvenanceIcon} title="查看标注溯源">⊕</span>
+                        )}
+                      </button>
+                      {/* 方向二：溯源展开层 — active 时显示 */}
+                      <AnimatePresence>
+                        {isActive && isVisible && (
+                          <motion.div
+                            className={styles.provenancePanel}
+                            initial={{ opacity: 0, y: -6, scaleY: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                            exit={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
+                            style={{ transformOrigin: 'top center' }}
+                          >
+                            <div className={styles.provenanceHeader}>
+                              <span className={styles.provenanceTag}>标注溯源</span>
+                              <span className={styles.provenanceTagEn}>ANNOTATION PROVENANCE</span>
+                            </div>
+                            <div className={styles.provenanceRows}>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>标注类型</span>
+                                <span className={styles.provenanceVal}>{mark.provenance.annotationLabel}</span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>训练依据</span>
+                                <span className={`${styles.provenanceVal} ${styles.provenanceValAccent}`}>
+                                  {mark.provenance.annotationType} 样本 × {mark.provenance.sampleCount}
+                                </span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>样本类型</span>
+                                <span className={styles.provenanceVal}>{mark.provenance.sampleType}</span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>来源数据集</span>
+                                <span className={styles.provenanceVal}>{mark.provenance.sourceDataset}</span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>样本 ID</span>
+                                <span className={`${styles.provenanceVal} ${styles.provenanceValMono}`}>{mark.provenance.sampleId}</span>
+                              </div>
+                              <div className={styles.provenanceRow}>
+                                <span className={styles.provenanceKey}>写入版本</span>
+                                <span className={styles.provenanceVal}>{mark.provenance.trainedIn}</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   );
                 })}
               </div>
-            </div>
-            {state === 'done' ? (
-              <div className={styles.doneActions}>
-                {marks.map((mark) => (
-                  <button key={mark.label} type="button" onMouseEnter={() => setActiveMark(mark.label)} onMouseLeave={() => setActiveMark(null)}>
-                    {mark.label} · {mark.clue}
-                  </button>
-                ))}
-                <Link to="/detect/report/demo">─ 查看完整报告 →</Link>
-              </div>
-            ) : null}
+            )}
+
+            {/* 操作按钮 */}
+            {state === 'done' && (
+              <motion.div
+                className={styles.actionsRow}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <button
+                  className={styles.reportBtn}
+                  onClick={openReport}
+                >
+                  查看详细报告 →
+                </button>
+                <button className={styles.resetBtn} onClick={() => setState('idle')}>
+                  重新检测
+                </button>
+              </motion.div>
+            )}
           </div>
-          <DetectRight state={state} elapsed={elapsed} />
-        </section>
+
+          {/* 右侧：三 Tab 分析面板 */}
+          <RightPanel
+            elapsed={elapsed}
+            activeMarkId={activeMarkId}
+            setActiveMarkId={setActiveMarkId}
+          />
+        </div>
       )}
-    </main>
+
+      {/* 底部进度条 + 推理日志 */}
+      {state !== 'idle' && (
+        <footer className={styles.bottomBar}>
+          {/* 进度条 */}
+          <div className={styles.progressTrack}>
+            <div className={styles.progressFill} style={{ width: `${Math.min(100, (elapsed / totalDuration) * 100)}%` }} />
+            <span className={styles.progressPhase}>
+              {state === 'done'
+                ? '✓ 显影完成'
+                : elapsed < 2000 ? '初始化...'
+                : elapsed < 4200 ? '语义解析...'
+                : elapsed < 7000 ? '专家协同...'
+                : '证据聚合...'}
+            </span>
+          </div>
+          {/* 日志 */}
+          <TerminalLogs elapsed={elapsed} />
+        </footer>
+      )}
+    </div>
   );
 }

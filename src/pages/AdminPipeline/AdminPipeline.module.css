@@ -1,5 +1,6 @@
 .page {
   width: 100%;
+  padding: 48px 64px 32px;
 }
 
 .dataBlocksGrid {
@@ -14,6 +15,8 @@
   flex-direction: column;
   gap: var(--space-5);
 }
+
+
 
 .dataBlockHeader {
   display: flex;

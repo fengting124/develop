@@ -1,0 +1,106 @@
+.bootScreen {
+  position: fixed;
+  inset: 0;
+  background: #0E0D0B;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  overflow: hidden;
+}
+
+.terminal {
+  width: 80%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  position: relative;
+  z-index: 2;
+}
+
+.logo {
+  font-size: 64px;
+  font-family: var(--font-serif);
+  letter-spacing: 0.2em;
+  color: var(--surface);
+  text-shadow: 0 0 30px rgba(200, 65, 46, 0.4);
+  animation: glitch 3s infinite;
+}
+
+@keyframes glitch {
+  0% { transform: translate(0) }
+  20% { transform: translate(-2px, 1px) }
+  21% { transform: translate(2px, -1px) }
+  22% { transform: translate(0) }
+  100% { transform: translate(0) }
+}
+
+.logs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 16px;
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(200, 65, 46, 0.6);
+}
+
+.logLine {
+  opacity: 0;
+  animation: typeIn 0.1s forwards;
+}
+
+@keyframes typeIn {
+  to { opacity: 1; }
+}
+
+.cursor {
+  width: 12px;
+  height: 20px;
+  background: var(--accent);
+  animation: blink 1s step-end infinite;
+  margin-top: 8px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30vh;
+  background: linear-gradient(to bottom, transparent, rgba(200, 65, 46, 0.1), transparent);
+  animation: scan 4s linear infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100vh); }
+  100% { transform: translateY(200vh); }
+}
+
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(200, 65, 46, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 65, 46, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  transform: perspective(500px) rotateX(60deg) scale(2);
+  transform-origin: bottom center;
+  opacity: 0.3;
+  z-index: 1;
+  animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+  0% { transform: perspective(500px) rotateX(60deg) translateY(0) scale(2); }
+  100% { transform: perspective(500px) rotateX(60deg) translateY(40px) scale(2); }
+}
