@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button, EdgeRule, Modal, PageContainer, useToast } from '@/components/primitives';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
+import { getDetection, type DetectionDetailResponse } from '@/api/backend';
 import { imageDemo } from '@/data/mocks';
 import styles from './Report.module.css';
 
@@ -48,9 +50,92 @@ const timelineEntries = [
   ['14:23:23', '出具结论', ''],
 ];
 
+function formatPercent(value: number) {
+  return `${Math.round(value * 100)}%`;
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return 'N/A';
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
+}
+
+function formatClock(value?: string | null) {
+  if (!value) return '--:--:--';
+  return new Intl.DateTimeFormat('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(new Date(value));
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+
+function verdictText(detail: DetectionDetailResponse | null) {
+  if (detail?.status === 'FAILED') return { cn: '检测失败', en: 'FAILED', confidence: 0 };
+  if (detail?.report?.verdict === 'LIKELY_AUTHENTIC') return { cn: '可能真实', en: 'REAL', confidence: detail.report.confidence };
+  if (detail?.report?.verdict === 'UNCERTAIN') return { cn: '结果不确定', en: 'UNCERTAIN', confidence: detail.report.confidence };
+  return { cn: 'AI 生成', en: 'FAKE', confidence: detail?.report?.confidence ?? imageDemo.confidence };
+}
+
 export function Report() {
   const [modal, setModal] = useState<'pdf' | 'archive' | null>(null);
+  const [detail, setDetail] = useState<DetectionDetailResponse | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { showToast } = useToast();
+  const { id } = useParams();
+  const location = useLocation();
+  const routeState = location.state as { imageSrc?: string } | null;
+
+  useEffect(() => {
+    if (!id || id === 'demo') return undefined;
+    let active = true;
+    getDetection(id)
+      .then((nextDetail) => {
+        if (active) setDetail(nextDetail);
+      })
+      .catch((error) => {
+        if (active) setLoadError(error instanceof Error ? error.message : 'Report load failed.');
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  const reportVerdict = verdictText(detail);
+  const reportImageSrc = routeState?.imageSrc ?? (id ? window.sessionStorage.getItem(`detection-preview:${id}`) : null) ?? imageDemo.src;
+  const evidenceItems = useMemo(() => {
+    if (!detail?.predictions.length) {
+      return imageDemo.marks.map((mark) => ({
+        code: mark.label,
+        name: mark.name,
+        description: `${mark.name} region shows visual inconsistency with the surrounding image.`,
+      }));
+    }
+    return detail.predictions.map((prediction, index) => ({
+      code: `M-${String(index + 1).padStart(2, '0')}`,
+      name: prediction.modelId,
+      description: `${prediction.modelId} ${prediction.modelVersion} returned ${prediction.label} with score ${formatPercent(prediction.normalizedScore)}, threshold ${prediction.threshold.toFixed(2)}, latency ${prediction.latencyMs}ms.`,
+    }));
+  }, [detail]);
+
+  const timeline = useMemo(() => {
+    if (!detail) return timelineEntries;
+    return [
+      [formatClock(detail.createdAt), '任务创建', detail.filename],
+      [formatClock(detail.startedAt), '模型推理', detail.status],
+      [formatClock(detail.completedAt), '报告生成', detail.report?.riskLevel ?? detail.failureReason ?? '等待结果'],
+    ];
+  }, [detail]);
 
   const completeAction = () => {
     showToast(modal === 'pdf' ? 'PDF 导出任务已创建' : '报告已归档', 'success');
@@ -97,7 +182,7 @@ export function Report() {
 
         <section>
           <h2>一. 送检材料</h2>
-          <img src={imageDemo.src} className={styles.thumb} alt="" />
+          <img src={reportImageSrc} className={styles.thumb} alt="" />
           <dl className={styles.meta}>
             <dt>类型</dt>
             <dd>图片</dd>
@@ -106,12 +191,37 @@ export function Report() {
             <dt>送检</dt>
             <dd>2026.11.21 14:23</dd>
           </dl>
+          {detail ? (
+            <dl className={styles.meta}>
+              <dt>API Type</dt>
+              <dd>{detail.contentType}</dd>
+              <dt>API Size</dt>
+              <dd>{detail.width} × {detail.height}</dd>
+              <dt>SHA-256</dt>
+              <dd>{detail.sha256.slice(0, 16)}...</dd>
+              <dt>File</dt>
+              <dd>{formatFileSize(detail.fileSize)}</dd>
+            </dl>
+          ) : null}
         </section>
 
         <hr className={styles.sectionDivider} />
 
         <section>
           <h2>二. 鉴别结论</h2>
+          {detail ? (
+            <div className={styles.verdictCardLarge}>
+              <p className={styles.verdictCardLargeCn}>{reportVerdict.cn}</p>
+              <p className={styles.verdictCardLargeEn}>{reportVerdict.en}</p>
+              <p className={styles.verdictCardLargeConf}>
+                <span className={styles.verdictConfDash} />
+                <span><span className={styles.verdictConfValue}>{formatPercent(reportVerdict.confidence)}</span> confidence</span>
+                <span className={styles.verdictConfDash} />
+              </p>
+            </div>
+          ) : null}
+          {loadError ? <p className={styles.footer}>{loadError}</p> : null}
+          {!detail ? (
           <div className={styles.verdictCardLarge}>
             <p className={styles.verdictCardLargeCn}>AI 生成</p>
             <p className={styles.verdictCardLargeEn}>FAKE</p>
@@ -121,6 +231,7 @@ export function Report() {
               <span className={styles.verdictConfDash} />
             </p>
           </div>
+          ) : null}
         </section>
 
         <hr className={styles.sectionDivider} />
@@ -128,13 +239,13 @@ export function Report() {
         <section>
           <h2>三. 三条关键证据</h2>
           <div className={styles.evidenceList}>
-            {imageDemo.marks.map((mark) => (
+            {evidenceItems.map((mark) => (
               <EvidenceItem
-                key={mark.label}
-                code={mark.label}
+                key={mark.code}
+                code={mark.code}
                 name={mark.name}
-                thumb={imageDemo.src}
-                description={`${mark.name} 区域与全局语义存在偏移，局部纹理、边缘过渡和光照响应不符合自然成像规律。`}
+                thumb={reportImageSrc}
+                description={mark.description}
               />
             ))}
           </div>
@@ -145,7 +256,7 @@ export function Report() {
         <section>
           <h2>四. 显影过程</h2>
           <div className={styles.timelineLog}>
-            {timelineEntries.map(([time, event, note]) => (
+            {timeline.map(([time, event, note]) => (
               <p key={`${time}-${event}`}>
                 <span>{time}</span>
                 <strong>─ {event}</strong>
@@ -159,7 +270,7 @@ export function Report() {
 
         <footer className={styles.footer}>
           <p>DEVELOP · 由系统自动生成 · 仅供参考</p>
-          <p>报告时间 ─ 2026.11.21 14:23:24</p>
+          <p>报告时间 ─ {formatDateTime(detail?.report?.createdAt ?? detail?.completedAt)}</p>
         </footer>
       </article>
       </PageContainer>

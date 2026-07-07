@@ -166,6 +166,33 @@
   transition: all 200ms ease-out;
 }
 
+.resultPill,
+.errorText {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  padding: 0 18px;
+}
+
+.resultPill {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.errorText {
+  max-width: 360px;
+  border-color: var(--fake);
+  background: var(--fake-soft);
+  color: var(--fake);
+}
+
 .doneActions button > *,
 .doneActions a > * {
   transform: translateY(-1px);
