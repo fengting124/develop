@@ -1,3 +1,5 @@
+name: aigc-forensics
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -17,5 +19,56 @@ services:
       retries: 5
     restart: unless-stopped
 
+  nonescape-mini:
+    build:
+      context: ../model-services/nonescape-mini
+    image: aigc-forensics/nonescape-mini:local
+    container_name: aigc-forensics-nonescape-mini
+    ports:
+      - "5010:5010"
+    volumes:
+      - shared-storage:/data/storage:ro
+      - model-weights:/models/weights
+    environment:
+      MODEL_WEIGHTS_DIR: /models/weights
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5010/health', timeout=2).read()",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend-java/Dockerfile
+    image: aigc-forensics/backend:local
+    container_name: aigc-forensics-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nonescape-mini:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/aigc_forensics
+      DB_USERNAME: aigc
+      DB_PASSWORD: aigc
+      SERVER_PORT: 8080
+      STORAGE_ROOT: /data/storage
+      APP_MODEL_REGISTRY_NONESCAPE_MINI_ENDPOINT_URL: http://nonescape-mini:5010
+    ports:
+      - "8080:8080"
+    volumes:
+      - shared-storage:/data/storage
+    restart: unless-stopped
+
 volumes:
   postgres-data:
+  shared-storage:
+  model-weights:

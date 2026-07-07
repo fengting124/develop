@@ -102,6 +102,11 @@ public class ModelRegistry {
         return endpointUrl;
     }
 
+    public void updateEndpointUrl(String endpointUrl, Instant updatedAt) {
+        this.endpointUrl = endpointUrl;
+        this.updatedAt = updatedAt;
+    }
+
     public boolean isEnabled() {
         return enabled;
     }
