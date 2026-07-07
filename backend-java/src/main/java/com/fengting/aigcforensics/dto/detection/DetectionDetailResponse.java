@@ -1,6 +1,7 @@
 package com.fengting.aigcforensics.dto.detection;
 
 import java.time.Instant;
+import java.util.List;
 
 import com.fengting.aigcforensics.domain.DetectionStatus;
 
@@ -17,5 +18,7 @@ public record DetectionDetailResponse(
         int height,
         Instant createdAt,
         Instant startedAt,
-        Instant completedAt) {
+        Instant completedAt,
+        List<DetectionPredictionResponse> predictions,
+        DetectionReportResponse report) {
 }

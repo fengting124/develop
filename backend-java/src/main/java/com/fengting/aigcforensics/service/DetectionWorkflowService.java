@@ -3,6 +3,7 @@ package com.fengting.aigcforensics.service;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
@@ -15,10 +16,15 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fengting.aigcforensics.domain.DetectionStatus;
 import com.fengting.aigcforensics.domain.DetectionTask;
 import com.fengting.aigcforensics.domain.MediaAsset;
+import com.fengting.aigcforensics.domain.ModelPrediction;
 import com.fengting.aigcforensics.dto.detection.CreateImageDetectionResponse;
 import com.fengting.aigcforensics.dto.detection.DetectionDetailResponse;
+import com.fengting.aigcforensics.dto.detection.DetectionPredictionResponse;
+import com.fengting.aigcforensics.dto.detection.DetectionReportResponse;
+import com.fengting.aigcforensics.repository.DetectionReportRepository;
 import com.fengting.aigcforensics.repository.DetectionTaskRepository;
 import com.fengting.aigcforensics.repository.MediaAssetRepository;
+import com.fengting.aigcforensics.repository.ModelPredictionRepository;
 import com.fengting.aigcforensics.service.ImageMetadataService.ImageMetadata;
 import com.fengting.aigcforensics.service.StorageService.StoredFile;
 
@@ -36,6 +42,8 @@ public class DetectionWorkflowService {
     private final StorageService storageService;
     private final HashService hashService;
     private final ImageMetadataService imageMetadataService;
+    private final ModelPredictionRepository modelPredictionRepository;
+    private final DetectionReportRepository detectionReportRepository;
     private final Clock clock;
 
     @Autowired
@@ -44,13 +52,17 @@ public class DetectionWorkflowService {
             DetectionTaskRepository detectionTaskRepository,
             StorageService storageService,
             HashService hashService,
-            ImageMetadataService imageMetadataService) {
+            ImageMetadataService imageMetadataService,
+            ModelPredictionRepository modelPredictionRepository,
+            DetectionReportRepository detectionReportRepository) {
         this(
                 mediaAssetRepository,
                 detectionTaskRepository,
                 storageService,
                 hashService,
                 imageMetadataService,
+                modelPredictionRepository,
+                detectionReportRepository,
                 Clock.systemUTC());
     }
 
@@ -60,12 +72,16 @@ public class DetectionWorkflowService {
             StorageService storageService,
             HashService hashService,
             ImageMetadataService imageMetadataService,
+            ModelPredictionRepository modelPredictionRepository,
+            DetectionReportRepository detectionReportRepository,
             Clock clock) {
         this.mediaAssetRepository = mediaAssetRepository;
         this.detectionTaskRepository = detectionTaskRepository;
         this.storageService = storageService;
         this.hashService = hashService;
         this.imageMetadataService = imageMetadataService;
+        this.modelPredictionRepository = modelPredictionRepository;
+        this.detectionReportRepository = detectionReportRepository;
         this.clock = clock;
     }
 
@@ -117,7 +133,40 @@ public class DetectionWorkflowService {
                 asset.getHeight(),
                 task.getCreatedAt(),
                 task.getStartedAt(),
-                task.getCompletedAt());
+                task.getCompletedAt(),
+                toPredictionResponses(task.getTaskId()),
+                toReportResponse(task.getTaskId()));
+    }
+
+    private List<DetectionPredictionResponse> toPredictionResponses(String taskId) {
+        return modelPredictionRepository.findByTaskIdOrderByCreatedAtAsc(taskId).stream()
+                .map(this::toPredictionResponse)
+                .toList();
+    }
+
+    private DetectionPredictionResponse toPredictionResponse(ModelPrediction prediction) {
+        return new DetectionPredictionResponse(
+                prediction.getPredictionId(),
+                prediction.getModelId(),
+                prediction.getModelVersion(),
+                prediction.getRawScore(),
+                prediction.getNormalizedScore(),
+                prediction.getLabel(),
+                prediction.getThreshold(),
+                prediction.getLatencyMs(),
+                prediction.getCreatedAt());
+    }
+
+    private DetectionReportResponse toReportResponse(String taskId) {
+        return detectionReportRepository.findByTaskId(taskId)
+                .map(report -> new DetectionReportResponse(
+                        report.getReportId(),
+                        report.getVerdict(),
+                        report.getConfidence(),
+                        report.getSummary(),
+                        report.getRiskLevel(),
+                        report.getCreatedAt()))
+                .orElse(null);
     }
 
     private void validateUpload(MultipartFile file) {
