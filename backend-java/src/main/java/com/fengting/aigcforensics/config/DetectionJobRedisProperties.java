@@ -11,9 +11,13 @@ public class DetectionJobRedisProperties {
     private String streamKey = "detection:jobs";
     private String groupName = "detection-workers";
     private String consumerName = "backend-" + UUID.randomUUID();
+    private String deadLetterStreamKey = "detection:jobs:dead-letter";
     private String submittedKeyPrefix = "detection:jobs:submitted:";
     private Duration submittedTtl = Duration.ofHours(6);
     private Duration blockTimeout = Duration.ofSeconds(2);
+    private Duration pendingIdleTimeout = Duration.ofMinutes(5);
+    private int pendingClaimBatchSize = 10;
+    private int maxDeliveryAttempts = 3;
 
     public String getStreamKey() {
         return streamKey;
@@ -39,6 +43,14 @@ public class DetectionJobRedisProperties {
         this.consumerName = consumerName;
     }
 
+    public String getDeadLetterStreamKey() {
+        return deadLetterStreamKey;
+    }
+
+    public void setDeadLetterStreamKey(String deadLetterStreamKey) {
+        this.deadLetterStreamKey = deadLetterStreamKey;
+    }
+
     public String getSubmittedKeyPrefix() {
         return submittedKeyPrefix;
     }
@@ -61,5 +73,29 @@ public class DetectionJobRedisProperties {
 
     public void setBlockTimeout(Duration blockTimeout) {
         this.blockTimeout = blockTimeout;
+    }
+
+    public Duration getPendingIdleTimeout() {
+        return pendingIdleTimeout;
+    }
+
+    public void setPendingIdleTimeout(Duration pendingIdleTimeout) {
+        this.pendingIdleTimeout = pendingIdleTimeout;
+    }
+
+    public int getPendingClaimBatchSize() {
+        return pendingClaimBatchSize;
+    }
+
+    public void setPendingClaimBatchSize(int pendingClaimBatchSize) {
+        this.pendingClaimBatchSize = pendingClaimBatchSize;
+    }
+
+    public int getMaxDeliveryAttempts() {
+        return maxDeliveryAttempts;
+    }
+
+    public void setMaxDeliveryAttempts(int maxDeliveryAttempts) {
+        this.maxDeliveryAttempts = maxDeliveryAttempts;
     }
 }

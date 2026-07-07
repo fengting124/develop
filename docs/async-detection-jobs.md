@@ -30,17 +30,23 @@ The current implementation uses Redis Stream:
 - stream key: `detection:jobs`
 - consumer group: `detection-workers`
 - submitted lock prefix: `detection:jobs:submitted:`
+- dead-letter stream key: `detection:jobs:dead-letter`
 
 Redis keeps task submission outside the backend process, so the backend can be
 restarted without losing queued work. Duplicate submissions are guarded with a
 short-lived Redis lock per task id.
 
-## Future Upgrade Path
+## Reliability Behavior
 
-When the project needs stronger retry semantics, extend the Redis worker with
-pending-message recovery and a dead-letter stream. The controller and client
-contract can stay the same:
+The worker checks stale pending messages before reading new messages. If a
+backend process crashes after claiming a job, another backend instance can claim
+the message after `app.detection.jobs.redis.pending-idle-timeout`.
 
-- submit through `/run-async`
-- poll through `GET /api/detections/{taskId}`
-- keep task status transitions in the database
+Messages that reach `app.detection.jobs.redis.max-delivery-attempts` are moved
+to the dead-letter stream and acknowledged in the main stream. This keeps a bad
+message from blocking the queue while preserving enough metadata for operations:
+
+- `taskId`
+- `originalMessageId`
+- `deliveryCount`
+- `reason`
