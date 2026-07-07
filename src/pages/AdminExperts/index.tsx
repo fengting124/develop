@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button, Input, Modal, PageContainer, useToast } from '@/components/primitives';
 import { ExpertCard } from '@/components/ExpertCard/ExpertCard';
+import { listModels, type ModelSummaryResponse } from '@/api/backend';
 import { expertsCore, expertsLora } from '@/data/mocks';
 import styles from './AdminExperts.module.css';
 
@@ -9,7 +10,23 @@ export function AdminExperts() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [extra, setExtra] = useState(false);
+  const [models, setModels] = useState<ModelSummaryResponse[]>([]);
+  const [modelError, setModelError] = useState<string | null>(null);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    let active = true;
+    listModels()
+      .then((nextModels) => {
+        if (active) setModels(nextModels);
+      })
+      .catch((error) => {
+        if (active) setModelError(error instanceof Error ? error.message : 'Failed to load models.');
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const startTraining = () => {
     setOpen(false);
@@ -25,6 +42,29 @@ export function AdminExperts() {
         <h1 className="pageTitle">专 家 库</h1>
         <p className="pageEnglish">EXPERTS</p>
       </header>
+      <hr />
+      <section>
+        <h2 className={styles.groupTitle}>Model Registry</h2>
+        {modelError ? <p className={styles.modelError}>{modelError}</p> : null}
+        <div className={styles.modelGrid}>
+          {models.map((model) => (
+            <article key={model.modelId} className={styles.modelCard}>
+              <header>
+                <span className={model.enabled ? styles.modelOnline : styles.modelOffline} />
+                <strong>{model.displayName}</strong>
+                <em>{model.version}</em>
+              </header>
+              <p>{model.modelType}</p>
+              <dl>
+                <dt>Threshold</dt>
+                <dd>{model.defaultThreshold.toFixed(2)}</dd>
+                <dt>Weight</dt>
+                <dd>{model.weight.toFixed(2)}</dd>
+              </dl>
+            </article>
+          ))}
+        </div>
+      </section>
       <hr />
       <section>
         <h2 className={styles.groupTitle}>核心专家</h2>

@@ -64,6 +64,74 @@
   gap: var(--space-5);
 }
 
+.modelGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.modelCard {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 150px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-4);
+}
+
+.modelCard header {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.modelCard strong {
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+}
+
+.modelCard em,
+.modelCard p,
+.modelCard dt,
+.modelCard dd,
+.modelError {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-style: normal;
+}
+
+.modelCard dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+
+.modelCard dd {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+}
+
+.modelOnline,
+.modelOffline {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.modelOnline {
+  background: var(--real);
+}
+
+.modelOffline {
+  background: var(--ink-3);
+}
+
 .sectionHead {
   display: flex;
   justify-content: space-between;

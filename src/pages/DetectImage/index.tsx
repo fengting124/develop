@@ -4,11 +4,20 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/primitives';
 import { ForensicMark } from '@/components/ForensicMark/ForensicMark';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
+import {
+  createImageDetection,
+  getDetection,
+  runDetectionAsync,
+  type DetectionDetailResponse,
+} from '@/api/backend';
 import styles from './DetectImage.module.css';
 
-type ProcessState = 'idle' | 'processing' | 'done';
+type ProcessState = 'idle' | 'processing' | 'done' | 'failed';
 type RightTab = 'flow' | 'semantic' | 'experts';
 type StepStatus = 'done' | 'active' | 'pending';
+
+const pollIntervalMs = 1500;
+const maxPollAttempts = 80;
 
 const demoImage = '/images/图片检测示例图/image.png';
 
@@ -44,6 +53,26 @@ const completedTime = steps.reduce<number[]>((acc, step, index) => {
 }, []);
 
 const totalDuration = completedTime[completedTime.length - 1] + 400;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function isTerminal(detail: DetectionDetailResponse) {
+  return detail.status === 'COMPLETED' || detail.status === 'FAILED';
+}
+
+function resultLabel(detail: DetectionDetailResponse | null, failed: boolean) {
+  if (failed) return 'FAILED';
+  if (detail?.report?.verdict === 'LIKELY_AUTHENTIC') return 'REAL';
+  if (detail?.report?.verdict === 'UNCERTAIN') return 'UNCERTAIN';
+  return 'FAKE';
+}
+
+function resultConfidence(detail: DetectionDetailResponse | null) {
+  const confidence = detail?.report?.confidence ?? detail?.predictions[0]?.normalizedScore;
+  return typeof confidence === 'number' ? `${Math.round(confidence * 100)}%` : '93%';
+}
 
 function StatusDot({ status }: { status: StepStatus }) {
   if (status === 'done') return <span className={styles.dotDone}>✓</span>;
@@ -355,32 +384,91 @@ export function DetectImage() {
   const [imageSrc, setImageSrc] = useState(demoImage);
   const [elapsed, setElapsed] = useState(0);
   const [activeMark, setActiveMark] = useState<string | null>(null);
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<DetectionDetailResponse | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const runRef = useRef(0);
 
   const startProcessing = (src = demoImage) => {
     setImageSrc(src);
     setElapsed(0);
     setActiveMark(null);
+    setTaskId(null);
+    setDetail(null);
+    setErrorMessage(null);
+    setDemoMode(true);
     setState('processing');
+  };
+
+  const pollUntilTerminal = async (nextTaskId: string, runId: number) => {
+    for (let attempt = 0; attempt < maxPollAttempts; attempt += 1) {
+      const nextDetail = await getDetection(nextTaskId);
+      if (runRef.current !== runId) return nextDetail;
+      setDetail(nextDetail);
+      if (isTerminal(nextDetail)) return nextDetail;
+      await sleep(pollIntervalMs);
+    }
+    throw new Error('Detection did not complete before the polling window ended.');
+  };
+
+  const processImageFile = async (file: File) => {
+    const runId = runRef.current + 1;
+    runRef.current = runId;
+    const previewUrl = URL.createObjectURL(file);
+    setImageSrc(previewUrl);
+    setElapsed(0);
+    setActiveMark(null);
+    setTaskId(null);
+    setDetail(null);
+    setErrorMessage(null);
+    setDemoMode(false);
+    setState('processing');
+
+    try {
+      const created = await createImageDetection(file);
+      if (runRef.current !== runId) return;
+      setTaskId(created.taskId);
+      window.sessionStorage.setItem(`detection-preview:${created.taskId}`, previewUrl);
+
+      const submitted = await runDetectionAsync(created.taskId);
+      if (runRef.current !== runId) return;
+      setDetail(submitted);
+      const finished = isTerminal(submitted) ? submitted : await pollUntilTerminal(created.taskId, runId);
+      if (runRef.current !== runId) return;
+      setDetail(finished);
+
+      if (finished.status === 'FAILED') {
+        setErrorMessage(finished.failureReason ?? 'Detection failed.');
+        setState('failed');
+        return;
+      }
+      setState('done');
+    } catch (error) {
+      if (runRef.current !== runId) return;
+      setErrorMessage(error instanceof Error ? error.message : 'Detection request failed.');
+      setState('failed');
+    }
   };
 
   useEffect(() => {
     if (state !== 'processing') return undefined;
     const startedAt = Date.now();
     const interval = window.setInterval(() => setElapsed(Date.now() - startedAt), 100);
-    const doneTimer = window.setTimeout(() => setState('done'), totalDuration);
+    const doneTimer = demoMode ? window.setTimeout(() => setState('done'), totalDuration) : undefined;
     return () => {
       window.clearInterval(interval);
-      window.clearTimeout(doneTimer);
+      if (doneTimer !== undefined) window.clearTimeout(doneTimer);
     };
-  }, [state]);
+  }, [demoMode, state]);
 
   const visibleMarks = marks.filter((mark) => elapsed >= mark.appearAt || state === 'done');
   const visibleEvidences = evidences.filter((evidence) => elapsed >= evidence.appearAt || state === 'done');
 
   const handleFile = (file?: File) => {
     if (!file) return;
-    startProcessing(URL.createObjectURL(file));
+    void processImageFile(file);
   };
 
   return (
@@ -416,7 +504,8 @@ export function DetectImage() {
                     <ForensicMark key={mark.label} {...mark} active={activeMark === mark.label} />
                   ))}
                 </AnimatePresence>
-                {state === 'done' ? <span className={styles.imageBadge}>FAKE</span> : null}
+                {state === 'done' ? <span className={styles.imageBadge}>{resultLabel(detail, false)}</span> : null}
+                {state === 'failed' ? <span className={styles.imageBadge}>FAIL</span> : null}
               </div>
             </div>
             <div className={styles.evidenceBar}>
@@ -432,14 +521,21 @@ export function DetectImage() {
                 })}
               </div>
             </div>
-            {state === 'done' ? (
+            {state === 'done' || state === 'failed' ? (
               <div className={styles.doneActions}>
+                <span className={state === 'failed' ? styles.errorText : styles.resultPill}>
+                  {resultLabel(detail, state === 'failed')} 路 {state === 'failed' ? errorMessage : resultConfidence(detail)}
+                </span>
                 {marks.map((mark) => (
                   <button key={mark.label} type="button" onMouseEnter={() => setActiveMark(mark.label)} onMouseLeave={() => setActiveMark(null)}>
                     {mark.label} · {mark.clue}
                   </button>
                 ))}
-                <Link to="/detect/report/demo">─ 查看完整报告 →</Link>
+                {state === 'done' ? (
+                  <Link to={`/detect/report/${taskId ?? 'demo'}`} state={{ imageSrc }}>
+                    ─ 查看完整报告 →
+                  </Link>
+                ) : null}
               </div>
             ) : null}
           </div>
