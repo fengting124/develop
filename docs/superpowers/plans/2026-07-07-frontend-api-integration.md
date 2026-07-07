@@ -88,4 +88,4 @@
 - [x] Run `npm run lint`.
 - [x] Run backend `mvn test`.
 - [x] Start Vite dev server and provide the local URL.
-- [ ] Commit and push `feature/frontend-api-integration`.
+- [x] Commit and push `feature/frontend-api-integration`.
