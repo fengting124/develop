@@ -12,6 +12,18 @@ dist
 dist-ssr
 *.local
 
+# Java backend
+backend-java/target/
+backend-java/.mvn/wrapper/maven-wrapper.jar
+
+# Runtime storage and local data
+storage/
+backend-java/storage/
+model-services/**/weights/
+*.db
+*.sqlite
+*.sqlite3
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
