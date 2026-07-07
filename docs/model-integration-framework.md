@@ -66,6 +66,12 @@ python tools/smoke_test.py --image public/samples/01.jpg
 
 See `docs/smoke-test-workflow.md` for detailed usage and failure output.
 
+## Async Execution
+
+The backend also exposes `POST /api/detections/{taskId}/run-async` for clients
+that should not block while inference runs. See `docs/async-detection-jobs.md`
+for the polling contract and upgrade path.
+
 ## GPU Server Upgrade Path
 
 Keep the HTTP contract stable and replace only the model-service internals:

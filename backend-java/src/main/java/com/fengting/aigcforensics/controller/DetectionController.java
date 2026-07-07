@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fengting.aigcforensics.dto.detection.CreateImageDetectionResponse;
 import com.fengting.aigcforensics.dto.detection.DetectionDetailResponse;
 import com.fengting.aigcforensics.service.DetectionExecutionService;
+import com.fengting.aigcforensics.service.DetectionJobService;
 import com.fengting.aigcforensics.service.DetectionWorkflowService;
 
 @RestController
@@ -21,12 +22,15 @@ public class DetectionController {
 
     private final DetectionWorkflowService detectionWorkflowService;
     private final DetectionExecutionService detectionExecutionService;
+    private final DetectionJobService detectionJobService;
 
     public DetectionController(
             DetectionWorkflowService detectionWorkflowService,
-            DetectionExecutionService detectionExecutionService) {
+            DetectionExecutionService detectionExecutionService,
+            DetectionJobService detectionJobService) {
         this.detectionWorkflowService = detectionWorkflowService;
         this.detectionExecutionService = detectionExecutionService;
+        this.detectionJobService = detectionJobService;
     }
 
     @PostMapping("/images")
@@ -43,6 +47,13 @@ public class DetectionController {
     @PostMapping("/{taskId}/run")
     public DetectionDetailResponse runDetection(@PathVariable String taskId) {
         detectionExecutionService.runDetection(taskId);
+        return detectionWorkflowService.getDetection(taskId);
+    }
+
+    @PostMapping("/{taskId}/run-async")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public DetectionDetailResponse runDetectionAsync(@PathVariable String taskId) {
+        detectionJobService.submit(taskId);
         return detectionWorkflowService.getDetection(taskId);
     }
 }
