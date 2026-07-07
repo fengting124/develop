@@ -8,6 +8,7 @@ real GPU-backed implementation.
 ## Services
 
 - `postgres`: stores media metadata, tasks, predictions, and reports.
+- `redis`: stores asynchronous detection job messages.
 - `backend`: Spring Boot service that owns upload, task execution, persistence,
   and report generation.
 - `nonescape-mini`: FastAPI model service exposing `/health` and

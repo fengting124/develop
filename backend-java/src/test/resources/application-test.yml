@@ -20,5 +20,8 @@ logging:
     org.springframework: warn
 
 app:
+  detection:
+    jobs:
+      worker-enabled: false
   model-registry:
     synchronization-enabled: false

@@ -19,6 +19,20 @@ services:
       retries: 5
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: aigc-forensics-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   nonescape-mini:
     build:
       context: ../model-services/nonescape-mini
@@ -53,12 +67,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       nonescape-mini:
         condition: service_healthy
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/aigc_forensics
       DB_USERNAME: aigc
       DB_PASSWORD: aigc
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       SERVER_PORT: 8080
       STORAGE_ROOT: /data/storage
       APP_MODEL_REGISTRY_NONESCAPE_MINI_ENDPOINT_URL: http://nonescape-mini:5010
@@ -70,5 +88,6 @@ services:
 
 volumes:
   postgres-data:
+  redis-data:
   shared-storage:
   model-weights:
