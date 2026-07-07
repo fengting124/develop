@@ -18,3 +18,7 @@ server:
 app:
   storage:
     root: ${STORAGE_ROOT:storage}
+  model-registry:
+    synchronization-enabled: ${APP_MODEL_REGISTRY_SYNCHRONIZATION_ENABLED:true}
+    nonescape-mini:
+      endpoint-url: ${APP_MODEL_REGISTRY_NONESCAPE_MINI_ENDPOINT_URL:http://localhost:5010}

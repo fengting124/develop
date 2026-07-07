@@ -18,3 +18,7 @@ logging:
     root: warn
     org.hibernate.SQL: warn
     org.springframework: warn
+
+app:
+  model-registry:
+    synchronization-enabled: false
