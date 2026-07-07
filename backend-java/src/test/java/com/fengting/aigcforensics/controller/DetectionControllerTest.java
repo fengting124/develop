@@ -1,6 +1,7 @@
 package com.fengting.aigcforensics.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,6 +22,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fengting.aigcforensics.domain.DetectionStatus;
 import com.fengting.aigcforensics.repository.DetectionTaskRepository;
 import com.fengting.aigcforensics.repository.MediaAssetRepository;
@@ -39,6 +42,9 @@ class DetectionControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
     private MediaAssetRepository mediaAssetRepository;
 
     @Autowired
@@ -50,7 +56,7 @@ class DetectionControllerTest {
                 "file",
                 "sample.png",
                 "image/png",
-                onePixelPng());
+                onePixelPng("sample.png"));
 
         String response = mockMvc.perform(multipart("/api/detections/images").file(image))
                 .andExpect(status().isAccepted())
@@ -89,12 +95,51 @@ class DetectionControllerTest {
                 .andExpect(jsonPath("$.message").value("Only JPEG, PNG, and WebP images are supported"));
     }
 
-    private byte[] onePixelPng() throws IOException {
+    @Test
+    void getDetectionReturnsTaskAndAssetDetails() throws Exception {
+        JsonNode created = createImageDetection("lookup.png");
+        String taskId = created.get("taskId").asText();
+        String assetId = created.get("assetId").asText();
+
+        mockMvc.perform(get("/api/detections/{taskId}", taskId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.taskId").value(taskId))
+                .andExpect(jsonPath("$.assetId").value(assetId))
+                .andExpect(jsonPath("$.status").value("QUEUED"))
+                .andExpect(jsonPath("$.filename").value("lookup.png"))
+                .andExpect(jsonPath("$.contentType").value("image/png"))
+                .andExpect(jsonPath("$.width").value(1))
+                .andExpect(jsonPath("$.height").value(1));
+    }
+
+    @Test
+    void getDetectionReturnsNotFoundForUnknownTask() throws Exception {
+        mockMvc.perform(get("/api/detections/{taskId}", "task_missing"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Detection task not found: task_missing"));
+    }
+
+    private byte[] onePixelPng(String seed) throws IOException {
         BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
-        image.setRGB(0, 0, Color.WHITE.getRGB());
+        image.setRGB(0, 0, Color.getHSBColor(Math.abs(seed.hashCode() % 360) / 360.0f, 0.5f, 1.0f).getRGB());
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ImageIO.write(image, "png", outputStream);
         return outputStream.toByteArray();
+    }
+
+    private JsonNode createImageDetection(String filename) throws Exception {
+        MockMultipartFile image = new MockMultipartFile(
+                "file",
+                filename,
+                "image/png",
+                onePixelPng(filename));
+
+        String response = mockMvc.perform(multipart("/api/detections/images").file(image))
+                .andExpect(status().isAccepted())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return objectMapper.readTree(response);
     }
 }

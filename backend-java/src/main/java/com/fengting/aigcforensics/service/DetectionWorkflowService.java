@@ -16,6 +16,7 @@ import com.fengting.aigcforensics.domain.DetectionStatus;
 import com.fengting.aigcforensics.domain.DetectionTask;
 import com.fengting.aigcforensics.domain.MediaAsset;
 import com.fengting.aigcforensics.dto.detection.CreateImageDetectionResponse;
+import com.fengting.aigcforensics.dto.detection.DetectionDetailResponse;
 import com.fengting.aigcforensics.repository.DetectionTaskRepository;
 import com.fengting.aigcforensics.repository.MediaAssetRepository;
 import com.fengting.aigcforensics.service.ImageMetadataService.ImageMetadata;
@@ -94,6 +95,29 @@ public class DetectionWorkflowService {
                 asset.getSha256(),
                 asset.getWidth(),
                 asset.getHeight());
+    }
+
+    @Transactional(readOnly = true)
+    public DetectionDetailResponse getDetection(String taskId) {
+        DetectionTask task = detectionTaskRepository.findByTaskId(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Detection task not found: " + taskId));
+        MediaAsset asset = mediaAssetRepository.findByAssetId(task.getAssetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Media asset not found: " + task.getAssetId()));
+
+        return new DetectionDetailResponse(
+                task.getTaskId(),
+                task.getAssetId(),
+                task.getStatus(),
+                task.getFailureReason(),
+                asset.getOriginalFilename(),
+                asset.getContentType(),
+                asset.getFileSize(),
+                asset.getSha256(),
+                asset.getWidth(),
+                asset.getHeight(),
+                task.getCreatedAt(),
+                task.getStartedAt(),
+                task.getCompletedAt());
     }
 
     private void validateUpload(MultipartFile file) {
