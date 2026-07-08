@@ -30,9 +30,13 @@ app:
         stream-key: ${APP_DETECTION_JOBS_REDIS_STREAM_KEY:detection:jobs}
         group-name: ${APP_DETECTION_JOBS_REDIS_GROUP_NAME:detection-workers}
         consumer-name: ${APP_DETECTION_JOBS_REDIS_CONSUMER_NAME:${spring.application.name}}
+        dead-letter-stream-key: ${APP_DETECTION_JOBS_REDIS_DEAD_LETTER_STREAM_KEY:detection:jobs:dead-letter}
         submitted-key-prefix: ${APP_DETECTION_JOBS_REDIS_SUBMITTED_KEY_PREFIX:detection:jobs:submitted:}
         submitted-ttl: ${APP_DETECTION_JOBS_REDIS_SUBMITTED_TTL:6h}
         block-timeout: ${APP_DETECTION_JOBS_REDIS_BLOCK_TIMEOUT:2s}
+        pending-idle-timeout: ${APP_DETECTION_JOBS_REDIS_PENDING_IDLE_TIMEOUT:5m}
+        pending-claim-batch-size: ${APP_DETECTION_JOBS_REDIS_PENDING_CLAIM_BATCH_SIZE:10}
+        max-delivery-attempts: ${APP_DETECTION_JOBS_REDIS_MAX_DELIVERY_ATTEMPTS:3}
   model-registry:
     synchronization-enabled: ${APP_MODEL_REGISTRY_SYNCHRONIZATION_ENABLED:true}
     nonescape-mini:
