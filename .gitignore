@@ -17,6 +17,7 @@ backend-java/target/
 backend-java/.mvn/wrapper/maven-wrapper.jar
 
 # Runtime storage and local data
+.dev/
 storage/
 backend-java/storage/
 model-services/**/weights/

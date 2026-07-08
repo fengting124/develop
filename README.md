@@ -62,6 +62,18 @@ Later comparison models:
 
 ## Development
 
+Run the local environment check first:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/check-local-env.ps1
+```
+
+Full local stack with Docker Compose:
+
+```powershell
+docker compose -f infra/docker-compose.yml up --build
+```
+
 Frontend:
 
 ```powershell
@@ -78,7 +90,14 @@ mvn test
 mvn spring-boot:run
 ```
 
-Model service will live under `model-services/nonescape-service` in a later phase.
+Model service:
+
+```powershell
+cd model-services\nonescape-mini
+..\..\.venv-model-service\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 5010
+```
+
+Detailed Windows, WSL, and SSH-server setup notes are in `docs/local-development.md`.
 
 ## Reliability Note
 
