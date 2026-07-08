@@ -137,15 +137,16 @@ cd backend-java
 mvn test
 ```
 
-- [ ] Commit:
+- [x] Commit completed on `feature/real-nonescape-runtime`:
 
-```powershell
-git add docs model-services infra .gitignore
-git commit -m "Add real Nonescape runtime framework"
+```text
+ea4f902 Add Nonescape runtime adapter framework
 ```
 
-- [ ] Push:
+- [x] Push completed to `origin/feature/real-nonescape-runtime`.
 
-```powershell
-git push -u origin feature/real-nonescape-runtime
+- [x] Defer real weight validation until GPU server setup:
+
+```text
+feature/server-model-weight-integration
 ```
