@@ -56,6 +56,23 @@ export interface DetectionDetailResponse {
   report: DetectionReportResponse | null;
 }
 
+export interface DetectionHistoryItemResponse {
+  taskId: string;
+  assetId: string;
+  status: DetectionStatus;
+  failureReason: string | null;
+  filename: string;
+  contentType: string;
+  fileSize: number;
+  sha256: string;
+  width: number;
+  height: number;
+  createdAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  report: DetectionReportResponse | null;
+}
+
 export interface ModelSummaryResponse {
   modelId: string;
   displayName: string;
@@ -66,6 +83,15 @@ export interface ModelSummaryResponse {
   defaultThreshold: number;
   weight: number;
   description: string;
+}
+
+export interface ModelHealthResponse {
+  modelId: string;
+  endpointUrl: string;
+  healthy: boolean;
+  status: 'UP' | 'DOWN';
+  message: string;
+  checkedAt: string;
 }
 
 export class ApiError extends Error {
@@ -114,6 +140,20 @@ export function getDetection(taskId: string) {
   return apiRequest<DetectionDetailResponse>(`/api/detections/${encodeURIComponent(taskId)}`);
 }
 
+export function listDetections() {
+  return apiRequest<DetectionHistoryItemResponse[]>('/api/detections');
+}
+
+export function getReport(reportId: string) {
+  return apiRequest<DetectionDetailResponse>(`/api/reports/${encodeURIComponent(reportId)}`);
+}
+
 export function listModels() {
   return apiRequest<ModelSummaryResponse[]>('/api/models');
+}
+
+export function checkModelHealth(modelId: string) {
+  return apiRequest<ModelHealthResponse>(`/api/models/${encodeURIComponent(modelId)}/health-check`, {
+    method: 'POST',
+  });
 }

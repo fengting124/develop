@@ -141,18 +141,45 @@ class DetectionControllerTest {
     }
 
     @Test
+    void listDetectionsReturnsNewestTasksWithReportSummary() throws Exception {
+        JsonNode older = createImageDetection("older.png");
+        String olderTaskId = older.get("taskId").asText();
+        mockMvc.perform(post("/api/detections/{taskId}/run", olderTaskId))
+                .andExpect(status().isOk());
+
+        JsonNode newer = createImageDetection("newer.png");
+        String newerTaskId = newer.get("taskId").asText();
+
+        mockMvc.perform(get("/api/detections"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].taskId").value(newerTaskId))
+                .andExpect(jsonPath("$[0].filename").value("newer.png"))
+                .andExpect(jsonPath("$[0].status").value("QUEUED"))
+                .andExpect(jsonPath("$[0].report").doesNotExist())
+                .andExpect(jsonPath("$[1].taskId").value(olderTaskId))
+                .andExpect(jsonPath("$[1].filename").value("older.png"))
+                .andExpect(jsonPath("$[1].status").value("COMPLETED"))
+                .andExpect(jsonPath("$[1].report.verdict").value("LIKELY_SYNTHETIC"))
+                .andExpect(jsonPath("$[1].report.confidence").value(0.86));
+    }
+
+    @Test
     void runDetectionStoresPredictionReportAndMarksTaskCompleted() throws Exception {
         JsonNode created = createImageDetection("synthetic.png");
         String taskId = created.get("taskId").asText();
 
-        mockMvc.perform(post("/api/detections/{taskId}/run", taskId))
+        String response = mockMvc.perform(post("/api/detections/{taskId}/run", taskId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.taskId").value(taskId))
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.predictions[0].modelId").value("nonescape-mini"))
                 .andExpect(jsonPath("$.predictions[0].label").value("SYNTHETIC"))
                 .andExpect(jsonPath("$.report.verdict").value("LIKELY_SYNTHETIC"))
-                .andExpect(jsonPath("$.report.riskLevel").value("HIGH"));
+                .andExpect(jsonPath("$.report.riskLevel").value("HIGH"))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String reportId = objectMapper.readTree(response).get("report").get("reportId").asText();
 
         assertThat(detectionTaskRepository.findByTaskId(taskId))
                 .isPresent()
@@ -161,6 +188,22 @@ class DetectionControllerTest {
                 .isEqualTo(DetectionStatus.COMPLETED);
         assertThat(modelPredictionRepository.findByTaskIdOrderByCreatedAtAsc(taskId)).hasSize(1);
         assertThat(detectionReportRepository.findByTaskId(taskId)).isPresent();
+
+        mockMvc.perform(get("/api/reports/{reportId}", reportId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.taskId").value(taskId))
+                .andExpect(jsonPath("$.filename").value("synthetic.png"))
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.predictions[0].modelId").value("nonescape-mini"))
+                .andExpect(jsonPath("$.report.reportId").value(reportId))
+                .andExpect(jsonPath("$.report.verdict").value("LIKELY_SYNTHETIC"));
+    }
+
+    @Test
+    void getReportReturnsNotFoundForUnknownReport() throws Exception {
+        mockMvc.perform(get("/api/reports/{reportId}", "report_missing"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Detection report not found: report_missing"));
     }
 
     @Test
@@ -224,6 +267,10 @@ class DetectionControllerTest {
 
         void failNextCall() {
             failNextCall.set(true);
+        }
+
+        @Override
+        public void checkHealth(String endpointUrl) {
         }
 
         @Override

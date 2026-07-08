@@ -81,9 +81,39 @@ class HttpModelInferenceClientTest {
                 .hasMessageContaining("model warming up");
     }
 
+    @Test
+    void checkHealthCallsHealthEndpoint() throws Exception {
+        AtomicReference<String> requestBody = new AtomicReference<>();
+        startServer("/health", 200, "{\"status\":\"ok\"}", requestBody);
+        HttpModelInferenceClient client = new HttpModelInferenceClient(objectMapper);
+
+        client.checkHealth(serverBaseUrl());
+
+        assertThat(requestBody.get()).isEqualTo("");
+    }
+
+    @Test
+    void checkHealthThrowsWhenHealthEndpointFails() throws Exception {
+        startServer("/health", 503, "unavailable", new AtomicReference<>());
+        HttpModelInferenceClient client = new HttpModelInferenceClient(objectMapper);
+
+        assertThatThrownBy(() -> client.checkHealth(serverBaseUrl()))
+                .isInstanceOf(ModelInferenceException.class)
+                .hasMessageContaining("Model health check returned 503")
+                .hasMessageContaining("unavailable");
+    }
+
     private void startServer(int status, String responseBody, AtomicReference<String> requestBody) throws IOException {
+        startServer("/api/v1/predict", status, responseBody, requestBody);
+    }
+
+    private void startServer(
+            String path,
+            int status,
+            String responseBody,
+            AtomicReference<String> requestBody) throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        server.createContext("/api/v1/predict", exchange -> {
+        server.createContext(path, exchange -> {
             requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
             byte[] response = responseBody.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "application/json");

@@ -3,7 +3,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button, EdgeRule, Modal, PageContainer, useToast } from '@/components/primitives';
 import { UserTopbar } from '@/components/UserTopbar/UserTopbar';
-import { getDetection, type DetectionDetailResponse } from '@/api/backend';
+import { getDetection, getReport, type DetectionDetailResponse } from '@/api/backend';
 import { imageDemo } from '@/data/mocks';
 import styles from './Report.module.css';
 
@@ -100,6 +100,7 @@ export function Report() {
     if (!id || id === 'demo') return undefined;
     let active = true;
     getDetection(id)
+      .catch(() => getReport(id))
       .then((nextDetail) => {
         if (active) setDetail(nextDetail);
       })

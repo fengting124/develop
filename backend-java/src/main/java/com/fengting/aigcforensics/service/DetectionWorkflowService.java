@@ -19,6 +19,7 @@ import com.fengting.aigcforensics.domain.MediaAsset;
 import com.fengting.aigcforensics.domain.ModelPrediction;
 import com.fengting.aigcforensics.dto.detection.CreateImageDetectionResponse;
 import com.fengting.aigcforensics.dto.detection.DetectionDetailResponse;
+import com.fengting.aigcforensics.dto.detection.DetectionHistoryItemResponse;
 import com.fengting.aigcforensics.dto.detection.DetectionPredictionResponse;
 import com.fengting.aigcforensics.dto.detection.DetectionReportResponse;
 import com.fengting.aigcforensics.repository.DetectionReportRepository;
@@ -117,6 +118,27 @@ public class DetectionWorkflowService {
     public DetectionDetailResponse getDetection(String taskId) {
         DetectionTask task = detectionTaskRepository.findByTaskId(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Detection task not found: " + taskId));
+        return toDetailResponse(task);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DetectionHistoryItemResponse> listDetections() {
+        return detectionTaskRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(this::toHistoryItemResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public DetectionDetailResponse getReport(String reportId) {
+        String taskId = detectionReportRepository.findByReportId(reportId)
+                .orElseThrow(() -> new ResourceNotFoundException("Detection report not found: " + reportId))
+                .getTaskId();
+        DetectionTask task = detectionTaskRepository.findByTaskId(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Detection task not found: " + taskId));
+        return toDetailResponse(task);
+    }
+
+    private DetectionDetailResponse toDetailResponse(DetectionTask task) {
         MediaAsset asset = mediaAssetRepository.findByAssetId(task.getAssetId())
                 .orElseThrow(() -> new ResourceNotFoundException("Media asset not found: " + task.getAssetId()));
 
@@ -135,6 +157,27 @@ public class DetectionWorkflowService {
                 task.getStartedAt(),
                 task.getCompletedAt(),
                 toPredictionResponses(task.getTaskId()),
+                toReportResponse(task.getTaskId()));
+    }
+
+    private DetectionHistoryItemResponse toHistoryItemResponse(DetectionTask task) {
+        MediaAsset asset = mediaAssetRepository.findByAssetId(task.getAssetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Media asset not found: " + task.getAssetId()));
+
+        return new DetectionHistoryItemResponse(
+                task.getTaskId(),
+                task.getAssetId(),
+                task.getStatus(),
+                task.getFailureReason(),
+                asset.getOriginalFilename(),
+                asset.getContentType(),
+                asset.getFileSize(),
+                asset.getSha256(),
+                asset.getWidth(),
+                asset.getHeight(),
+                task.getCreatedAt(),
+                task.getStartedAt(),
+                task.getCompletedAt(),
                 toReportResponse(task.getTaskId()));
     }
 
