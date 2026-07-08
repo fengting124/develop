@@ -1,73 +1,85 @@
-# React + TypeScript + Vite
+# Visual Authenticity Workbench
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AI image authenticity analysis and model evaluation platform.
 
-Currently, two official plugins are available:
+## Problem
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+AI-generated images are now common in content moderation, media verification, legal review, and asset management workflows. A single detector score is not enough for a real application: teams also need upload records, model versions, thresholds, latency, image hashes, history, and reports that clearly explain the limits of the result.
 
-## React Compiler
+This project turns open-source AI image detectors into an engineering system. It does not claim to be a universal truth engine.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Scope
 
-## Expanding the ESLint configuration
+MVP supports image-only detection:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Upload one JPG, PNG, or WebP image.
+- Store the file and image metadata.
+- Create a detection task in a Java backend.
+- Call a Python model service for real inference.
+- Store model output, threshold, version, latency, and image hash.
+- Generate a report and detection history.
+- Show model health and registry information.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Out of scope for MVP:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Video deepfake detection.
+- Audio or text detection.
+- Legal-grade forensic certification.
+- User billing, tenants, RBAC, or complex audit workflows.
+- Custom model training or stacking meta-learners.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Architecture
+
+```text
+React + TypeScript frontend
+  -> Spring Boot Java backend
+    -> PostgreSQL
+    -> local file storage
+    -> Python FastAPI model service
+      -> Nonescape Mini image detector
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The Java backend owns business logic. Python services own model inference.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Tech Stack
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Frontend: React 18, TypeScript, Vite, Framer Motion
+- Backend: Java, Spring Boot, Maven, Spring Data JPA, Flyway
+- Database: PostgreSQL
+- Model service: Python, FastAPI, PyTorch, safetensors
+- Deployment: Docker Compose
+
+## Planned Models
+
+MVP model:
+
+- Nonescape Mini: <https://github.com/e3ntity/nonescape>
+
+Later comparison models:
+
+- Nonescape Full
+- ClipBased-SyntheticImageDetection: <https://github.com/grip-unina/ClipBased-SyntheticImageDetection>
+
+## Development
+
+Frontend:
+
+```powershell
+npm install
+npm run dev
+npm run build
 ```
+
+Java backend:
+
+```powershell
+cd backend-java
+mvn test
+mvn spring-boot:run
+```
+
+Model service will live under `model-services/nonescape-service` in a later phase.
+
+## Reliability Note
+
+Detection results are auxiliary signals. They should not be used as the sole basis for high-stakes decisions.
