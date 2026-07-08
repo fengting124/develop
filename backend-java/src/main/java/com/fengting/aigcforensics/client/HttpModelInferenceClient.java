@@ -35,6 +35,21 @@ public class HttpModelInferenceClient implements ModelInferenceClient {
     }
 
     @Override
+    public void checkHealth(String endpointUrl) {
+        URI uri = URI.create(normalizeEndpointUrl(endpointUrl) + "/health");
+        HttpRequest httpRequest = HttpRequest.newBuilder(uri)
+                .timeout(REQUEST_TIMEOUT)
+                .GET()
+                .build();
+
+        HttpResponse<String> response = send(httpRequest);
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            throw new ModelInferenceException(
+                    "Model health check returned " + response.statusCode() + ": " + response.body());
+        }
+    }
+
+    @Override
     public ModelInferenceResult predict(String endpointUrl, ModelInferenceRequest request) {
         URI uri = URI.create(normalizeEndpointUrl(endpointUrl) + "/api/v1/predict");
         String requestBody = serializeRequest(request);

@@ -1,5 +1,7 @@
 package com.fengting.aigcforensics.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fengting.aigcforensics.dto.detection.CreateImageDetectionResponse;
 import com.fengting.aigcforensics.dto.detection.DetectionDetailResponse;
+import com.fengting.aigcforensics.dto.detection.DetectionHistoryItemResponse;
 import com.fengting.aigcforensics.service.DetectionExecutionService;
 import com.fengting.aigcforensics.service.DetectionJobService;
 import com.fengting.aigcforensics.service.DetectionWorkflowService;
@@ -37,6 +40,11 @@ public class DetectionController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public CreateImageDetectionResponse createImageDetection(@RequestPart("file") MultipartFile file) {
         return detectionWorkflowService.createImageDetection(file);
+    }
+
+    @GetMapping
+    public List<DetectionHistoryItemResponse> listDetections() {
+        return detectionWorkflowService.listDetections();
     }
 
     @GetMapping("/{taskId}")

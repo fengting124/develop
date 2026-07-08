@@ -536,12 +536,18 @@ Expected:
 
 ## Phase 6: Frontend Integration
 
+Status on 2026-07-08: complete for the MVP scope. The UI is connected through
+`src/api/backend.ts`, image upload uses the async detection workflow, the report
+page can load by task id or report id, the admin overview shows live detection
+history, and the model registry page shows backend health-check status. Full
+Docker end-to-end verification remains deferred until the local Docker
+environment is ready.
+
 ### Task 6.1: Add Frontend API Client
 
 **Files:**
 
-- Create: `src/services/api.ts`
-- Create: `src/services/types.ts`
+- Create: `src/api/backend.ts`
 - Modify: `vite.config.ts`
 
 Responsibilities:
@@ -559,6 +565,7 @@ npm run build
 Expected:
 
 - Build passes.
+- Implemented and verified.
 
 ### Task 6.2: Connect DetectImage Page
 
@@ -612,6 +619,8 @@ Expected:
 
 - Build passes.
 - Report page renders API data.
+- Implemented and verified with `/api/detections/{taskId}` and
+  `/api/reports/{reportId}`.
 
 ### Task 6.4: Add Detection History
 
@@ -634,6 +643,7 @@ npm run build
 Expected:
 
 - Build passes.
+- Implemented and verified in the admin overview page.
 
 ---
 
@@ -733,4 +743,3 @@ For Docker changes:
 cd infra
 docker compose up --build
 ```
-
