@@ -44,7 +44,10 @@ services:
       - shared-storage:/data/storage:ro
       - model-weights:/models/weights
     environment:
-      MODEL_WEIGHTS_DIR: /models/weights
+      MODEL_RUNTIME: nonescape-onnx
+      MODEL_WEIGHTS_PATH: /models/weights/nonescape-mini-v0.onnx
+      MODEL_DEVICE: cpu
+      MODEL_ALLOW_HEURISTIC_FALLBACK: "true"
     healthcheck:
       test:
         [

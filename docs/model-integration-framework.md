@@ -1,9 +1,9 @@
 # Model Integration Framework
 
 This project keeps model weights and GPU runtime concerns outside the core
-business workflow for now. The Java backend depends only on a stable HTTP model
-contract, while the model service can later replace its heuristic scorer with a
-real GPU-backed implementation.
+business workflow. The Java backend depends only on a stable HTTP model
+contract, while the model service selects either a local development fallback or
+a real Nonescape Mini ONNX runtime.
 
 ## Services
 
@@ -12,7 +12,8 @@ real GPU-backed implementation.
 - `backend`: Spring Boot service that owns upload, task execution, persistence,
   and report generation.
 - `nonescape-mini`: FastAPI model service exposing `/health` and
-  `/api/v1/predict`.
+  `/api/v1/predict`. It supports `MODEL_RUNTIME=heuristic` for local fallback
+  and `MODEL_RUNTIME=nonescape-onnx` for real Nonescape Mini ONNX inference.
 
 ## Shared Storage Contract
 
@@ -41,6 +42,38 @@ APP_MODEL_REGISTRY_NONESCAPE_MINI_ENDPOINT_URL=http://nonescape-mini:5010
 
 The Java startup synchronizer updates the `model_registry.endpoint_url` value
 for `nonescape-mini` if the configured endpoint differs from the seeded value.
+
+## Model Runtime Configuration
+
+The model service accepts these environment variables:
+
+```text
+MODEL_RUNTIME=heuristic|nonescape-onnx
+MODEL_WEIGHTS_PATH=/models/weights/nonescape-mini-v0.onnx
+MODEL_DEVICE=cpu|cuda
+MODEL_ALLOW_HEURISTIC_FALLBACK=true|false
+```
+
+Recommended local Docker defaults:
+
+```text
+MODEL_RUNTIME=nonescape-onnx
+MODEL_WEIGHTS_PATH=/models/weights/nonescape-mini-v0.onnx
+MODEL_DEVICE=cpu
+MODEL_ALLOW_HEURISTIC_FALLBACK=true
+```
+
+With fallback enabled, missing weights do not crash the development service.
+`GET /health` will report `runtime=heuristic`, `requestedRuntime=nonescape-onnx`,
+and `modelLoaded=false` so the UI and backend can show a degraded model state.
+
+Download the ONNX weight outside Git:
+
+```powershell
+Invoke-WebRequest `
+  https://nonescape.sfo2.cdn.digitaloceanspaces.com/nonescape-mini-v0.onnx `
+  -OutFile D:\models\nonescape-mini-v0.onnx
+```
 
 ## Local Compose Run
 
@@ -78,10 +111,10 @@ for the polling contract and upgrade path.
 Keep the HTTP contract stable and replace only the model-service internals:
 
 1. Mount real weights under `/models/weights`.
-2. Add model loading in `model-services/nonescape-mini/app/scoring.py` or a new
-   runtime adapter module.
-3. Keep `/api/v1/predict` returning `modelVersion`, `rawScore`,
+2. Set `MODEL_RUNTIME=nonescape-onnx`.
+3. Set `MODEL_WEIGHTS_PATH=/models/weights/nonescape-mini-v0.onnx`.
+4. Keep `/api/v1/predict` returning `modelVersion`, `rawScore`,
    `normalizedScore`, `label`, `latencyMs`, and `rawResponse`.
-4. Add startup warmup and device selection through environment variables.
-5. Add GPU-specific Docker Compose override later, for example
+5. Add startup warmup and device selection through environment variables.
+6. Add GPU-specific Docker Compose override later, for example
    `infra/docker-compose.gpu.yml`.
