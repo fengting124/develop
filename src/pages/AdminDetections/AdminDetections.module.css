@@ -1,0 +1,161 @@
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-5);
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 24px 28px;
+}
+
+.toolbar h2 {
+  font-size: var(--text-xl);
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filters button {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--canvas);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  padding: 8px 10px;
+}
+
+.filters button:hover,
+.activeFilter {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+.table {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.head,
+.row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 116px minmax(160px, 1fr) 90px 120px 64px;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.head {
+  padding: 0 14px 8px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.row {
+  min-height: 64px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px;
+}
+
+.row strong {
+  display: block;
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+}
+
+.row em {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-style: normal;
+}
+
+.row a {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.status {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.good {
+  color: var(--real);
+}
+
+.bad {
+  color: var(--fake);
+}
+
+.warn {
+  color: var(--low-conf);
+}
+
+.neutral {
+  color: var(--ink-3);
+}
+
+.empty,
+.error {
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius);
+  color: var(--ink-3);
+  padding: 16px;
+}
+
+.error {
+  margin-bottom: var(--space-5);
+  border-color: var(--fake);
+  color: var(--fake);
+}
+
+@media (max-width: 1080px) {
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .head {
+    display: none;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+

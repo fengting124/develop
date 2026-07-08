@@ -1,4 +1,5 @@
 export type DetectionStatus = 'QUEUED' | 'INFERENCING' | 'COMPLETED' | 'FAILED';
+export type EvaluationStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
 export type ModelLabel = 'AUTHENTIC' | 'SYNTHETIC' | 'UNCERTAIN';
 export type ReportVerdict = 'LIKELY_AUTHENTIC' | 'LIKELY_SYNTHETIC' | 'UNCERTAIN';
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -94,6 +95,50 @@ export interface ModelHealthResponse {
   checkedAt: string;
 }
 
+export interface EvaluationRunResponse {
+  evaluationId: string;
+  name: string;
+  datasetName: string;
+  modelId: string;
+  status: EvaluationStatus;
+  totalSamples: number;
+  completedSamples: number;
+  accuracy: number | null;
+  precision: number | null;
+  recall: number | null;
+  f1: number | null;
+  attemptCount: number;
+  maxAttempts: number;
+  createdAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  failureReason: string | null;
+}
+
+export interface EvaluationSampleResponse {
+  sampleId: string;
+  evaluationId: string;
+  filename: string;
+  groundTruthLabel: ModelLabel;
+  predictedLabel: ModelLabel | null;
+  score: number | null;
+  latencyMs: number | null;
+  correct: boolean | null;
+  failureReason: string | null;
+  createdAt: string;
+}
+
+export interface EvaluationDetailResponse extends EvaluationRunResponse {
+  samples: EvaluationSampleResponse[];
+}
+
+export interface CreateEvaluationRequest {
+  name: string;
+  datasetName: string;
+  modelId: string;
+  manifest: string;
+}
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -156,4 +201,36 @@ export function checkModelHealth(modelId: string) {
   return apiRequest<ModelHealthResponse>(`/api/models/${encodeURIComponent(modelId)}/health-check`, {
     method: 'POST',
   });
+}
+
+export function createEvaluation(request: CreateEvaluationRequest) {
+  return apiRequest<EvaluationRunResponse>('/api/evaluations', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+export function listEvaluations() {
+  return apiRequest<EvaluationRunResponse[]>('/api/evaluations');
+}
+
+export function getEvaluation(evaluationId: string) {
+  return apiRequest<EvaluationDetailResponse>(`/api/evaluations/${encodeURIComponent(evaluationId)}`);
+}
+
+export function runEvaluation(evaluationId: string) {
+  return apiRequest<EvaluationDetailResponse>(`/api/evaluations/${encodeURIComponent(evaluationId)}/run`, {
+    method: 'POST',
+  });
+}
+
+export function retryEvaluation(evaluationId: string) {
+  return apiRequest<EvaluationDetailResponse>(`/api/evaluations/${encodeURIComponent(evaluationId)}/retry`, {
+    method: 'POST',
+  });
+}
+
+export function listEvaluationSamples(evaluationId: string, correct?: boolean) {
+  const query = typeof correct === 'boolean' ? `?correct=${String(correct)}` : '';
+  return apiRequest<EvaluationSampleResponse[]>(`/api/evaluations/${encodeURIComponent(evaluationId)}/samples${query}`);
 }

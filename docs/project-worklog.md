@@ -46,6 +46,52 @@ Future acceptance:
 
 ## Timeline
 
+### 2026-07-09: Frontend Workbench Redesign
+
+Branch:
+
+```text
+feature/evaluation-frontend-workbench
+```
+
+What changed:
+
+- Reframed the admin area as a usable workbench instead of concept pages.
+- Preserved the existing visual style: calm canvas, fine borders, serif
+  headings, mono data labels, compact cards, and restrained status colors.
+- Replaced primary admin navigation with operational destinations:
+  Overview, Detections, Evaluations, Models, and Review.
+- Added evaluation frontend API bindings.
+- Added an evaluation page for creating manifest-based evaluations, running or
+  retrying them, inspecting metrics, and reviewing wrong samples.
+- Added detection history, model registry, and review queue pages backed by the
+  existing APIs.
+- Reworked the overview page to summarize detection history, evaluation runs,
+  model health, and review workload.
+
+Why:
+
+- The backend now has real evaluation execution, so the frontend needs to show
+  measurable model behavior rather than only demo-style concepts.
+- Job-search reviewers should quickly understand the system boundaries:
+  detection workflow, evaluation workflow, model registry, and human review.
+- The redesign intentionally improves usability and information architecture
+  without changing the recognizable visual identity of the project.
+
+Verification:
+
+```powershell
+npm run lint
+npm run build
+npx playwright screenshot --browser=chromium http://127.0.0.1:5174/admin/evaluations artifacts-admin-evaluations.png
+```
+
+Deferred:
+
+- Full charting and confusion matrix visualization.
+- Pagination and server-side filtering for large datasets.
+- Rich image preview for evaluation samples after dataset upload support exists.
+
 ### 2026-07-08: Evaluation Batch Execution Framework
 
 Branch:
