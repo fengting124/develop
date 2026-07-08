@@ -56,6 +56,16 @@ Invoke-RestMethod http://localhost:8080/api/health
 Invoke-RestMethod http://localhost:5010/health
 ```
 
+## End-to-End Smoke Test
+
+After services are running, verify the full workflow:
+
+```powershell
+python tools/smoke_test.py --image public/samples/01.jpg
+```
+
+See `docs/smoke-test-workflow.md` for detailed usage and failure output.
+
 ## GPU Server Upgrade Path
 
 Keep the HTTP contract stable and replace only the model-service internals:
