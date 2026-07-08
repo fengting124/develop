@@ -7,14 +7,20 @@ import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
+import com.fengting.aigcforensics.client.ModelInferenceClient;
+import com.fengting.aigcforensics.client.ModelInferenceRequest;
+import com.fengting.aigcforensics.client.ModelInferenceResult;
+import com.fengting.aigcforensics.domain.ModelLabel;
 import com.fengting.aigcforensics.domain.ModelRegistry;
 import com.fengting.aigcforensics.dto.model.ModelSummaryResponse;
 import com.fengting.aigcforensics.repository.ModelRegistryRepository;
 
 @DataJpaTest
-@Import(ModelRegistryService.class)
+@Import({ModelRegistryService.class, ModelRegistryServiceTest.ModelRegistryServiceTestConfig.class})
 class ModelRegistryServiceTest {
 
     @Autowired
@@ -67,5 +73,29 @@ class ModelRegistryServiceTest {
                 .extracting(ModelSummaryResponse::modelId)
                 .containsSubsequence("enabled-high-weight", "nonescape-mini", "enabled-low-weight")
                 .doesNotContain("disabled");
+    }
+
+    @TestConfiguration
+    static class ModelRegistryServiceTestConfig {
+
+        @Bean
+        ModelInferenceClient modelInferenceClient() {
+            return new ModelInferenceClient() {
+                @Override
+                public void checkHealth(String endpointUrl) {
+                }
+
+                @Override
+                public ModelInferenceResult predict(String endpointUrl, ModelInferenceRequest request) {
+                    return new ModelInferenceResult(
+                            "v0",
+                            0.1,
+                            0.1,
+                            ModelLabel.AUTHENTIC,
+                            1,
+                            "{}");
+                }
+            };
+        }
     }
 }

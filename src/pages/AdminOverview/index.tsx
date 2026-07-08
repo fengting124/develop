@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { PageContainer } from '@/components/primitives';
+import { listDetections, type DetectionHistoryItemResponse } from '@/api/backend';
 import { anomalyPool, expertsCore } from '@/data/mocks';
 import styles from './AdminOverview.module.css';
 
@@ -21,6 +22,11 @@ interface StatusItemProps {
   type: 'real' | 'accent';
   label: string;
   detail: string;
+}
+
+interface TodayStatusListProps {
+  history: DetectionHistoryItemResponse[];
+  error: string | null;
 }
 
 function OverviewSection({ index, title, english, to, order, children }: OverviewSectionProps) {
@@ -71,13 +77,47 @@ function StatusItem({ type, label, detail }: StatusItemProps) {
   );
 }
 
-function TodayStatusList() {
+export function TodayStatusList() {
   return (
     <div className={styles.statusList}>
       <StatusItem type="real" label="系统持续运行" detail="自上次刷新 04:12" />
       <StatusItem type="real" label="新增样本" detail="在过去 1 小时内" />
       <StatusItem type="accent" label="待审样本" detail="需要您的关注" />
       <StatusItem type="real" label="专家在线" detail="运行正常" />
+    </div>
+  );
+}
+
+function formatHistoryTime(value?: string | null) {
+  if (!value) return 'N/A';
+  return new Intl.DateTimeFormat('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(value));
+}
+
+function historyVerdict(item?: DetectionHistoryItemResponse) {
+  if (!item) return 'No task yet';
+  if (item.status === 'FAILED') return 'Failed';
+  if (!item.report) return item.status;
+  if (item.report.verdict === 'LIKELY_AUTHENTIC') return `Real ${Math.round(item.report.confidence * 100)}%`;
+  if (item.report.verdict === 'UNCERTAIN') return `Uncertain ${Math.round(item.report.confidence * 100)}%`;
+  return `AI ${Math.round(item.report.confidence * 100)}%`;
+}
+
+function LiveTodayStatusList({ history, error }: TodayStatusListProps) {
+  const completed = history.filter((item) => item.status === 'COMPLETED').length;
+  const pending = history.filter((item) => item.status === 'QUEUED' || item.status === 'INFERENCING').length;
+  const failed = history.filter((item) => item.status === 'FAILED').length;
+  const latest = history[0];
+
+  return (
+    <div className={styles.statusList}>
+      <StatusItem type={error ? 'accent' : 'real'} label="API" detail={error ?? 'Connected'} />
+      <StatusItem type="real" label="Tasks" detail={`${history.length} total, ${completed} completed`} />
+      <StatusItem type={pending > 0 ? 'accent' : 'real'} label="Pending" detail={`${pending} queued/running, ${failed} failed`} />
+      <StatusItem type="real" label="Latest" detail={`${latest?.filename ?? 'N/A'} - ${historyVerdict(latest)} - ${formatHistoryTime(latest?.createdAt)}`} />
     </div>
   );
 }
@@ -217,6 +257,23 @@ function AnomalyThumbnail() {
 }
 
 export function AdminOverview() {
+  const [history, setHistory] = useState<DetectionHistoryItemResponse[]>([]);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    listDetections()
+      .then((items) => {
+        if (active) setHistory(items);
+      })
+      .catch((error) => {
+        if (active) setHistoryError(error instanceof Error ? error.message : 'Failed to load detection history.');
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <PageContainer width="normal">
       <div className={styles.page}>
@@ -228,7 +285,7 @@ export function AdminOverview() {
 
         <div className={styles.grid}>
           <OverviewSection index="01" title="今日动态" english="Today" to={null} order={0}>
-            <TodayStatusList />
+            <LiveTodayStatusList history={history} error={historyError} />
           </OverviewSection>
           <OverviewSection index="02" title="数据流动" english="Pipeline" to="/admin/pipeline" order={1}>
             <PipelineThumbnail />

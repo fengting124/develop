@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button, Input, Modal, PageContainer, useToast } from '@/components/primitives';
 import { ExpertCard } from '@/components/ExpertCard/ExpertCard';
-import { listModels, type ModelSummaryResponse } from '@/api/backend';
+import { checkModelHealth, listModels, type ModelHealthResponse, type ModelSummaryResponse } from '@/api/backend';
 import { expertsCore, expertsLora } from '@/data/mocks';
 import styles from './AdminExperts.module.css';
 
@@ -11,6 +11,7 @@ export function AdminExperts() {
   const [step, setStep] = useState(1);
   const [extra, setExtra] = useState(false);
   const [models, setModels] = useState<ModelSummaryResponse[]>([]);
+  const [modelHealth, setModelHealth] = useState<Record<string, ModelHealthResponse>>({});
   const [modelError, setModelError] = useState<string | null>(null);
   const { showToast } = useToast();
 
@@ -18,7 +19,19 @@ export function AdminExperts() {
     let active = true;
     listModels()
       .then((nextModels) => {
-        if (active) setModels(nextModels);
+        if (!active) return;
+        setModels(nextModels);
+        return Promise.allSettled(nextModels.map((model) => checkModelHealth(model.modelId)));
+      })
+      .then((results) => {
+        if (!active || !results) return;
+        const nextHealth: Record<string, ModelHealthResponse> = {};
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            nextHealth[result.value.modelId] = result.value;
+          }
+        });
+        setModelHealth(nextHealth);
       })
       .catch((error) => {
         if (active) setModelError(error instanceof Error ? error.message : 'Failed to load models.');
@@ -50,11 +63,11 @@ export function AdminExperts() {
           {models.map((model) => (
             <article key={model.modelId} className={styles.modelCard}>
               <header>
-                <span className={model.enabled ? styles.modelOnline : styles.modelOffline} />
+                <span className={modelHealth[model.modelId]?.healthy ?? model.enabled ? styles.modelOnline : styles.modelOffline} />
                 <strong>{model.displayName}</strong>
                 <em>{model.version}</em>
               </header>
-              <p>{model.modelType}</p>
+              <p>{modelHealth[model.modelId]?.status ?? model.modelType}</p>
               <dl>
                 <dt>Threshold</dt>
                 <dd>{model.defaultThreshold.toFixed(2)}</dd>
