@@ -109,3 +109,39 @@ jobs:
       - name: Skip model service tests
         if: steps.model_service.outputs.exists != 'true'
         run: echo "Nonescape mini model service not present in this revision."
+
+  smoke-tools:
+    name: Smoke Tools
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect smoke tool tests
+        id: smoke_tools
+        shell: bash
+        run: |
+          if [ -d tools/tests ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Python
+        if: steps.smoke_tools.outputs.exists == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pytest
+        if: steps.smoke_tools.outputs.exists == 'true'
+        run: pip install pytest==8.4.1
+
+      - name: Test
+        if: steps.smoke_tools.outputs.exists == 'true'
+        run: python -m pytest tools/tests
+
+      - name: Skip smoke tool tests
+        if: steps.smoke_tools.outputs.exists != 'true'
+        run: echo "Smoke tool tests not present in this revision."
