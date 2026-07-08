@@ -1,302 +1,179 @@
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PageContainer } from '@/components/primitives';
-import { listDetections, type DetectionHistoryItemResponse } from '@/api/backend';
-import { anomalyPool, expertsCore } from '@/data/mocks';
+import {
+  checkModelHealth,
+  listDetections,
+  listEvaluations,
+  listModels,
+  type DetectionHistoryItemResponse,
+  type EvaluationRunResponse,
+  type ModelHealthResponse,
+  type ModelSummaryResponse,
+} from '@/api/backend';
+import { formatDate, formatPercent, statusTone } from '@/pages/adminFormat';
 import styles from './AdminOverview.module.css';
 
-const sectionDelays = [0, 0.08, 0.16, 0.24];
-
-interface OverviewSectionProps {
-  index: string;
-  title: string;
-  english: string;
-  to: string | null;
-  order: number;
-  children: ReactNode;
+function StatusPill({ status }: { status: string }) {
+  return <span className={`${styles.status} ${styles[statusTone(status)]}`}>{status}</span>;
 }
 
-interface StatusItemProps {
-  type: 'real' | 'accent';
-  label: string;
-  detail: string;
-}
-
-interface TodayStatusListProps {
-  history: DetectionHistoryItemResponse[];
-  error: string | null;
-}
-
-function OverviewSection({ index, title, english, to, order, children }: OverviewSectionProps) {
-  const navigate = useNavigate();
-
+function StatCard({ label, value, detail }: { label: string; value: string | number; detail: string }) {
   return (
-    <motion.section
-      className={`${styles.section} ${to ? styles.clickable : ''}`}
-      onClick={() => {
-        if (to) navigate(to);
-      }}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: sectionDelays[order], ease: 'easeOut' }}
-    >
-      <header className={styles.sectionHeader}>
-        <span className={styles.sectionIndex}>{index}</span>
-        <span className={styles.sectionDash}>─</span>
-        <div className={styles.sectionTitles}>
-          <h2 className={styles.sectionTitle}>{title}</h2>
-          <p className={styles.sectionEnglish}>{english}</p>
-        </div>
-      </header>
-
-      <div className={styles.sectionBody}>{children}</div>
-
-      {to ? (
-        <footer className={styles.sectionFooter}>
-          <span className={styles.viewMore}>
-            <span className={styles.dash}>─</span>
-            <span>查看详细</span>
-            <span className={styles.arrow}>→</span>
-          </span>
-        </footer>
-      ) : null}
-    </motion.section>
-  );
-}
-
-function StatusItem({ type, label, detail }: StatusItemProps) {
-  return (
-    <div className={styles.statusItem}>
-      <span className={`${styles.statusDot} ${styles[type]}`} />
-      <span className={styles.statusLabel}>{label}</span>
-      <span className={styles.statusDash}>──</span>
-      <span className={styles.statusDetail}>{detail}</span>
-    </div>
-  );
-}
-
-export function TodayStatusList() {
-  return (
-    <div className={styles.statusList}>
-      <StatusItem type="real" label="系统持续运行" detail="自上次刷新 04:12" />
-      <StatusItem type="real" label="新增样本" detail="在过去 1 小时内" />
-      <StatusItem type="accent" label="待审样本" detail="需要您的关注" />
-      <StatusItem type="real" label="专家在线" detail="运行正常" />
-    </div>
-  );
-}
-
-function formatHistoryTime(value?: string | null) {
-  if (!value) return 'N/A';
-  return new Intl.DateTimeFormat('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date(value));
-}
-
-function historyVerdict(item?: DetectionHistoryItemResponse) {
-  if (!item) return 'No task yet';
-  if (item.status === 'FAILED') return 'Failed';
-  if (!item.report) return item.status;
-  if (item.report.verdict === 'LIKELY_AUTHENTIC') return `Real ${Math.round(item.report.confidence * 100)}%`;
-  if (item.report.verdict === 'UNCERTAIN') return `Uncertain ${Math.round(item.report.confidence * 100)}%`;
-  return `AI ${Math.round(item.report.confidence * 100)}%`;
-}
-
-function LiveTodayStatusList({ history, error }: TodayStatusListProps) {
-  const completed = history.filter((item) => item.status === 'COMPLETED').length;
-  const pending = history.filter((item) => item.status === 'QUEUED' || item.status === 'INFERENCING').length;
-  const failed = history.filter((item) => item.status === 'FAILED').length;
-  const latest = history[0];
-
-  return (
-    <div className={styles.statusList}>
-      <StatusItem type={error ? 'accent' : 'real'} label="API" detail={error ?? 'Connected'} />
-      <StatusItem type="real" label="Tasks" detail={`${history.length} total, ${completed} completed`} />
-      <StatusItem type={pending > 0 ? 'accent' : 'real'} label="Pending" detail={`${pending} queued/running, ${failed} failed`} />
-      <StatusItem type="real" label="Latest" detail={`${latest?.filename ?? 'N/A'} - ${historyVerdict(latest)} - ${formatHistoryTime(latest?.createdAt)}`} />
-    </div>
-  );
-}
-
-function PipelineThumbnail() {
-  const [activeIndex, setActiveIndex] = useState(2);
-  const nodes = ['audio', 'text', 'speech', 'lip', 'compose'];
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % nodes.length);
-    }, 2500);
-    return () => window.clearInterval(timer);
-  }, [nodes.length]);
-
-  return (
-    <div className={styles.miniPipeline}>
-      {nodes.map((node, index) => (
-        <div className={styles.pipelineGroup} key={node}>
-          <span
-            className={`${styles.miniNode} ${index < activeIndex ? styles.doneNode : ''} ${index === activeIndex ? styles.activeNode : ''}`}
-          >
-            <MiniPipelineIcon type={node} />
-          </span>
-          {index < nodes.length - 1 ? <span className={`${styles.miniConnector} ${index < activeIndex ? styles.activeConnector : ''}`} /> : null}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function MiniPipelineIcon({ type }: { type: string }) {
-  if (type === 'audio') {
-    return (
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        {[2, 5, 8, 11].map((x) => <rect key={x} x={x - 1} y={4 + (x % 3)} width="1.5" height={8 - (x % 3)} fill="currentColor" />)}
-      </svg>
-    );
-  }
-  if (type === 'text') {
-    return (
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        <line x1="3" y1="5" x2="13" y2="5" />
-        <line x1="3" y1="8" x2="11" y2="8" />
-        <line x1="3" y1="11" x2="9" y2="11" />
-      </svg>
-    );
-  }
-  if (type === 'speech') {
-    return (
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        <path d="M2 8 Q5 4, 8 8 T14 8" />
-      </svg>
-    );
-  }
-  if (type === 'lip') {
-    return (
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        <ellipse cx="8" cy="8" rx="5" ry="2" />
-        <line x1="3" y1="8" x2="13" y2="8" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <rect x="2" y="2" width="5" height="5" fill="currentColor" opacity="0.9" />
-      <rect x="9" y="2" width="5" height="5" fill="currentColor" opacity="0.6" />
-      <rect x="2" y="9" width="5" height="5" fill="currentColor" opacity="0.4" />
-      <rect x="9" y="9" width="5" height="5" fill="currentColor" opacity="0.75" />
-    </svg>
-  );
-}
-
-function MiniExpertIcon({ type }: { type?: string }) {
-  return (
-    <svg className={styles.expertIcon} viewBox="0 0 28 28" aria-hidden="true">
-      {type === 'texture' ? (
-        <>
-          <path d="M8 20 20 8" />
-          <path d="M5 16 16 5" />
-          <path d="M12 23 23 12" />
-        </>
-      ) : null}
-      {type === 'frequency' ? (
-        <>
-          <circle cx="14" cy="14" r="4" />
-          <circle cx="14" cy="14" r="8" />
-          <circle cx="14" cy="14" r="11" />
-        </>
-      ) : null}
-      {type === 'style' ? <path d="M6 16c4-9 7 7 16-4" /> : null}
-      {type === 'semantic' ? (
-        <>
-          <path d="M7 18 12 8l6 5 4-6" />
-          <circle cx="7" cy="18" r="1.6" />
-          <circle cx="12" cy="8" r="1.6" />
-          <circle cx="18" cy="13" r="1.6" />
-          <circle cx="22" cy="7" r="1.6" />
-        </>
-      ) : null}
-    </svg>
-  );
-}
-
-function ExpertsThumbnail() {
-  return (
-    <div className={styles.expertsGrid}>
-      {expertsCore.map((expert) => (
-        <div className={styles.expertMini} key={expert.name}>
-          <MiniExpertIcon type={expert.iconType} />
-          <span className={styles.expertName}>{expert.name}</span>
-          <span className={styles.expertStatus} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AnomalyThumbnail() {
-  return (
-    <div className={styles.anomalyPreview}>
-      <div className={styles.anomalyImages}>
-        {anomalyPool.slice(0, 3).map((item) => (
-          <div className={styles.anomalyThumb} key={item.id}>
-            <img src={item.src} alt="" />
-            <span className={styles.anomalyMark}>◐</span>
-          </div>
-        ))}
-      </div>
-      <p className={styles.anomalyHint}>
-        <span className={styles.anomalyCount}>{anomalyPool.length}</span>
-        <span className={styles.anomalyDash}>──</span>
-        <span>个样本等待您的确认</span>
-      </p>
-    </div>
+    <article className={styles.statCard}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <em>{detail}</em>
+    </article>
   );
 }
 
 export function AdminOverview() {
-  const [history, setHistory] = useState<DetectionHistoryItemResponse[]>([]);
-  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [detections, setDetections] = useState<DetectionHistoryItemResponse[]>([]);
+  const [evaluations, setEvaluations] = useState<EvaluationRunResponse[]>([]);
+  const [models, setModels] = useState<ModelSummaryResponse[]>([]);
+  const [health, setHealth] = useState<Record<string, ModelHealthResponse>>({});
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    listDetections()
-      .then((items) => {
-        if (active) setHistory(items);
-      })
-      .catch((error) => {
-        if (active) setHistoryError(error instanceof Error ? error.message : 'Failed to load detection history.');
-      });
+    async function loadOverview() {
+      try {
+        const [nextDetections, nextEvaluations, nextModels] = await Promise.all([
+          listDetections(),
+          listEvaluations(),
+          listModels(),
+        ]);
+        if (!active) return;
+        setDetections(nextDetections);
+        setEvaluations(nextEvaluations);
+        setModels(nextModels);
+        const healthResults = await Promise.allSettled(nextModels.map((model) => checkModelHealth(model.modelId)));
+        if (!active) return;
+        const nextHealth: Record<string, ModelHealthResponse> = {};
+        healthResults.forEach((result) => {
+          if (result.status === 'fulfilled') nextHealth[result.value.modelId] = result.value;
+        });
+        setHealth(nextHealth);
+      } catch (apiError) {
+        if (active) setError(apiError instanceof Error ? apiError.message : 'Failed to load workbench overview.');
+      }
+    }
+    void loadOverview();
     return () => {
       active = false;
     };
   }, []);
 
+  const completedDetections = detections.filter((item) => item.status === 'COMPLETED').length;
+  const failedDetections = detections.filter((item) => item.status === 'FAILED').length;
+  const latestEvaluation = evaluations.find((item) => item.status === 'COMPLETED') ?? evaluations[0];
+  const failedEvaluations = evaluations.filter((item) => item.status === 'FAILED').length;
+  const healthyModels = useMemo(() => models.filter((model) => health[model.modelId]?.healthy).length, [health, models]);
+  const reviewCount = failedDetections + failedEvaluations;
+
   return (
-    <PageContainer width="normal">
+    <PageContainer width="wide">
       <div className={styles.page}>
         <header className="pageHeader">
-          <p className="italic-quote">─ A workshop for keeping models honest ─</p>
-          <h1 className="pageTitle">治 理 中 心</h1>
-          <p className="pageEnglish">GOVERN</p>
+          <p className="italic-quote">- A workbench for measurable image authenticity -</p>
+          <h1 className="pageTitle">Workbench</h1>
+          <p className="pageEnglish">OVERVIEW</p>
         </header>
 
-        <div className={styles.grid}>
-          <OverviewSection index="01" title="今日动态" english="Today" to={null} order={0}>
-            <LiveTodayStatusList history={history} error={historyError} />
-          </OverviewSection>
-          <OverviewSection index="02" title="数据流动" english="Pipeline" to="/admin/pipeline" order={1}>
-            <PipelineThumbnail />
-          </OverviewSection>
-          <OverviewSection index="03" title="专家状态" english="Experts" to="/admin/experts" order={2}>
-            <ExpertsThumbnail />
-          </OverviewSection>
-          <OverviewSection index="04" title="异常关注" english="Anomaly" to="/admin/anomaly" order={3}>
-            <AnomalyThumbnail />
-          </OverviewSection>
-        </div>
+        {error ? <p className={styles.error}>{error}</p> : null}
+
+        <section className={styles.stats}>
+          <StatCard label="Detections" value={detections.length} detail={`${completedDetections} completed, ${failedDetections} failed`} />
+          <StatCard label="Evaluations" value={evaluations.length} detail={latestEvaluation ? `Latest F1 ${formatPercent(latestEvaluation.f1)}` : 'No evaluation run'} />
+          <StatCard label="Models" value={`${healthyModels}/${models.length}`} detail="healthy model endpoints" />
+          <StatCard label="Review Queue" value={reviewCount} detail="failed or uncertain items" />
+        </section>
+
+        <section className={styles.grid}>
+          <article className={styles.panel}>
+            <header className={styles.panelHeader}>
+              <div>
+                <span className={styles.eyebrow}>Recent</span>
+                <h2>Detection Tasks</h2>
+              </div>
+              <Link to="/admin/detections">Open</Link>
+            </header>
+            <div className={styles.list}>
+              {detections.slice(0, 5).map((item) => (
+                <div className={styles.listRow} key={item.taskId}>
+                  <span>
+                    <strong>{item.filename}</strong>
+                    <em>{formatDate(item.createdAt)}</em>
+                  </span>
+                  <StatusPill status={item.status} />
+                </div>
+              ))}
+              {!detections.length ? <p className={styles.empty}>No detection history yet.</p> : null}
+            </div>
+          </article>
+
+          <article className={styles.panel}>
+            <header className={styles.panelHeader}>
+              <div>
+                <span className={styles.eyebrow}>Quality</span>
+                <h2>Evaluation Runs</h2>
+              </div>
+              <Link to="/admin/evaluations">Open</Link>
+            </header>
+            <div className={styles.list}>
+              {evaluations.slice(0, 5).map((item) => (
+                <div className={styles.listRow} key={item.evaluationId}>
+                  <span>
+                    <strong>{item.name}</strong>
+                    <em>{item.datasetName} - F1 {formatPercent(item.f1)}</em>
+                  </span>
+                  <StatusPill status={item.status} />
+                </div>
+              ))}
+              {!evaluations.length ? <p className={styles.empty}>No evaluations yet. Create one from a manifest.</p> : null}
+            </div>
+          </article>
+
+          <article className={styles.panel}>
+            <header className={styles.panelHeader}>
+              <div>
+                <span className={styles.eyebrow}>Runtime</span>
+                <h2>Model Health</h2>
+              </div>
+              <Link to="/admin/models">Open</Link>
+            </header>
+            <div className={styles.list}>
+              {models.map((model) => (
+                <div className={styles.listRow} key={model.modelId}>
+                  <span>
+                    <strong>{model.displayName}</strong>
+                    <em>{model.version} - threshold {model.defaultThreshold.toFixed(2)}</em>
+                  </span>
+                  <span className={`${styles.status} ${health[model.modelId]?.healthy ? styles.good : styles.bad}`}>
+                    {health[model.modelId]?.status ?? 'UNKNOWN'}
+                  </span>
+                </div>
+              ))}
+              {!models.length ? <p className={styles.empty}>No model registry data available.</p> : null}
+            </div>
+          </article>
+
+          <article className={styles.panel}>
+            <header className={styles.panelHeader}>
+              <div>
+                <span className={styles.eyebrow}>Attention</span>
+                <h2>Review Queue</h2>
+              </div>
+              <Link to="/admin/review">Open</Link>
+            </header>
+            <div className={styles.reviewBox}>
+              <strong>{reviewCount}</strong>
+              <span>items need inspection</span>
+              <p>Failed detections and failed evaluation runs are grouped here so the system does not hide uncertainty.</p>
+            </div>
+          </article>
+        </section>
       </div>
     </PageContainer>
   );
