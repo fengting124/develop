@@ -16,6 +16,8 @@ public record EvaluationRunResponse(
         Double precision,
         Double recall,
         Double f1,
+        int attemptCount,
+        int maxAttempts,
         Instant createdAt,
         Instant startedAt,
         Instant completedAt,

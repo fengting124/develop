@@ -114,4 +114,44 @@ class EvaluationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Unsupported label at manifest line 2: UNKNOWN"));
     }
+
+    @Test
+    void runsQueuedEvaluationThroughHttpAndPersistsGeneratedPredictions() throws Exception {
+        String response = mockMvc.perform(post("/api/evaluations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "name": "Queued Dataset",
+                          "datasetName": "sample-v2",
+                          "modelId": "nonescape-mini",
+                          "manifest": "filename,groundTruthLabel\\nreal_010.jpg,AUTHENTIC\\nfake_010.jpg,SYNTHETIC"
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("QUEUED"))
+                .andExpect(jsonPath("$.attemptCount").value(0))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        JsonNode created = objectMapper.readTree(response);
+        String evaluationId = created.get("evaluationId").asText();
+
+        mockMvc.perform(post("/api/evaluations/{evaluationId}/run", evaluationId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.evaluationId").value(evaluationId))
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.attemptCount").value(1))
+                .andExpect(jsonPath("$.maxAttempts").value(3))
+                .andExpect(jsonPath("$.completedSamples").value(2))
+                .andExpect(jsonPath("$.accuracy").isNumber())
+                .andExpect(jsonPath("$.samples.length()").value(2))
+                .andExpect(jsonPath("$.samples[0].predictedLabel").isString())
+                .andExpect(jsonPath("$.samples[1].score").isNumber());
+
+        mockMvc.perform(post("/api/evaluations/{evaluationId}/retry", evaluationId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.evaluationId").value(evaluationId))
+                .andExpect(jsonPath("$.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.attemptCount").value(1));
+    }
 }
