@@ -1,0 +1,13 @@
+.git
+.idea
+.vscode
+.venv-model-service
+backend-java/target
+dist
+node_modules
+storage
+model-services/**/weights
+*.log
+*.local
+__pycache__
+*.py[cod]
