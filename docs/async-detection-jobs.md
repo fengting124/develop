@@ -13,7 +13,7 @@ debugging.
 
 ## Async Run
 
-`/run-async` submits a queued task to the backend job executor and immediately
+`/run-async` submits a queued task to the Redis-backed worker queue and immediately
 returns `202 Accepted` with the current task snapshot. Clients should poll:
 
 ```text
@@ -25,15 +25,21 @@ until the status becomes one of:
 - `COMPLETED`
 - `FAILED`
 
-The current implementation uses a bounded in-process Spring task executor. It
-prevents duplicate submissions for the same queued task inside one backend
-process. This is intentionally simple for the first deployable version.
+The current implementation uses Redis Stream:
+
+- stream key: `detection:jobs`
+- consumer group: `detection-workers`
+- submitted lock prefix: `detection:jobs:submitted:`
+
+Redis keeps task submission outside the backend process, so the backend can be
+restarted without losing queued work. Duplicate submissions are guarded with a
+short-lived Redis lock per task id.
 
 ## Future Upgrade Path
 
-When the project needs multiple backend replicas or durable retry semantics,
-replace the in-process executor behind `DetectionJobService` with a persistent
-queue. The controller and client contract can stay the same:
+When the project needs stronger retry semantics, extend the Redis worker with
+pending-message recovery and a dead-letter stream. The controller and client
+contract can stay the same:
 
 - submit through `/run-async`
 - poll through `GET /api/detections/{taskId}`
