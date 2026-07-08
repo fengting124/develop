@@ -99,6 +99,11 @@ cd model-services\nonescape-mini
 
 Detailed Windows, WSL, and SSH-server setup notes are in `docs/local-development.md`.
 
+## Documentation
+
+Start with `docs/README.md` for the documentation map, project worklog,
+improvement roadmap, and writing standards.
+
 ## Reliability Note
 
 Detection results are auxiliary signals. They should not be used as the sole basis for high-stakes decisions.
