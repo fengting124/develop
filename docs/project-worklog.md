@@ -46,6 +46,57 @@ Future acceptance:
 
 ## Timeline
 
+### 2026-07-08: Evaluation Backend Foundation
+
+Branch:
+
+```text
+feature/evaluation-backend
+```
+
+Commit:
+
+```text
+Branch head after final verification.
+```
+
+What changed:
+
+- Added evaluation metric calculation for binary synthetic-image detection.
+- Added Flyway migration `V3__add_evaluation_tables.sql`.
+- Added `evaluation_run` and `evaluation_sample` JPA entities and repositories.
+- Added `POST /api/evaluations`.
+- Added `GET /api/evaluations`.
+- Added `GET /api/evaluations/{evaluationId}`.
+- Added `GET /api/evaluations/{evaluationId}/samples?correct=false`.
+- Added CSV manifest parsing for the first backend slice.
+
+Why:
+
+- The project needs to answer "how does the model perform?" instead of only
+  producing one-off detection reports.
+- This first slice stores evaluation datasets and computes metrics when
+  prediction columns are already present.
+- Batch model execution is intentionally deferred because it requires file set
+  upload, queue orchestration, and model-service calls. Those should be built in
+  a separate branch after the data model and API contract are stable.
+
+Verification:
+
+```powershell
+cd backend-java
+mvn -Dtest=EvaluationMetricsCalculatorTest test
+mvn -Dtest=EvaluationRepositoryTest test
+mvn -Dtest=EvaluationControllerTest test
+```
+
+Deferred:
+
+- Uploading a directory or zip of evaluation images.
+- Async batch execution through Redis.
+- Calling the Python model service for each sample.
+- Frontend evaluation dashboard.
+
 ### 2026-07-08: Documentation Governance
 
 Branch:
