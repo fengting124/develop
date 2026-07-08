@@ -21,6 +21,8 @@ backend-java/.mvn/wrapper/maven-wrapper.jar
 storage/
 backend-java/storage/
 model-services/**/weights/
+*.onnx
+*.safetensors
 .venv-model-service/
 __pycache__/
 *.py[cod]

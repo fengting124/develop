@@ -16,6 +16,12 @@ def test_health_returns_service_status():
     assert response.json() == {
         "status": "ok",
         "service": "nonescape-mini-model-service",
+        "runtime": "heuristic",
+        "requestedRuntime": "heuristic",
+        "modelLoaded": True,
+        "modelVersion": "heuristic-v0",
+        "device": "cpu",
+        "preprocessVersion": "image-statistics-v0",
     }
 
 
@@ -40,6 +46,9 @@ def test_predict_returns_backend_compatible_contract_for_valid_image(tmp_path):
     assert payload["label"] in {"AUTHENTIC", "SYNTHETIC"}
     assert payload["latencyMs"] >= 0
     assert payload["rawResponse"]["heuristic"] == "image_statistics_v0"
+    assert payload["rawResponse"]["runtime"] == "heuristic"
+    assert payload["rawResponse"]["modelLoaded"] is True
+    assert payload["rawResponse"]["preprocessVersion"] == "image-statistics-v0"
     assert payload["rawResponse"]["width"] == 2
     assert payload["rawResponse"]["height"] == 2
 
