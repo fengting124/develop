@@ -46,6 +46,62 @@ Future acceptance:
 
 ## Timeline
 
+### 2026-07-08: Evaluation Batch Execution Framework
+
+Branch:
+
+```text
+feature/evaluation-batch-execution
+```
+
+What changed:
+
+- Added `attemptCount` and `maxAttempts` to evaluation runs.
+- Added an evaluation-specific model boundary:
+  `EvaluationModelClient`, `EvaluationModelRequest`, and `EvaluationModelResult`.
+- Added a deterministic placeholder model client for local execution without
+  model weights, GPU, or image files.
+- Added `EvaluationExecutionService` to run queued evaluations sample by
+  sample.
+- Added failure handling that marks the run `FAILED`, records the failing sample
+  reason, and persists partial progress.
+- Added retry behavior that skips already completed samples and continues
+  remaining samples while attempts remain.
+- Added `POST /api/evaluations/{evaluationId}/run`.
+- Added `POST /api/evaluations/{evaluationId}/retry`.
+- Added focused tests for persistence, model boundary, execution success,
+  execution failure, retry, and HTTP execution.
+
+Why:
+
+- The previous evaluation slice could store records and calculate metrics only
+  when predictions were already present in the manifest.
+- This branch turns evaluation into a real backend workflow while still
+  respecting the current environment constraint: no model weights are downloaded
+  and no GPU runtime is required.
+- The deterministic client is intentionally a boundary adapter, not a claimed
+  detector. It lets the Java orchestration, retry semantics, metrics, and
+  database writes become testable now, while leaving the real model adapter for
+  the later GPU-server branch.
+
+Verification:
+
+```powershell
+cd backend-java
+mvn -Dtest=EvaluationRepositoryTest test
+mvn -Dtest=DeterministicEvaluationModelClientTest test
+mvn -Dtest=EvaluationExecutionServiceTest test
+mvn -Dtest=EvaluationControllerTest test
+```
+
+Deferred:
+
+- Downloading or loading `nonescape-mini-v0.onnx`.
+- Resolving evaluation manifest filenames to uploaded dataset files.
+- Asynchronous Redis-backed evaluation execution.
+- Frontend evaluation dashboard and confusion matrix visualization.
+- Replacing the deterministic local adapter with a Python model-service adapter.
+
 ### 2026-07-08: Evaluation Backend Foundation
 
 Branch:
@@ -340,21 +396,22 @@ Why these matter:
 
 ## Next Recommended Work
 
-Start Phase B from `docs/project-improvement-roadmap.md`:
+Continue Phase B from `docs/project-improvement-roadmap.md`:
 
 ```text
-feature/evaluation-backend
+feature/evaluation-frontend
 ```
 
 Scope:
 
-- Add evaluation database tables.
-- Add manifest parsing.
-- Add metrics calculation.
-- Add evaluation task APIs.
-- Keep frontend work for a separate branch.
+- Add an evaluation list and detail page.
+- Display status, attempts, aggregate metrics, and sample rows.
+- Show wrong-sample filtering first; confusion matrix can follow in a later
+  polish branch.
+- Keep the existing frontend visual style.
 
 Reason:
 
-The project needs to prove model behavior with data. Evaluation is more valuable
-for interviews than adding more UI pages before metrics exist.
+The backend now has a measurable evaluation workflow. The next interview-visible
+step is to make the evaluation result easy to inspect without changing the
+project into a broad dashboard.

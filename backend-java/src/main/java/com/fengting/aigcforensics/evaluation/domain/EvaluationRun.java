@@ -53,6 +53,12 @@ public class EvaluationRun {
     @Column(name = "f1_score")
     private Double f1;
 
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount;
+
+    @Column(name = "max_attempts", nullable = false)
+    private int maxAttempts;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -80,6 +86,8 @@ public class EvaluationRun {
             Double precision,
             Double recall,
             Double f1,
+            int attemptCount,
+            int maxAttempts,
             Instant createdAt,
             Instant startedAt,
             Instant completedAt,
@@ -95,6 +103,8 @@ public class EvaluationRun {
         this.precision = precision;
         this.recall = recall;
         this.f1 = f1;
+        this.attemptCount = attemptCount;
+        this.maxAttempts = maxAttempts;
         this.createdAt = createdAt;
         this.startedAt = startedAt;
         this.completedAt = completedAt;
@@ -149,6 +159,14 @@ public class EvaluationRun {
         return f1;
     }
 
+    public int getAttemptCount() {
+        return attemptCount;
+    }
+
+    public int getMaxAttempts() {
+        return maxAttempts;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -163,5 +181,41 @@ public class EvaluationRun {
 
     public String getFailureReason() {
         return failureReason;
+    }
+
+    public boolean canRetry() {
+        return attemptCount < maxAttempts;
+    }
+
+    public void markStarted(Instant startedAt) {
+        this.status = EvaluationStatus.RUNNING;
+        this.attemptCount++;
+        this.startedAt = startedAt;
+        this.completedAt = null;
+        this.failureReason = null;
+    }
+
+    public void markCompleted(
+            int completedSamples,
+            Double accuracy,
+            Double precision,
+            Double recall,
+            Double f1,
+            Instant completedAt) {
+        this.status = EvaluationStatus.COMPLETED;
+        this.completedSamples = completedSamples;
+        this.accuracy = accuracy;
+        this.precision = precision;
+        this.recall = recall;
+        this.f1 = f1;
+        this.completedAt = completedAt;
+        this.failureReason = null;
+    }
+
+    public void markFailed(String failureReason, int completedSamples, Instant completedAt) {
+        this.status = EvaluationStatus.FAILED;
+        this.completedSamples = completedSamples;
+        this.completedAt = completedAt;
+        this.failureReason = failureReason;
     }
 }

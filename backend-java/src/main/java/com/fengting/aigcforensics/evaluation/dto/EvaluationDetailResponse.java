@@ -17,6 +17,8 @@ public record EvaluationDetailResponse(
         Double precision,
         Double recall,
         Double f1,
+        int attemptCount,
+        int maxAttempts,
         Instant createdAt,
         Instant startedAt,
         Instant completedAt,

@@ -122,4 +122,16 @@ public class EvaluationSample {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public void markPredicted(ModelLabel predictedLabel, Double score, Integer latencyMs) {
+        this.predictedLabel = predictedLabel;
+        this.score = score;
+        this.latencyMs = latencyMs;
+        this.correct = predictedLabel == groundTruthLabel;
+        this.failureReason = null;
+    }
+
+    public void markFailed(String failureReason) {
+        this.failureReason = failureReason;
+    }
 }

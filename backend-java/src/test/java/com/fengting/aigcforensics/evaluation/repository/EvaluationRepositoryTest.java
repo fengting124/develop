@@ -44,6 +44,8 @@ class EvaluationRepositoryTest {
                 0.0,
                 0.0,
                 0.0,
+                1,
+                3,
                 now,
                 now,
                 now,
@@ -76,6 +78,13 @@ class EvaluationRepositoryTest {
                 .get()
                 .extracting(EvaluationRun::getStatus)
                 .isEqualTo(EvaluationStatus.COMPLETED);
+        assertThat(evaluationRunRepository.findByEvaluationId("eval_001"))
+                .isPresent()
+                .get()
+                .satisfies(run -> {
+                    assertThat(run.getAttemptCount()).isEqualTo(1);
+                    assertThat(run.getMaxAttempts()).isEqualTo(3);
+                });
         assertThat(evaluationSampleRepository.findByEvaluationIdOrderByCreatedAtAsc("eval_001"))
                 .extracting(EvaluationSample::getFilename)
                 .containsExactly("real_001.jpg", "fake_001.jpg");

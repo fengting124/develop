@@ -16,6 +16,7 @@ import com.fengting.aigcforensics.evaluation.dto.CreateEvaluationRequest;
 import com.fengting.aigcforensics.evaluation.dto.EvaluationDetailResponse;
 import com.fengting.aigcforensics.evaluation.dto.EvaluationRunResponse;
 import com.fengting.aigcforensics.evaluation.dto.EvaluationSampleResponse;
+import com.fengting.aigcforensics.evaluation.service.EvaluationExecutionService;
 import com.fengting.aigcforensics.evaluation.service.EvaluationService;
 
 import jakarta.validation.Valid;
@@ -25,9 +26,13 @@ import jakarta.validation.Valid;
 public class EvaluationController {
 
     private final EvaluationService evaluationService;
+    private final EvaluationExecutionService evaluationExecutionService;
 
-    public EvaluationController(EvaluationService evaluationService) {
+    public EvaluationController(
+            EvaluationService evaluationService,
+            EvaluationExecutionService evaluationExecutionService) {
         this.evaluationService = evaluationService;
+        this.evaluationExecutionService = evaluationExecutionService;
     }
 
     @PostMapping
@@ -44,6 +49,16 @@ public class EvaluationController {
     @GetMapping("/{evaluationId}")
     public EvaluationDetailResponse getEvaluation(@PathVariable String evaluationId) {
         return evaluationService.getEvaluation(evaluationId);
+    }
+
+    @PostMapping("/{evaluationId}/run")
+    public EvaluationDetailResponse runEvaluation(@PathVariable String evaluationId) {
+        return evaluationExecutionService.runEvaluation(evaluationId);
+    }
+
+    @PostMapping("/{evaluationId}/retry")
+    public EvaluationDetailResponse retryEvaluation(@PathVariable String evaluationId) {
+        return evaluationExecutionService.runEvaluation(evaluationId);
     }
 
     @GetMapping("/{evaluationId}/samples")
