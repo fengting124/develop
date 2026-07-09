@@ -479,24 +479,67 @@ Deferred:
 - Full interactive Docker demo remains pending until Docker is available.
 - Real model weights remain deferred until a GPU server is prepared.
 
-## Next Recommended Work
+### 2026-07-09: Evaluation Result Insights
 
-Continue Phase B from `docs/project-improvement-roadmap.md` with a narrower
-verification and insight branch:
+Branch:
 
 ```text
 feature/evaluation-result-insights
 ```
 
+Commit:
+
+```text
+See the PR commit history after merge.
+```
+
+What changed:
+
+- Added tested frontend insight calculation for evaluation samples.
+- Added a confusion matrix, label distribution, and sample-outcome summary to
+  `/admin/evaluations`.
+- Improved the wrong-sample empty state for completed matching predictions.
+
+Why:
+
+- The evaluation page needed to explain model behavior, not only list runs and
+  aggregate metrics.
+- The change keeps insight logic in a pure utility so future backend aggregation
+  can be compared against frontend expectations.
+
+Verification:
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `mvn -B test`
+
+Deferred:
+
+- No backend aggregation API was added in this branch.
+- Real model weights remain deferred until a GPU server is prepared.
+- Local headless screenshot verification was attempted with a mocked API, but
+  the temporary Vite process exited before Chrome could capture the page.
+
+## Next Recommended Work
+
+Continue Phase B from `docs/project-improvement-roadmap.md` with a backend
+observability branch:
+
+```text
+feature/evaluation-observability
+```
+
 Scope:
 
-- Add a small confusion matrix or label breakdown to `/admin/evaluations`.
-- Add clearer empty states for runs with no wrong samples.
+- Add structured logs around evaluation execution start, retry, completion, and
+  failure.
+- Add lightweight timing fields or counters that make run latency explainable.
+- Document how to inspect evaluation execution behavior locally and in CI.
 - Keep the deterministic model boundary until GPU weights are available.
-- Preserve the current frontend visual style.
 
 Reason:
 
-The project now has evaluation execution and a usable admin workbench. The next
-interview-visible step is to make model quality easier to explain without
+The project now has evaluation execution and frontend result explainability. The
+next interview-visible step is to show production-minded observability without
 expanding scope into training, video detection, or heavy model operations.
