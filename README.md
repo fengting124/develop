@@ -98,6 +98,7 @@ cd model-services\nonescape-mini
 ```
 
 Detailed Windows, WSL, and SSH-server setup notes are in `docs/local-development.md`.
+For the evaluation workflow demo, follow `docs/fullstack-evaluation-demo.md`.
 
 ## Documentation
 

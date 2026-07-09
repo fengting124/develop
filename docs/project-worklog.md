@@ -440,24 +440,63 @@ Why these matter:
   local storage.
 - They created the foundation for later evaluation and robustness work.
 
-## Next Recommended Work
+### 2026-07-09: Full-Stack Evaluation Demo Polish
 
-Continue Phase B from `docs/project-improvement-roadmap.md`:
+Branch:
 
 ```text
-feature/evaluation-frontend
+feature/fullstack-evaluation-demo-smoke
+```
+
+Commit:
+
+```text
+See the PR commit history after merge.
+```
+
+What changed:
+
+- Added a small frontend test boundary for API error formatting.
+- Converted raw gateway failures into a clear backend availability message.
+- Documented the admin evaluation demo path from frontend to Java backend.
+
+Why:
+
+- The evaluation workflow already existed, but the demo story needed a cleaner
+  operator experience when the backend is offline.
+- Interviewers should be able to distinguish implemented evaluation execution
+  from deferred GPU model-weight work.
+
+Verification:
+
+- `npm run test`
+- `npm run lint`
+- `npm run build`
+- `mvn -B test`
+
+Deferred:
+
+- Full interactive Docker demo remains pending until Docker is available.
+- Real model weights remain deferred until a GPU server is prepared.
+
+## Next Recommended Work
+
+Continue Phase B from `docs/project-improvement-roadmap.md` with a narrower
+verification and insight branch:
+
+```text
+feature/evaluation-result-insights
 ```
 
 Scope:
 
-- Add an evaluation list and detail page.
-- Display status, attempts, aggregate metrics, and sample rows.
-- Show wrong-sample filtering first; confusion matrix can follow in a later
-  polish branch.
-- Keep the existing frontend visual style.
+- Add a small confusion matrix or label breakdown to `/admin/evaluations`.
+- Add clearer empty states for runs with no wrong samples.
+- Keep the deterministic model boundary until GPU weights are available.
+- Preserve the current frontend visual style.
 
 Reason:
 
-The backend now has a measurable evaluation workflow. The next interview-visible
-step is to make the evaluation result easy to inspect without changing the
-project into a broad dashboard.
+The project now has evaluation execution and a usable admin workbench. The next
+interview-visible step is to make model quality easier to explain without
+expanding scope into training, video detection, or heavy model operations.

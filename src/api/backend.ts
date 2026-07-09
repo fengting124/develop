@@ -1,3 +1,5 @@
+import { formatApiErrorMessage } from './errorMessage';
+
 export type DetectionStatus = 'QUEUED' | 'INFERENCING' | 'COMPLETED' | 'FAILED';
 export type EvaluationStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
 export type ModelLabel = 'AUTHENTIC' | 'SYNTHETIC' | 'UNCERTAIN';
@@ -159,8 +161,8 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new ApiError(message || `Request failed with status ${response.status}`, response.status);
+    const bodyText = await response.text();
+    throw new ApiError(formatApiErrorMessage(response.status, bodyText), response.status);
   }
 
   return response.json() as Promise<T>;

@@ -22,6 +22,8 @@ Use these when setting up or operating the project.
   server setup guidance.
 - [Smoke Test Workflow](smoke-test-workflow.md): end-to-end verification after
   services are running.
+- [Full-Stack Evaluation Demo](fullstack-evaluation-demo.md): admin UI to Java
+  backend evaluation workflow without model weights.
 
 ## Architecture And Contracts
 
@@ -49,3 +51,5 @@ These documents are useful for understanding how the project evolved.
 4. If discussing architecture, read
    [Model Integration Framework](model-integration-framework.md) and
    [Async Detection Jobs](async-detection-jobs.md).
+5. If demonstrating the project, run through
+   [Full-Stack Evaluation Demo](fullstack-evaluation-demo.md).
