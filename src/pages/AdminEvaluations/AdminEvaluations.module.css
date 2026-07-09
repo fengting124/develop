@@ -5,6 +5,7 @@
 
 .shell {
   display: grid;
+  align-items: start;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: var(--space-6);
 }
