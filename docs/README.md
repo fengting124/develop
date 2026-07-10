@@ -28,6 +28,8 @@ Use these when setting up or operating the project.
   Redis delivery, failure semantics, inspection, and replay.
 - [Detection Execution Leases](detection-execution-leases.md): short
   transactions, fencing tokens, lease recovery, and queue acknowledgement.
+- [Upload Security Boundary](upload-security.md): content-derived image types,
+  decode limits, generated storage paths, and deployment controls.
 
 ## Architecture And Contracts
 
