@@ -664,23 +664,65 @@ Deferred:
 
 ---
 
-## Next Recommended Work
-
-Continue the production foundation with the upload trust boundary:
+### 2026-07-11: Upload Trust Boundary
 
 ```text
 feature/upload-trust-boundary
 ```
 
+What changed:
+
+- Added layered JPEG, PNG, and WebP inspection using signatures, ImageIO reader
+  agreement, dimensions, decoded pixel limits, and a full decode.
+- Added the TwelveMonkeys WebP reader and verified it with an upstream fixture.
+- Replaced browser MIME trust with canonical content-derived metadata.
+- Replaced user-controlled storage names with generated asset paths and atomic
+  accepted-file writes.
+- Added transport and application byte limits plus a stable `413` response.
+- Documented why forensic evidence is retained without re-encoding and which
+  deployment controls compensate for that choice.
+
+Why:
+
+- Uploads are the platform's primary untrusted input and feed the future model
+  runtime directly.
+- MIME and extension checks alone are spoofable, while unbounded decode can
+  exhaust memory even for a modest encoded file.
+- Validating before accepted storage prevents corrupt input from becoming
+  durable application state.
+
+Verification:
+
+- Java suite reached 116 passing tests before final cross-project verification.
+- Tests cover spoofed MIME, real WebP decode, corrupt content, byte/dimension/
+  pixel limits, display filename traversal, generated paths, and `413` mapping.
+
+Deferred:
+
+- Authentication, user quotas, and rate limiting.
+- Antivirus/sandbox integration and object-storage quarantine.
+- Docker-backed disk, restart, and temporary-file lifecycle tests.
+
+---
+
+## Next Recommended Work
+
+Resolve the recorded frontend dependency findings in an isolated branch:
+
+```text
+fix/frontend-dependency-security
+```
+
 Scope:
 
-- Validate file signatures and decoded image content instead of trusting MIME
-  type or filename.
-- Apply decoded pixel and dimension limits against decompression bombs.
-- Separate quarantine, accepted storage, and cleanup behavior.
-- Define deterministic rejection responses and security-focused tests.
+- Re-run `npm audit` against the current lockfile.
+- Upgrade only affected direct dependencies within compatible ranges where
+  possible.
+- Verify tests, lint, production build, and UI screenshots.
+- Record any finding that requires a breaking framework upgrade.
 
 Reason:
 
-Uploads are the system's primary untrusted input. Hardening this boundary adds
-real security depth without requiring Docker, GPU hardware, or model weights.
+The production foundation audit recorded one high and one low frontend
+dependency finding. Closing known supply-chain findings is a smaller but real
+production requirement and should not be mixed into backend security code.

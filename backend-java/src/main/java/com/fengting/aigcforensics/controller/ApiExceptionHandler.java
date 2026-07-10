@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import com.fengting.aigcforensics.dto.error.ErrorResponse;
@@ -31,6 +32,12 @@ public class ApiExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMissingPart(MissingServletRequestPartException exception) {
         return new ErrorResponse("Missing required multipart field: " + exception.getRequestPartName(), Instant.now());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    public ErrorResponse handleUploadTooLarge(MaxUploadSizeExceededException exception) {
+        return new ErrorResponse("Uploaded file exceeds the configured request limit", Instant.now());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
