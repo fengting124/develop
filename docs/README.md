@@ -29,6 +29,9 @@ Use these when setting up or operating the project.
 
 Use these to understand system boundaries.
 
+- [Production Foundation And Project Boundary Design](superpowers/specs/2026-07-11-production-foundation-design.md):
+  production boundaries, reliability requirements, engineering standards, and
+  phased branch delivery plan.
 - [Model Integration Framework](model-integration-framework.md): Java-to-Python
   model-service contract, model runtime configuration, and weight handling.
 - [Async Detection Jobs](async-detection-jobs.md): Redis-backed asynchronous
@@ -42,14 +45,17 @@ These documents are useful for understanding how the project evolved.
 - [Frontend API Integration Plan](superpowers/plans/2026-07-07-frontend-api-integration.md)
 - [Real Nonescape Runtime Plan](superpowers/plans/2026-07-08-real-nonescape-runtime.md)
 - [Platform Design Spec](superpowers/specs/2026-07-07-image-authenticity-platform-design.md)
+- [Production Foundation Design](superpowers/specs/2026-07-11-production-foundation-design.md)
 
 ## Reading Order For Interview Review
 
 1. Read the [Project README](../README.md).
 2. Read the [Project Worklog](project-worklog.md).
-3. Read the [Improvement Roadmap](project-improvement-roadmap.md).
-4. If discussing architecture, read
+3. Read the [Production Foundation Design](superpowers/specs/2026-07-11-production-foundation-design.md).
+4. Read the [Improvement Roadmap](project-improvement-roadmap.md) for earlier
+   gap analysis and completed phases.
+5. If discussing architecture, read
    [Model Integration Framework](model-integration-framework.md) and
    [Async Detection Jobs](async-detection-jobs.md).
-5. If demonstrating the project, run through
+6. If demonstrating the project, run through
    [Full-Stack Evaluation Demo](fullstack-evaluation-demo.md).

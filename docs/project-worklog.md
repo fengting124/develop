@@ -521,25 +521,79 @@ Deferred:
 - Local headless screenshot verification was attempted with a mocked API, but
   the temporary Vite process exited before Chrome could capture the page.
 
-## Next Recommended Work
+### 2026-07-11: Production Foundation And Project Boundary Design
 
-Continue Phase B from `docs/project-improvement-roadmap.md` with a backend
-observability branch:
+Branch:
 
 ```text
-feature/evaluation-observability
+feature/production-foundation-spec
+```
+
+What changed:
+
+- Audited the current frontend, Java backend, PostgreSQL, Redis, storage,
+  model-service, evaluation, testing, CI, and repository-governance boundaries.
+- Compared the design with Spring Modulith, Debezium outbox guidance, Redis
+  Streams, Testcontainers, OpenTelemetry, Resilience4j, OWASP upload guidance,
+  and maintained AI-image detection benchmarks.
+- Defined measurable reliability, security, observability, reproducibility,
+  testing, API, data-governance, and repository standards.
+- Split future work into focused branches from reliable dispatch through GPU
+  server integration.
+
+Why:
+
+- The project needs interview-visible engineering depth that solves real
+  failure modes instead of adding unrelated pages or infrastructure names.
+- Database-to-Redis consistency, long-running database transactions, upload
+  trust, and fake evaluation execution are concrete current risks.
+- Model weights remain deferred, so the local stage must make the surrounding
+  system reliable and verifiable first.
+
+Verification baseline:
+
+- `npm run test`: 8 passed.
+- `npm run lint`: passed.
+- `npm run build`: passed.
+- `mvn -B test`: 47 passed.
+- Python model-service tests: 6 passed.
+
+Recorded risk:
+
+- `npm audit` reported one high and one low vulnerability. The Vite finding is
+  isolated to the next `fix/frontend-dependency-security` branch.
+
+Next branch:
+
+```text
+feature/reliable-job-dispatch
+```
+
+The branch will implement a PostgreSQL transactional outbox and idempotent
+Redis publication before evaluation is connected to real inference.
+
+---
+
+## Next Recommended Work
+
+Start Stage 1 from the production foundation design with a reliable dispatch
+branch:
+
+```text
+feature/reliable-job-dispatch
 ```
 
 Scope:
 
-- Add structured logs around evaluation execution start, retry, completion, and
-  failure.
-- Add lightweight timing fields or counters that make run latency explainable.
-- Document how to inspect evaluation execution behavior locally and in CI.
-- Keep the deterministic model boundary until GPU weights are available.
+- Persist task dispatch requests in PostgreSQL in the same transaction as the
+  business command.
+- Publish pending outbox records to Redis with a versioned event envelope.
+- Add idempotent publication, bounded retry, stale-claim recovery, inspection,
+  and explicit replay behavior.
+- Document queue failure and recovery operations.
 
 Reason:
 
-The project now has evaluation execution and frontend result explainability. The
-next interview-visible step is to show production-minded observability without
-expanding scope into training, video detection, or heavy model operations.
+The current database-to-Redis call is a dual write. Reliable dispatch provides
+a reusable foundation for detection and evaluation, demonstrates a real
+production consistency problem, and can be implemented without model weights.
