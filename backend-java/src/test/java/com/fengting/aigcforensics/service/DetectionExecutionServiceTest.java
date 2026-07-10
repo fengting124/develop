@@ -73,6 +73,31 @@ class DetectionExecutionServiceTest {
     }
 
     @Test
+    void doesNotCommitPartialResultsWhenLaterModelFails() {
+        DetectionExecutionPlan plan = new DetectionExecutionPlan(
+                "token-1",
+                "task-1",
+                "asset-1",
+                Path.of("uploads/image.png"),
+                List.of(
+                        new DetectionModelTarget("model-1", "http://model-1:5010", 0.5),
+                        new DetectionModelTarget("model-2", "http://model-2:5010", 0.6)));
+        when(transactionService.claim("task-1")).thenReturn(DetectionExecutionClaim.claimed(plan));
+        when(modelInferenceClient.predict(eq("http://model-1:5010"), any()))
+                .thenReturn(inferenceResult());
+        when(modelInferenceClient.predict(eq("http://model-2:5010"), any()))
+                .thenThrow(new ModelInferenceException("second model unavailable"));
+        when(transactionService.fail("task-1", "token-1", "second model unavailable"))
+                .thenReturn(DetectionExecutionOutcome.FAILED);
+
+        DetectionExecutionOutcome outcome = service.runDetection("task-1");
+
+        assertThat(outcome).isEqualTo(DetectionExecutionOutcome.FAILED);
+        verify(transactionService, never()).complete(any(), any(), any());
+        verify(transactionService).fail("task-1", "token-1", "second model unavailable");
+    }
+
+    @Test
     void returnsBusyWithoutCallingModel() {
         when(transactionService.claim("task-1")).thenReturn(
                 DetectionExecutionClaim.withoutPlan(DetectionExecutionClaimStatus.BUSY));

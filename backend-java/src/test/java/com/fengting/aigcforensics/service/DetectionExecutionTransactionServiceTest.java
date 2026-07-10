@@ -129,6 +129,23 @@ class DetectionExecutionTransactionServiceTest {
     }
 
     @Test
+    void staleFailureDoesNotChangeNewerExecution() {
+        DetectionTask task = queuedTask();
+        task.claimExecution("new-token", NOW, NOW.plusSeconds(60));
+        when(taskRepository.findByTaskIdForUpdate("task-1")).thenReturn(Optional.of(task));
+
+        DetectionExecutionOutcome outcome = service.fail(
+                "task-1",
+                "old-token",
+                "late model failure");
+
+        assertThat(outcome).isEqualTo(DetectionExecutionOutcome.STALE);
+        assertThat(task.getStatus()).isEqualTo(DetectionStatus.INFERENCING);
+        assertThat(task.getFailureReason()).isNull();
+        assertThat(task.getExecutionToken()).isEqualTo("new-token");
+    }
+
+    @Test
     void matchingCompletionPersistsPredictionsAndReportAtomically() {
         DetectionTask task = queuedTask();
         task.claimExecution("token-1", NOW, NOW.plusSeconds(60));
