@@ -103,7 +103,8 @@ public class JobOutboxEvent {
     public void claim(Instant claimedAt) {
         requireStatus(JobOutboxStatus.PENDING, "claim");
         if (availableAt == null || availableAt.isAfter(claimedAt)) {
-            throw new IllegalStateException("Outbox event is not available for publishing: " + eventId);
+            throw new InvalidJobOutboxStateException(
+                    "Outbox event is not available for publishing: " + eventId);
         }
         status = JobOutboxStatus.PUBLISHING;
         attemptCount++;
@@ -145,7 +146,8 @@ public class JobOutboxEvent {
 
     public void replay(Instant replayedAt) {
         if (status != JobOutboxStatus.PUBLISHED && status != JobOutboxStatus.FAILED) {
-            throw new IllegalStateException("Only terminal outbox events can be replayed: " + eventId);
+            throw new InvalidJobOutboxStateException(
+                    "Only terminal outbox events can be replayed: " + eventId);
         }
         status = JobOutboxStatus.PENDING;
         attemptCount = 0;
@@ -157,7 +159,7 @@ public class JobOutboxEvent {
 
     private void requireStatus(JobOutboxStatus expected, String action) {
         if (status != expected) {
-            throw new IllegalStateException(
+            throw new InvalidJobOutboxStateException(
                     "Cannot " + action + " outbox event " + eventId + " while status is " + status);
         }
     }
