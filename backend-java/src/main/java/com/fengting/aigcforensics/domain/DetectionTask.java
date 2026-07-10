@@ -1,6 +1,7 @@
 package com.fengting.aigcforensics.domain;
 
 import java.time.Instant;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,6 +42,15 @@ public class DetectionTask {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Column(name = "execution_token", length = 64)
+    private String executionToken;
+
+    @Column(name = "execution_lease_until")
+    private Instant executionLeaseUntil;
+
+    @Column(name = "execution_attempt_count", nullable = false)
+    private int executionAttemptCount;
+
     protected DetectionTask() {
     }
 
@@ -59,12 +69,74 @@ public class DetectionTask {
     public void markCompleted(Instant completedAt) {
         this.status = DetectionStatus.COMPLETED;
         this.completedAt = completedAt;
+        clearExecutionOwnership();
     }
 
     public void markFailed(String failureReason, Instant completedAt) {
         this.status = DetectionStatus.FAILED;
         this.failureReason = failureReason;
         this.completedAt = completedAt;
+        clearExecutionOwnership();
+    }
+
+    public boolean claimExecution(String token, Instant now, Instant leaseUntil) {
+        requireValidClaim(token, now, leaseUntil);
+        if (status == DetectionStatus.COMPLETED || hasLiveExecutionLease(now)) {
+            return false;
+        }
+
+        status = DetectionStatus.INFERENCING;
+        executionToken = token;
+        executionLeaseUntil = leaseUntil;
+        executionAttemptCount++;
+        startedAt = now;
+        completedAt = null;
+        failureReason = null;
+        return true;
+    }
+
+    public boolean completeExecution(String token, Instant completedAt) {
+        if (!ownsExecution(token)) {
+            return false;
+        }
+        markCompleted(Objects.requireNonNull(completedAt, "completedAt must not be null"));
+        return true;
+    }
+
+    public boolean failExecution(String token, String reason, Instant completedAt) {
+        if (!ownsExecution(token)) {
+            return false;
+        }
+        markFailed(reason, Objects.requireNonNull(completedAt, "completedAt must not be null"));
+        return true;
+    }
+
+    public boolean ownsExecution(String token) {
+        return status == DetectionStatus.INFERENCING
+                && executionToken != null
+                && executionToken.equals(token);
+    }
+
+    private boolean hasLiveExecutionLease(Instant now) {
+        return status == DetectionStatus.INFERENCING
+                && executionLeaseUntil != null
+                && executionLeaseUntil.isAfter(now);
+    }
+
+    private void requireValidClaim(String token, Instant now, Instant leaseUntil) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("execution token must not be blank");
+        }
+        Objects.requireNonNull(now, "now must not be null");
+        Objects.requireNonNull(leaseUntil, "leaseUntil must not be null");
+        if (!leaseUntil.isAfter(now)) {
+            throw new IllegalArgumentException("execution lease must expire after claim time");
+        }
+    }
+
+    private void clearExecutionOwnership() {
+        executionToken = null;
+        executionLeaseUntil = null;
     }
 
     public Long getId() {
@@ -97,5 +169,17 @@ public class DetectionTask {
 
     public Instant getCompletedAt() {
         return completedAt;
+    }
+
+    public String getExecutionToken() {
+        return executionToken;
+    }
+
+    public Instant getExecutionLeaseUntil() {
+        return executionLeaseUntil;
+    }
+
+    public int getExecutionAttemptCount() {
+        return executionAttemptCount;
     }
 }

@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -275,6 +276,7 @@ class DetectionControllerTest {
 
         @Override
         public ModelInferenceResult predict(String endpointUrl, ModelInferenceRequest request) {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
             if (failNextCall.getAndSet(false)) {
                 throw new ModelInferenceException("model service unavailable");
             }

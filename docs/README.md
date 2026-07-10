@@ -26,6 +26,8 @@ Use these when setting up or operating the project.
   backend evaluation workflow without model weights.
 - [Reliable Job Dispatch](reliable-job-dispatch.md): transactional outbox,
   Redis delivery, failure semantics, inspection, and replay.
+- [Detection Execution Leases](detection-execution-leases.md): short
+  transactions, fencing tokens, lease recovery, and queue acknowledgement.
 
 ## Architecture And Contracts
 

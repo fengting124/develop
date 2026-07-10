@@ -24,11 +24,25 @@ class DetectionJobWorkerTest {
     void pollsJobRunsDetectionAndAcknowledgesMessage() {
         DetectionJobMessage message = new DetectionJobMessage("message-001", "event-001", 1, "task-001");
         when(detectionJobConsumer.poll()).thenReturn(Optional.of(message));
+        when(detectionExecutionService.runDetection("task-001"))
+                .thenReturn(DetectionExecutionOutcome.COMPLETED);
 
         new DetectionJobWorker(detectionJobConsumer, detectionExecutionService).pollOnce();
 
         verify(detectionExecutionService).runDetection("task-001");
         verify(detectionJobConsumer).acknowledge(message);
+    }
+
+    @Test
+    void leavesMessagePendingWhenTaskHasLiveExecutionLease() {
+        DetectionJobMessage message = new DetectionJobMessage("message-001", "event-001", 1, "task-001");
+        when(detectionJobConsumer.poll()).thenReturn(Optional.of(message));
+        when(detectionExecutionService.runDetection("task-001"))
+                .thenReturn(DetectionExecutionOutcome.BUSY);
+
+        new DetectionJobWorker(detectionJobConsumer, detectionExecutionService).pollOnce();
+
+        verify(detectionJobConsumer, never()).acknowledge(message);
     }
 
     @Test
