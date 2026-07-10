@@ -623,23 +623,64 @@ Deferred:
 
 ---
 
-## Next Recommended Work
-
-Continue Stage 1 by shortening detection execution transactions:
+### 2026-07-11: Short-Lived Detection Execution Transactions
 
 ```text
 feature/short-lived-execution-transactions
 ```
 
+What changed:
+
+- Added Flyway V6 execution token, lease expiry, and attempt count fields.
+- Split task claim, external model invocation, and result persistence into
+  separate transaction boundaries.
+- Added fencing-token checks so stale success or failure callbacks cannot
+  overwrite a newer attempt.
+- Kept partial multi-model results in memory and committed predictions and the
+  report atomically only after every model succeeded.
+- Changed the Redis worker to leave `BUSY` messages pending for safe redelivery.
+
+Why:
+
+- Network inference must not hold database connections or row locks.
+- A crashed worker needs bounded recovery without accepting late stale writes.
+- The guarantee is useful with a heuristic adapter now and remains valid when
+  GPU-backed model latency is introduced later.
+
+Verification:
+
+- Domain tests cover live lease rejection, expiry recovery, and token fencing.
+- Service tests cover detached plans, stale writes, multi-model partial
+  failure, and acknowledgement decisions.
+- Spring integration tests assert the model client runs without an active
+  transaction and validate Flyway V6 against JPA.
+- Java suite reached 97 passing tests before final cross-project verification.
+
+Deferred:
+
+- Lease heartbeat until representative real-model latency is available.
+- Docker-backed process crash and PostgreSQL/Redis restart tests.
+- Applying the same execution boundary to batch evaluation.
+
+---
+
+## Next Recommended Work
+
+Continue the production foundation with the upload trust boundary:
+
+```text
+feature/upload-trust-boundary
+```
+
 Scope:
 
-- Claim a detection task in a short transaction.
-- Invoke the model service outside any database transaction.
-- Persist success or failure in a second short transaction.
-- Add protection against stale execution attempts overwriting newer state.
+- Validate file signatures and decoded image content instead of trusting MIME
+  type or filename.
+- Apply decoded pixel and dimension limits against decompression bombs.
+- Separate quarantine, accepted storage, and cleanup behavior.
+- Define deterministic rejection responses and security-focused tests.
 
 Reason:
 
-`DetectionExecutionService` currently keeps a database transaction open across
-the model HTTP call. Removing that boundary prevents long-held database
-connections and locks while retaining durable attempt state.
+Uploads are the system's primary untrusted input. Hardening this boundary adds
+real security depth without requiring Docker, GPU hardware, or model weights.

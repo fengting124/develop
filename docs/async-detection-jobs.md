@@ -57,3 +57,8 @@ message from blocking the queue while preserving enough metadata for operations:
 
 See [Reliable Job Dispatch](reliable-job-dispatch.md) for outbox states,
 configuration, failure scenarios, inspection, and replay.
+
+Worker-side model execution uses a database lease and fencing token. A message
+for a task with a live execution lease remains pending instead of being
+acknowledged. See [Detection Execution Leases](detection-execution-leases.md)
+for transaction and recovery semantics.

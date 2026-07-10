@@ -166,7 +166,6 @@ guarantee and remain deferred.
 
 Normal duplicate publication is suppressed by the stable event id, and a
 duplicate delivered after task completion returns without repeating model
-work. Atomic ownership when two independently injected messages target the
-same non-terminal task is deferred to
-`feature/short-lived-execution-transactions`. Until that work is merged, do
-not manually append duplicate task messages to the Redis stream.
+work. Concurrent ownership of a non-terminal task is protected by the
+execution lease and fencing token described in
+[Detection Execution Leases](detection-execution-leases.md).
