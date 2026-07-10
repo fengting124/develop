@@ -574,26 +574,72 @@ Redis publication before evaluation is connected to real inference.
 
 ---
 
-## Next Recommended Work
+### 2026-07-11: Reliable Detection Job Dispatch
 
-Start Stage 1 from the production foundation design with a reliable dispatch
-branch:
+Branch:
 
 ```text
 feature/reliable-job-dispatch
 ```
 
+What changed:
+
+- Added Flyway migration V5 and a durable PostgreSQL outbox state machine.
+- Changed asynchronous submission from a direct Redis write to transactional
+  outbox scheduling while locking the detection task against concurrent
+  submission.
+- Added a versioned Redis event envelope, stable event-id deduplication, stale
+  claim recovery, bounded retry with jitter, and permanent failure state.
+- Added bounded operations APIs for inspection and explicit terminal-event
+  replay without exposing raw payload JSON.
+- Added a detailed reliability and recovery runbook.
+
+Why:
+
+- The previous request-to-Redis call was a database/queue dual write.
+- Real systems must survive Redis outages and process crashes without losing
+  accepted business work.
+- The same outbox foundation can later dispatch evaluation work without model
+  weights or additional infrastructure products.
+
+Verification:
+
+- TDD RED/GREEN cycles covered the domain state machine, transaction service,
+  Redis envelope, dispatcher, operations API, concurrent submission lock, and
+  indeterminate Redis responses.
+- Java suite increased from 47 baseline tests to 79 passing tests.
+- Frontend tests (8), lint, and production build passed.
+- Model-service tests (6) and full-stack smoke tests (3) passed without model
+  weights.
+
+Deferred:
+
+- Real PostgreSQL/Redis restart and concurrency tests remain assigned to
+  `test/postgres-redis-testcontainers` when Docker is available.
+- The model HTTP call still runs inside its database transaction and is the
+  next production-boundary change.
+- Operations endpoints remain trusted-network only until authentication is in
+  scope.
+
+---
+
+## Next Recommended Work
+
+Continue Stage 1 by shortening detection execution transactions:
+
+```text
+feature/short-lived-execution-transactions
+```
+
 Scope:
 
-- Persist task dispatch requests in PostgreSQL in the same transaction as the
-  business command.
-- Publish pending outbox records to Redis with a versioned event envelope.
-- Add idempotent publication, bounded retry, stale-claim recovery, inspection,
-  and explicit replay behavior.
-- Document queue failure and recovery operations.
+- Claim a detection task in a short transaction.
+- Invoke the model service outside any database transaction.
+- Persist success or failure in a second short transaction.
+- Add protection against stale execution attempts overwriting newer state.
 
 Reason:
 
-The current database-to-Redis call is a dual write. Reliable dispatch provides
-a reusable foundation for detection and evaluation, demonstrates a real
-production consistency problem, and can be implemented without model weights.
+`DetectionExecutionService` currently keeps a database transaction open across
+the model HTTP call. Removing that boundary prevents long-held database
+connections and locks while retaining durable attempt state.
