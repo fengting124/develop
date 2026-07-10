@@ -13,8 +13,10 @@ debugging.
 
 ## Async Run
 
-`/run-async` submits a queued task to the Redis-backed worker queue and immediately
-returns `202 Accepted` with the current task snapshot. Clients should poll:
+`/run-async` writes or replays a durable PostgreSQL outbox event in the same
+transaction used to validate the task, then immediately returns `202 Accepted`
+with the current task snapshot. A separate dispatcher publishes eligible
+outbox events to Redis. Clients should poll:
 
 ```text
 GET /api/detections/{taskId}
@@ -29,12 +31,13 @@ The current implementation uses Redis Stream:
 
 - stream key: `detection:jobs`
 - consumer group: `detection-workers`
-- submitted lock prefix: `detection:jobs:submitted:`
+- submitted event prefix: `detection:jobs:submitted:`
 - dead-letter stream key: `detection:jobs:dead-letter`
 
-Redis keeps task submission outside the backend process, so the backend can be
-restarted without losing queued work. Duplicate submissions are guarded with a
-short-lived Redis lock per task id.
+PostgreSQL is the source of truth for publication work. Redis keeps delivered
+jobs outside the backend process, while a stable event id and short-lived Redis
+key suppress immediate duplicate publication. Delivery remains at least once;
+the detection task state is the final idempotency boundary.
 
 ## Reliability Behavior
 
@@ -47,6 +50,10 @@ to the dead-letter stream and acknowledged in the main stream. This keeps a bad
 message from blocking the queue while preserving enough metadata for operations:
 
 - `taskId`
+- `eventId`
 - `originalMessageId`
 - `deliveryCount`
 - `reason`
+
+See [Reliable Job Dispatch](reliable-job-dispatch.md) for outbox states,
+configuration, failure scenarios, inspection, and replay.

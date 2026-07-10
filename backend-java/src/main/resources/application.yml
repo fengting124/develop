@@ -22,6 +22,14 @@ server:
 app:
   storage:
     root: ${STORAGE_ROOT:storage}
+  jobs:
+    outbox:
+      dispatcher-enabled: ${APP_JOBS_OUTBOX_DISPATCHER_ENABLED:true}
+      poll-delay-ms: ${APP_JOBS_OUTBOX_POLL_DELAY_MS:500}
+      stale-after: ${APP_JOBS_OUTBOX_STALE_AFTER:1m}
+      max-attempts: ${APP_JOBS_OUTBOX_MAX_ATTEMPTS:5}
+      base-retry-delay: ${APP_JOBS_OUTBOX_BASE_RETRY_DELAY:1s}
+      max-retry-delay: ${APP_JOBS_OUTBOX_MAX_RETRY_DELAY:1m}
   detection:
     jobs:
       worker-enabled: ${APP_DETECTION_JOBS_WORKER_ENABLED:true}

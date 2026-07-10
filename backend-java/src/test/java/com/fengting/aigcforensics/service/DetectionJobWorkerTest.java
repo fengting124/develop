@@ -22,7 +22,7 @@ class DetectionJobWorkerTest {
 
     @Test
     void pollsJobRunsDetectionAndAcknowledgesMessage() {
-        DetectionJobMessage message = new DetectionJobMessage("message-001", "task-001");
+        DetectionJobMessage message = new DetectionJobMessage("message-001", "event-001", 1, "task-001");
         when(detectionJobConsumer.poll()).thenReturn(Optional.of(message));
 
         new DetectionJobWorker(detectionJobConsumer, detectionExecutionService).pollOnce();

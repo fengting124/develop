@@ -24,6 +24,8 @@ Use these when setting up or operating the project.
   services are running.
 - [Full-Stack Evaluation Demo](fullstack-evaluation-demo.md): admin UI to Java
   backend evaluation workflow without model weights.
+- [Reliable Job Dispatch](reliable-job-dispatch.md): transactional outbox,
+  Redis delivery, failure semantics, inspection, and replay.
 
 ## Architecture And Contracts
 

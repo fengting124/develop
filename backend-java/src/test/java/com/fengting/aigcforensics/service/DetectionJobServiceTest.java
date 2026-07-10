@@ -1,11 +1,11 @@
 package com.fengting.aigcforensics.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -23,44 +23,45 @@ class DetectionJobServiceTest {
     @Mock
     private DetectionTaskRepository detectionTaskRepository;
 
+    @Mock
+    private JobOutboxService jobOutboxService;
+
     @Test
     void submitsQueuedTaskToQueue() {
-        CapturingDetectionJobQueue jobQueue = new CapturingDetectionJobQueue();
         DetectionTask task = task("task-001", DetectionStatus.QUEUED);
-        when(detectionTaskRepository.findByTaskId("task-001")).thenReturn(Optional.of(task));
+        when(detectionTaskRepository.findByTaskIdForUpdate("task-001")).thenReturn(Optional.of(task));
 
         DetectionTask submitted = new DetectionJobService(
                 detectionTaskRepository,
-                jobQueue).submit("task-001");
+                jobOutboxService).submit("task-001");
 
         assertThat(submitted).isSameAs(task);
-        assertThat(jobQueue.taskIds).containsExactly("task-001");
+        verify(jobOutboxService).scheduleDetection("task-001");
     }
 
     @Test
     void doesNotSubmitCompletedTask() {
-        CapturingDetectionJobQueue jobQueue = new CapturingDetectionJobQueue();
         DetectionTask task = task("task-001", DetectionStatus.QUEUED);
         task.markCompleted(Instant.parse("2026-07-07T00:00:01Z"));
-        when(detectionTaskRepository.findByTaskId("task-001")).thenReturn(Optional.of(task));
+        when(detectionTaskRepository.findByTaskIdForUpdate("task-001")).thenReturn(Optional.of(task));
 
-        new DetectionJobService(detectionTaskRepository, jobQueue)
+        new DetectionJobService(detectionTaskRepository, jobOutboxService)
                 .submit("task-001");
 
-        assertThat(jobQueue.taskIds).isEmpty();
+        verify(jobOutboxService, never()).scheduleDetection("task-001");
+        verify(jobOutboxService, never()).replayDetection("task-001");
     }
 
     @Test
     void submitsFailedTaskForManualRetry() {
-        CapturingDetectionJobQueue jobQueue = new CapturingDetectionJobQueue();
         DetectionTask task = task("task-001", DetectionStatus.QUEUED);
         task.markFailed("temporary model outage", Instant.parse("2026-07-07T00:00:01Z"));
-        when(detectionTaskRepository.findByTaskId("task-001")).thenReturn(Optional.of(task));
+        when(detectionTaskRepository.findByTaskIdForUpdate("task-001")).thenReturn(Optional.of(task));
 
-        new DetectionJobService(detectionTaskRepository, jobQueue)
+        new DetectionJobService(detectionTaskRepository, jobOutboxService)
                 .submit("task-001");
 
-        assertThat(jobQueue.taskIds).containsExactly("task-001");
+        verify(jobOutboxService).replayDetection("task-001");
     }
 
     private DetectionTask task(String taskId, DetectionStatus status) {
@@ -69,15 +70,5 @@ class DetectionJobServiceTest {
                 "asset-001",
                 status,
                 Instant.parse("2026-07-07T00:00:00Z"));
-    }
-
-    private static class CapturingDetectionJobQueue implements DetectionJobQueue {
-
-        private final List<String> taskIds = new ArrayList<>();
-
-        @Override
-        public void enqueue(String taskId) {
-            taskIds.add(taskId);
-        }
     }
 }

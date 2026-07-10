@@ -20,6 +20,9 @@ logging:
     org.springframework: warn
 
 app:
+  jobs:
+    outbox:
+      dispatcher-enabled: false
   detection:
     jobs:
       worker-enabled: false
