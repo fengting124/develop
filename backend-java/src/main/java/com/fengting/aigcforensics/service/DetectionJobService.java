@@ -11,23 +11,24 @@ import com.fengting.aigcforensics.repository.DetectionTaskRepository;
 public class DetectionJobService {
 
     private final DetectionTaskRepository detectionTaskRepository;
-    private final DetectionJobQueue detectionJobQueue;
+    private final JobOutboxService jobOutboxService;
 
     public DetectionJobService(
             DetectionTaskRepository detectionTaskRepository,
-            DetectionJobQueue detectionJobQueue) {
+            JobOutboxService jobOutboxService) {
         this.detectionTaskRepository = detectionTaskRepository;
-        this.detectionJobQueue = detectionJobQueue;
+        this.jobOutboxService = jobOutboxService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public DetectionTask submit(String taskId) {
         DetectionTask task = detectionTaskRepository.findByTaskId(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Detection task not found: " + taskId));
-        if (task.getStatus() != DetectionStatus.QUEUED && task.getStatus() != DetectionStatus.FAILED) {
-            return task;
+        if (task.getStatus() == DetectionStatus.QUEUED) {
+            jobOutboxService.scheduleDetection(taskId);
+        } else if (task.getStatus() == DetectionStatus.FAILED) {
+            jobOutboxService.replayDetection(taskId);
         }
-        detectionJobQueue.enqueue(taskId);
         return task;
     }
 }
