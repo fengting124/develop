@@ -5,6 +5,7 @@
 
 .shell {
   display: grid;
+  align-items: start;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: var(--space-6);
 }
@@ -204,6 +205,127 @@
   font-weight: var(--weight-medium);
 }
 
+.insightGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.insightPanel,
+.matrixPanel {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--canvas);
+  padding: 18px;
+}
+
+.matrixPanel {
+  margin-bottom: var(--space-5);
+}
+
+.insightHeader {
+  margin-bottom: var(--space-3);
+}
+
+.insightHeader h3 {
+  margin-top: 3px;
+  color: var(--ink);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+}
+
+.insightNumbers {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.insightNumber {
+  min-width: 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.insightNumber span,
+.distributionRow span,
+.distributionRow em,
+.matrixHead,
+.matrixRow strong {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.insightNumber strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-medium);
+}
+
+.distributionList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.distributionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px 56px;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 38px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.distributionRow:last-child {
+  border-bottom: 0;
+}
+
+.distributionRow strong {
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+}
+
+.matrix {
+  display: grid;
+  gap: var(--space-2);
+  overflow-x: auto;
+}
+
+.matrixHead,
+.matrixRow {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) repeat(3, minmax(92px, 0.42fr));
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 520px;
+}
+
+.matrixHead {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.matrixRow {
+  min-height: 42px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.matrixRow span {
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-medium);
+}
+
 .empty,
 .error {
   border: 1px dashed var(--rule);
@@ -226,5 +348,12 @@
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-}
 
+  .insightGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .insightNumbers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

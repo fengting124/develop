@@ -10,6 +10,7 @@ import {
   type EvaluationRunResponse,
 } from '@/api/backend';
 import { formatDate, formatPercent, labelText, statusTone } from '@/pages/adminFormat';
+import { buildEvaluationInsights, LABELS } from './evaluationInsights';
 import styles from './AdminEvaluations.module.css';
 
 const sampleManifest = `filename,groundTruthLabel
@@ -21,6 +22,15 @@ function Metric({ label, value }: { label: string; value?: number | null }) {
     <div className={styles.metric}>
       <span>{label}</span>
       <strong>{formatPercent(value)}</strong>
+    </div>
+  );
+}
+
+function InsightNumber({ label, value }: { label: string; value: number }) {
+  return (
+    <div className={styles.insightNumber}>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
@@ -40,6 +50,7 @@ export function AdminEvaluations() {
 
   const selectedRun = useMemo(() => runs.find((run) => run.evaluationId === selectedId) ?? runs[0] ?? null, [runs, selectedId]);
   const wrongSamples = detail?.samples.filter((sample) => sample.correct === false || sample.failureReason) ?? [];
+  const insights = useMemo(() => buildEvaluationInsights(detail?.samples ?? []), [detail?.samples]);
 
   const refresh = async (nextSelectedId = selectedId) => {
     setLoading(true);
@@ -201,6 +212,59 @@ export function AdminEvaluations() {
             <Metric label="F1" value={detail?.f1} />
           </div>
 
+          <div className={styles.insightGrid}>
+            <section className={styles.insightPanel}>
+              <div className={styles.insightHeader}>
+                <span className={styles.eyebrow}>Quality Split</span>
+                <h3>Sample Outcome</h3>
+              </div>
+              <div className={styles.insightNumbers}>
+                <InsightNumber label="Total" value={insights.summary.total} />
+                <InsightNumber label="Correct" value={insights.summary.correct} />
+                <InsightNumber label="Wrong" value={insights.summary.wrong} />
+                <InsightNumber label="Failed" value={insights.summary.failed} />
+                <InsightNumber label="Pending" value={insights.summary.pending} />
+              </div>
+            </section>
+
+            <section className={styles.insightPanel}>
+              <div className={styles.insightHeader}>
+                <span className={styles.eyebrow}>Manifest</span>
+                <h3>Label Distribution</h3>
+              </div>
+              <div className={styles.distributionList}>
+                {insights.labelDistribution.map((row) => (
+                  <div className={styles.distributionRow} key={row.label}>
+                    <span>{labelText(row.label)}</span>
+                    <strong>{row.count}</strong>
+                    <em>{formatPercent(row.ratio)}</em>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <section className={styles.matrixPanel}>
+            <div className={styles.insightHeader}>
+              <span className={styles.eyebrow}>Confusion Matrix</span>
+              <h3>Truth By Prediction</h3>
+            </div>
+            <div className={styles.matrix}>
+              <div className={styles.matrixHead}>
+                <span>Truth \\ Prediction</span>
+                {LABELS.map((label) => <span key={label}>{labelText(label)}</span>)}
+              </div>
+              {LABELS.map((truthLabel) => (
+                <div className={styles.matrixRow} key={truthLabel}>
+                  <strong>{labelText(truthLabel)}</strong>
+                  {LABELS.map((predictedLabel) => (
+                    <span key={predictedLabel}>{insights.matrix[truthLabel][predictedLabel]}</span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </section>
+
           <div className={styles.sampleTable}>
             <div className={styles.sampleHead}>
               <span>Filename</span>
@@ -221,7 +285,11 @@ export function AdminEvaluations() {
                 <span>{sample.latencyMs === null ? 'N/A' : `${sample.latencyMs}ms`}</span>
               </div>
             ))}
-            {!wrongSamples.length ? <p className={styles.empty}>No wrong or failed samples for the selected run.</p> : null}
+            {!wrongSamples.length ? (
+              <p className={styles.empty}>
+                {detail ? 'All completed predictions match the manifest labels.' : 'Create or select an evaluation to inspect wrong samples.'}
+              </p>
+            ) : null}
           </div>
         </section>
       </div>
