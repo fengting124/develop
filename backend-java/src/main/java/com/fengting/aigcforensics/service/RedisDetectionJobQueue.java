@@ -54,18 +54,24 @@ public class RedisDetectionJobQueue implements DetectionJobQueue, DetectionJobCo
         String submittedKey = submittedKey(request.eventId());
         Boolean acquired = redisTemplate.opsForValue()
                 .setIfAbsent(submittedKey, "1", properties.getSubmittedTtl());
+        if (acquired == null) {
+            throw new IllegalStateException("Redis deduplication returned no result for event " + request.eventId());
+        }
         if (Boolean.FALSE.equals(acquired)) {
             return;
         }
 
         try {
-            redisTemplate.opsForStream().add(StreamRecords.newRecord()
+            RecordId recordId = redisTemplate.opsForStream().add(StreamRecords.newRecord()
                     .ofMap(Map.of(
                             EVENT_ID_FIELD, request.eventId(),
                             EVENT_VERSION_FIELD, String.valueOf(request.eventVersion()),
                             TASK_ID_FIELD, request.taskId(),
                             OCCURRED_AT_FIELD, request.occurredAt().toString()))
                     .withStreamKey(properties.getStreamKey()));
+            if (recordId == null) {
+                throw new IllegalStateException("Redis stream returned no record id for event " + request.eventId());
+            }
         } catch (RuntimeException exception) {
             redisTemplate.delete(submittedKey);
             throw exception;

@@ -1,6 +1,7 @@
 package com.fengting.aigcforensics.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -60,6 +61,7 @@ class RedisDetectionJobQueueTest {
                 properties.getSubmittedTtl()))
                 .thenReturn(true);
         when(redisTemplate.opsForStream()).thenReturn(streamOperations);
+        when(streamOperations.add(any(MapRecord.class))).thenReturn(RecordId.of("message-001"));
 
         new RedisDetectionJobQueue(redisTemplate, properties).enqueue(request);
 
@@ -85,6 +87,42 @@ class RedisDetectionJobQueueTest {
         new RedisDetectionJobQueue(redisTemplate, properties).enqueue(request("event-001", "task-001"));
 
         verify(redisTemplate, never()).opsForStream();
+    }
+
+    @Test
+    void rejectsIndeterminateDeduplicationResult() {
+        DetectionJobRedisProperties properties = new DetectionJobRedisProperties();
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.setIfAbsent(
+                properties.getSubmittedKeyPrefix() + "event-001",
+                "1",
+                properties.getSubmittedTtl()))
+                .thenReturn(null);
+
+        assertThatThrownBy(() -> new RedisDetectionJobQueue(redisTemplate, properties)
+                .enqueue(request("event-001", "task-001")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("deduplication");
+        verify(redisTemplate, never()).opsForStream();
+    }
+
+    @Test
+    void rejectsMissingStreamRecordIdAndReleasesDeduplicationKey() {
+        DetectionJobRedisProperties properties = new DetectionJobRedisProperties();
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.setIfAbsent(
+                properties.getSubmittedKeyPrefix() + "event-001",
+                "1",
+                properties.getSubmittedTtl()))
+                .thenReturn(true);
+        when(redisTemplate.opsForStream()).thenReturn(streamOperations);
+        when(streamOperations.add(any(MapRecord.class))).thenReturn(null);
+
+        assertThatThrownBy(() -> new RedisDetectionJobQueue(redisTemplate, properties)
+                .enqueue(request("event-001", "task-001")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("record id");
+        verify(redisTemplate).delete(properties.getSubmittedKeyPrefix() + "event-001");
     }
 
     @Test

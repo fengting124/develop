@@ -22,7 +22,7 @@ public class DetectionJobService {
 
     @Transactional
     public DetectionTask submit(String taskId) {
-        DetectionTask task = detectionTaskRepository.findByTaskId(taskId)
+        DetectionTask task = detectionTaskRepository.findByTaskIdForUpdate(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Detection task not found: " + taskId));
         if (task.getStatus() == DetectionStatus.QUEUED) {
             jobOutboxService.scheduleDetection(taskId);

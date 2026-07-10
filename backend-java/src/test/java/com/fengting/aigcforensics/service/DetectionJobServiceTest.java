@@ -29,7 +29,7 @@ class DetectionJobServiceTest {
     @Test
     void submitsQueuedTaskToQueue() {
         DetectionTask task = task("task-001", DetectionStatus.QUEUED);
-        when(detectionTaskRepository.findByTaskId("task-001")).thenReturn(Optional.of(task));
+        when(detectionTaskRepository.findByTaskIdForUpdate("task-001")).thenReturn(Optional.of(task));
 
         DetectionTask submitted = new DetectionJobService(
                 detectionTaskRepository,
@@ -43,7 +43,7 @@ class DetectionJobServiceTest {
     void doesNotSubmitCompletedTask() {
         DetectionTask task = task("task-001", DetectionStatus.QUEUED);
         task.markCompleted(Instant.parse("2026-07-07T00:00:01Z"));
-        when(detectionTaskRepository.findByTaskId("task-001")).thenReturn(Optional.of(task));
+        when(detectionTaskRepository.findByTaskIdForUpdate("task-001")).thenReturn(Optional.of(task));
 
         new DetectionJobService(detectionTaskRepository, jobOutboxService)
                 .submit("task-001");
@@ -56,7 +56,7 @@ class DetectionJobServiceTest {
     void submitsFailedTaskForManualRetry() {
         DetectionTask task = task("task-001", DetectionStatus.QUEUED);
         task.markFailed("temporary model outage", Instant.parse("2026-07-07T00:00:01Z"));
-        when(detectionTaskRepository.findByTaskId("task-001")).thenReturn(Optional.of(task));
+        when(detectionTaskRepository.findByTaskIdForUpdate("task-001")).thenReturn(Optional.of(task));
 
         new DetectionJobService(detectionTaskRepository, jobOutboxService)
                 .submit("task-001");
