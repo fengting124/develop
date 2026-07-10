@@ -18,14 +18,14 @@ class LocalStorageServiceTest {
     void savesUploadUnderAssetDirectory() throws Exception {
         LocalStorageService storageService = new LocalStorageService(tempDir);
 
-        StorageService.StoredFile storedFile = storageService.saveUpload(
+        StorageService.StoredFile storedFile = storageService.saveAcceptedImage(
                 "asset_001",
-                "../unsafe name.png",
+                "png",
                 new byte[] { 1, 2, 3 });
 
         assertThat(storedFile.size()).isEqualTo(3);
         assertThat(storedFile.path()).startsWith(tempDir.toAbsolutePath().normalize());
-        assertThat(storedFile.path().getFileName().toString()).isEqualTo("unsafe_name.png");
+        assertThat(storedFile.path().getFileName().toString()).isEqualTo("asset_001.png");
         assertThat(Files.readAllBytes(storedFile.path())).containsExactly(1, 2, 3);
     }
 
@@ -33,8 +33,20 @@ class LocalStorageServiceTest {
     void rejectsEmptyUpload() {
         LocalStorageService storageService = new LocalStorageService(tempDir);
 
-        assertThatThrownBy(() -> storageService.saveUpload("asset_001", "sample.png", new byte[0]))
+        assertThatThrownBy(() -> storageService.saveAcceptedImage("asset_001", "png", new byte[0]))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("content");
+    }
+
+    @Test
+    void rejectsUntrustedAssetIdAndExtension() {
+        LocalStorageService storageService = new LocalStorageService(tempDir);
+
+        assertThatThrownBy(() -> storageService.saveAcceptedImage("../escape", "png", new byte[] { 1 }))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("assetId contains unsupported characters");
+        assertThatThrownBy(() -> storageService.saveAcceptedImage("asset_001", "../exe", new byte[] { 1 }))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("extension contains unsupported characters");
     }
 }

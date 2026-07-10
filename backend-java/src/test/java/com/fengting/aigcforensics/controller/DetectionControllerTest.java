@@ -114,7 +114,51 @@ class DetectionControllerTest {
 
         mockMvc.perform(multipart("/api/detections/images").file(text))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Only JPEG, PNG, and WebP images are supported"));
+                .andExpect(jsonPath("$.message")
+                        .value("Only JPEG, PNG, and WebP image content is supported"));
+    }
+
+    @Test
+    void createImageDetectionDerivesTypeFromContentInsteadOfRequestHeader() throws Exception {
+        MockMultipartFile image = new MockMultipartFile(
+                "file",
+                "mislabelled.txt",
+                "text/plain",
+                onePixelPng("mislabelled"));
+
+        mockMvc.perform(multipart("/api/detections/images").file(image))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.filename").value("mislabelled.txt"))
+                .andExpect(jsonPath("$.contentType").value("image/png"));
+    }
+
+    @Test
+    void createImageDetectionRejectsCorruptImageBeforeStorage() throws Exception {
+        MockMultipartFile image = new MockMultipartFile(
+                "file",
+                "corrupt.png",
+                "image/png",
+                new byte[] {
+                        (byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+                        0x00, 0x00, 0x00, 0x00
+                });
+
+        mockMvc.perform(multipart("/api/detections/images").file(image))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Uploaded image is corrupt or unreadable"));
+    }
+
+    @Test
+    void createImageDetectionSanitizesDisplayFilename() throws Exception {
+        MockMultipartFile image = new MockMultipartFile(
+                "file",
+                "../../folder\\evidence.png",
+                "image/png",
+                onePixelPng("filename"));
+
+        mockMvc.perform(multipart("/api/detections/images").file(image))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.filename").value("evidence.png"));
     }
 
     @Test

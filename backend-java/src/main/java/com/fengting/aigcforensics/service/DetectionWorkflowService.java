@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,23 +24,19 @@ import com.fengting.aigcforensics.repository.DetectionReportRepository;
 import com.fengting.aigcforensics.repository.DetectionTaskRepository;
 import com.fengting.aigcforensics.repository.MediaAssetRepository;
 import com.fengting.aigcforensics.repository.ModelPredictionRepository;
-import com.fengting.aigcforensics.service.ImageMetadataService.ImageMetadata;
+import com.fengting.aigcforensics.config.UploadPolicyProperties;
 import com.fengting.aigcforensics.service.StorageService.StoredFile;
 
 @Service
 public class DetectionWorkflowService {
 
-    private static final Set<String> SUPPORTED_IMAGE_TYPES = Set.of(
-            "image/jpeg",
-            "image/png",
-            "image/webp");
-    private static final String UNSUPPORTED_IMAGE_MESSAGE = "Only JPEG, PNG, and WebP images are supported";
-
     private final MediaAssetRepository mediaAssetRepository;
     private final DetectionTaskRepository detectionTaskRepository;
     private final StorageService storageService;
     private final HashService hashService;
-    private final ImageMetadataService imageMetadataService;
+    private final ImageUploadInspector imageUploadInspector;
+    private final UploadFilenameSanitizer filenameSanitizer;
+    private final UploadPolicyProperties uploadPolicy;
     private final ModelPredictionRepository modelPredictionRepository;
     private final DetectionReportRepository detectionReportRepository;
     private final Clock clock;
@@ -53,7 +47,9 @@ public class DetectionWorkflowService {
             DetectionTaskRepository detectionTaskRepository,
             StorageService storageService,
             HashService hashService,
-            ImageMetadataService imageMetadataService,
+            ImageUploadInspector imageUploadInspector,
+            UploadFilenameSanitizer filenameSanitizer,
+            UploadPolicyProperties uploadPolicy,
             ModelPredictionRepository modelPredictionRepository,
             DetectionReportRepository detectionReportRepository) {
         this(
@@ -61,7 +57,9 @@ public class DetectionWorkflowService {
                 detectionTaskRepository,
                 storageService,
                 hashService,
-                imageMetadataService,
+                imageUploadInspector,
+                filenameSanitizer,
+                uploadPolicy,
                 modelPredictionRepository,
                 detectionReportRepository,
                 Clock.systemUTC());
@@ -72,7 +70,9 @@ public class DetectionWorkflowService {
             DetectionTaskRepository detectionTaskRepository,
             StorageService storageService,
             HashService hashService,
-            ImageMetadataService imageMetadataService,
+            ImageUploadInspector imageUploadInspector,
+            UploadFilenameSanitizer filenameSanitizer,
+            UploadPolicyProperties uploadPolicy,
             ModelPredictionRepository modelPredictionRepository,
             DetectionReportRepository detectionReportRepository,
             Clock clock) {
@@ -80,7 +80,9 @@ public class DetectionWorkflowService {
         this.detectionTaskRepository = detectionTaskRepository;
         this.storageService = storageService;
         this.hashService = hashService;
-        this.imageMetadataService = imageMetadataService;
+        this.imageUploadInspector = imageUploadInspector;
+        this.filenameSanitizer = filenameSanitizer;
+        this.uploadPolicy = uploadPolicy;
         this.modelPredictionRepository = modelPredictionRepository;
         this.detectionReportRepository = detectionReportRepository;
         this.clock = clock;
@@ -91,9 +93,10 @@ public class DetectionWorkflowService {
         validateUpload(file);
 
         byte[] content = readContent(file);
+        InspectedImage inspectedImage = imageUploadInspector.inspect(content);
         String sha256 = hashService.sha256(content);
         MediaAsset asset = mediaAssetRepository.findBySha256(sha256)
-                .orElseGet(() -> storeNewAsset(file, content, sha256));
+                .orElseGet(() -> storeNewAsset(file, content, sha256, inspectedImage));
 
         DetectionTask task = new DetectionTask(
                 newExternalId("task"),
@@ -216,26 +219,30 @@ public class DetectionWorkflowService {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Uploaded file must not be empty");
         }
-
-        String contentType = normalizeContentType(file.getContentType());
-        if (!SUPPORTED_IMAGE_TYPES.contains(contentType)) {
-            throw new IllegalArgumentException(UNSUPPORTED_IMAGE_MESSAGE);
+        if (file.getSize() > uploadPolicy.maxBytes()) {
+            throw new IllegalArgumentException("Uploaded file exceeds the configured byte limit");
         }
     }
 
-    private MediaAsset storeNewAsset(MultipartFile file, byte[] content, String sha256) {
+    private MediaAsset storeNewAsset(
+            MultipartFile file,
+            byte[] content,
+            String sha256,
+            InspectedImage inspectedImage) {
         String assetId = newExternalId("asset");
-        StoredFile storedFile = storageService.saveUpload(assetId, file.getOriginalFilename(), content);
-        ImageMetadata metadata = imageMetadataService.read(storedFile.path());
+        StoredFile storedFile = storageService.saveAcceptedImage(
+                assetId,
+                inspectedImage.extension(),
+                content);
 
         MediaAsset asset = new MediaAsset(
                 assetId,
-                safeOriginalFilename(file),
-                normalizeContentType(file.getContentType()),
+                filenameSanitizer.sanitize(file.getOriginalFilename()),
+                inspectedImage.contentType(),
                 storedFile.size(),
                 sha256,
-                metadata.width(),
-                metadata.height(),
+                inspectedImage.width(),
+                inspectedImage.height(),
                 storedFile.path().toString(),
                 null,
                 Instant.now(clock));
@@ -248,21 +255,6 @@ public class DetectionWorkflowService {
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to read uploaded file", exception);
         }
-    }
-
-    private String safeOriginalFilename(MultipartFile file) {
-        String filename = file.getOriginalFilename();
-        if (filename == null || filename.isBlank()) {
-            return "upload.bin";
-        }
-        return filename;
-    }
-
-    private String normalizeContentType(String contentType) {
-        if (contentType == null) {
-            return "";
-        }
-        return contentType.toLowerCase(Locale.ROOT);
     }
 
     private String newExternalId(String prefix) {
