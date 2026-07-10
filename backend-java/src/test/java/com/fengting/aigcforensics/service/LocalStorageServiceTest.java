@@ -49,4 +49,21 @@ class LocalStorageServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("extension contains unsupported characters");
     }
+
+    @Test
+    void neverOverwritesPreviouslyAcceptedEvidence() throws Exception {
+        LocalStorageService storageService = new LocalStorageService(tempDir);
+        StorageService.StoredFile original = storageService.saveAcceptedImage(
+                "asset_001",
+                "png",
+                new byte[] { 1, 2, 3 });
+
+        assertThatThrownBy(() -> storageService.saveAcceptedImage(
+                "asset_001",
+                "png",
+                new byte[] { 9, 9, 9 }))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Failed to save accepted image");
+        assertThat(Files.readAllBytes(original.path())).containsExactly(1, 2, 3);
+    }
 }

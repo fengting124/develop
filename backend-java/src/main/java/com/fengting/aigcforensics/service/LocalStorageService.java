@@ -44,15 +44,23 @@ public class LocalStorageService implements StorageService {
 
         Path temporary = directory.resolve(assetId + ".tmp-" + UUID.randomUUID()).normalize();
         ensurePathInsideRoot(temporary);
+        boolean outputReserved = false;
+        boolean completed = false;
         try {
             Files.createDirectories(directory);
+            Files.createFile(output);
+            outputReserved = true;
             Files.write(temporary, content, StandardOpenOption.CREATE_NEW);
             moveIntoPlace(temporary, output);
+            completed = true;
             return new StoredFile(output, content.length);
         } catch (IOException exception) {
             throw new IllegalStateException("Failed to save accepted image " + assetId, exception);
         } finally {
             deleteTemporaryFile(temporary);
+            if (outputReserved && !completed) {
+                deleteTemporaryFile(output);
+            }
         }
     }
 
@@ -64,9 +72,13 @@ public class LocalStorageService implements StorageService {
 
     private void moveIntoPlace(Path temporary, Path output) throws IOException {
         try {
-            Files.move(temporary, output, StandardCopyOption.ATOMIC_MOVE);
+            Files.move(
+                    temporary,
+                    output,
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
         } catch (java.nio.file.AtomicMoveNotSupportedException exception) {
-            Files.move(temporary, output);
+            Files.move(temporary, output, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 
