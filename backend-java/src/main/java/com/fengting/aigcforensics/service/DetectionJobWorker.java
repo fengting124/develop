@@ -25,8 +25,10 @@ public class DetectionJobWorker {
     @Scheduled(fixedDelayString = "${app.detection.jobs.poll-delay-ms:1000}")
     public void pollOnce() {
         detectionJobConsumer.poll().ifPresent(message -> {
-            detectionExecutionService.runDetection(message.taskId());
-            detectionJobConsumer.acknowledge(message);
+            DetectionExecutionOutcome outcome = detectionExecutionService.runDetection(message.taskId());
+            if (outcome.shouldAcknowledge()) {
+                detectionJobConsumer.acknowledge(message);
+            }
         });
     }
 }

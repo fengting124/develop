@@ -31,6 +31,8 @@ app:
       base-retry-delay: ${APP_JOBS_OUTBOX_BASE_RETRY_DELAY:1s}
       max-retry-delay: ${APP_JOBS_OUTBOX_MAX_RETRY_DELAY:1m}
   detection:
+    execution:
+      lease-duration: ${APP_DETECTION_EXECUTION_LEASE_DURATION:5m}
     jobs:
       worker-enabled: ${APP_DETECTION_JOBS_WORKER_ENABLED:true}
       poll-delay-ms: ${APP_DETECTION_JOBS_POLL_DELAY_MS:1000}
