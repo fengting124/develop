@@ -147,7 +147,7 @@ Commit: `test: define product capability contract`
 - Consumes: capability ids and route fields from Task 1.
 - Produces: `formalRoutes`, `showcaseRoutes`, and `isFormalRoute(path)`.
 
-- [ ] **Step 1: Write failing route-policy tests**
+- [x] **Step 1: Write failing route-policy tests**
 
 ```ts
 assert.equal(isFormalRoute('/detect/image'), true);
@@ -156,7 +156,7 @@ assert.equal(isFormalRoute('/dev/showcase/video-detection'), false);
 assert.equal(formalRoutes.some((route) => route.includes('showcase')), false);
 ```
 
-- [ ] **Step 2: Verify RED and implement policy**
+- [x] **Step 2: Verify RED and implement policy**
 
 Run: `npm run test`
 
@@ -165,7 +165,7 @@ Expected: missing `routePolicy.ts`.
 Implement immutable formal and showcase route lists. Do not parse route intent
 from display labels.
 
-- [ ] **Step 3: Update application routes**
+- [x] **Step 3: Update application routes**
 
 - Remove the formal `/detect/video` component route.
 - Redirect `/detect/video` to `/detect` for old bookmarks.
@@ -176,7 +176,7 @@ from display labels.
 - Let the image card occupy the existing constrained layout without changing
   its typography, colors, motion, or radius system.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `npm run test && npm run lint && npm run build`
 

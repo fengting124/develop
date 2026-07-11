@@ -65,14 +65,6 @@
   stroke-dashoffset: 0;
 }
 
-.videoIcon {
-  transition: transform 700ms ease-out;
-}
-
-.choiceCard:hover .videoIcon {
-  transform: translateY(-4px) scale(1.04);
-}
-
 .center {
   display: grid;
   gap: var(--space-2);
