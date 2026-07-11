@@ -46,6 +46,9 @@ Use these to understand system boundaries.
 - [AI Application Product Boundary And Long-Term Roadmap](superpowers/specs/2026-07-11-ai-application-product-roadmap-design.md):
   authoritative product scope, review workflow, long-term phases, and portfolio
   acceptance criteria.
+- [Real Evaluation Execution Boundary](superpowers/specs/2026-07-11-evaluation-real-execution-design.md):
+  asset-backed datasets, durable batch execution, fenced recovery, result
+  provenance, and Phase 2 acceptance criteria.
 - [Model Integration Framework](model-integration-framework.md): Java-to-Python
   model-service contract, model runtime configuration, and weight handling.
 - [Async Detection Jobs](async-detection-jobs.md): Redis-backed asynchronous
