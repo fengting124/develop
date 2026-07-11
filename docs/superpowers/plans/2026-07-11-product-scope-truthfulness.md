@@ -83,7 +83,7 @@ Commit: `docs: establish documentation lifecycle governance`
 - Produces: `CapabilityStatus`, `ProductCapability`, `productCapabilities`, `formalCapabilityIds`, and `showcaseCapabilityIds`.
 - Consumed by: route and documentation tasks.
 
-- [ ] **Step 1: Write the failing registry test**
+- [x] **Step 1: Write the failing registry test**
 
 Test exact invariants:
 
@@ -98,13 +98,13 @@ assert.equal(productCapabilities.some((item) => item.status === 'implemented' &&
 
 Add `src/config/capabilities.test.ts` to the existing `npm test` command.
 
-- [ ] **Step 2: Run the test and confirm RED**
+- [x] **Step 2: Run the test and confirm RED**
 
 Run: `npm run test`
 
 Expected: TypeScript module resolution failure for `./capabilities.ts`.
 
-- [ ] **Step 3: Implement the registry**
+- [x] **Step 3: Implement the registry**
 
 Use these public types:
 
@@ -125,7 +125,7 @@ Register image detection, evaluation, model registry, review queue, real model
 runtime, video detection, expert LoRA concepts, audio detection, and model
 training. Only implemented entries may expose `formalRoute`.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `npm run test`
 
