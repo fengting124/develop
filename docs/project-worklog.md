@@ -705,24 +705,59 @@ Deferred:
 
 ---
 
-## Next Recommended Work
-
-Resolve the recorded frontend dependency findings in an isolated branch:
+### 2026-07-11: Frontend Dependency Security
 
 ```text
 fix/frontend-dependency-security
 ```
 
+What changed:
+
+- Refreshed the lockfile within existing package ranges.
+- Upgraded Vite from 8.0.14 to 8.1.4 to resolve the Windows path-deny bypass
+  and UNC-path credential disclosure advisories.
+- Upgraded transitive Babel packages from 7.29.0 to 7.29.7 to resolve the
+  source-map local file-read advisory.
+- Kept `package.json` ranges and application source unchanged.
+
+Why:
+
+- A known high-severity development-server vulnerability is still relevant on
+  the project's primary Windows development environment.
+- A lockfile-only compatible update is lower risk than carrying known findings
+  or mixing a framework migration with security remediation.
+
+Verification:
+
+- A clean `npm ci` completed successfully.
+- `npm audit --audit-level=low` reports zero vulnerabilities.
+- Frontend tests (8), lint, and production build pass with Vite 8.1.4.
+- Screenshots were not repeated because no frontend source, CSS, asset, or
+  runtime behavior changed.
+
+---
+
+## Next Recommended Work
+
+Add interview-visible operational observability:
+
+```text
+feature/observability-correlation
+```
+
 Scope:
 
-- Re-run `npm audit` against the current lockfile.
-- Upgrade only affected direct dependencies within compatible ranges where
-  possible.
-- Verify tests, lint, production build, and UI screenshots.
-- Record any finding that requires a breaking framework upgrade.
+- Propagate a correlation id across HTTP requests, outbox events, Redis jobs,
+  model calls, and persisted execution records.
+- Add Micrometer counters and timers for dispatch, retries, queue outcomes,
+  inference latency, and upload rejection reasons.
+- Define structured logging fields without logging image bytes or model raw
+  payloads.
+- Document local metrics endpoints and production exposure boundaries.
 
 Reason:
 
-The production foundation audit recorded one high and one low frontend
-dependency finding. Closing known supply-chain findings is a smaller but real
-production requirement and should not be mixed into backend security code.
+The project now handles failure and recovery, but operators cannot yet answer
+which request produced a task, where latency accumulated, or how often retries
+and security rejections occur. Correlated traces and bounded metrics turn the
+reliability features into an operable system.
