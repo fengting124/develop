@@ -198,7 +198,7 @@ Commit: `refactor: separate formal and showcase routes`
 - Produces: `buildReportPresentation(detail)` returning verdict, confidence,
   evidence rows, and timeline rows derived only from `DetectionDetailResponse`.
 
-- [ ] **Step 1: Write failing presentation tests**
+- [x] **Step 1: Write failing presentation tests**
 
 Cover these exact rules:
 
@@ -209,7 +209,7 @@ assert.equal(buildReportPresentation(failedTask).verdict, 'FAILED');
 assert.equal(buildReportPresentation(realCompletedTask).confidence, 0.86);
 ```
 
-- [ ] **Step 2: Verify RED and implement the mapper**
+- [x] **Step 2: Verify RED and implement the mapper**
 
 Run: `npm run test`
 
@@ -218,7 +218,7 @@ Expected: missing `reportPresentation.ts`.
 The mapper must not import `src/data/mocks.ts`. Empty backend evidence remains
 empty; it does not synthesize anomaly marks.
 
-- [ ] **Step 3: Refactor the report page**
+- [x] **Step 3: Refactor the report page**
 
 - Remove `imageDemo`, static fake timeline, and synthetic evidence fallbacks.
 - Require a non-demo route id and load backend data.
@@ -230,7 +230,7 @@ empty; it does not synthesize anomaly marks.
 - Disable PDF/archive commands or label them unavailable until a backend export
   contract exists; do not show a false success toast.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `npm run test && npm run lint && npm run build`
 

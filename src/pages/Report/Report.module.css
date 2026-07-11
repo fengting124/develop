@@ -197,6 +197,16 @@
   border: 1px solid var(--rule);
 }
 
+.mediaPlaceholder {
+  display: grid;
+  min-height: 240px;
+  place-items: center;
+  border: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
 .meta {
   display: grid;
   grid-template-columns: 80px 1fr;
