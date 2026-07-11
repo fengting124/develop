@@ -38,6 +38,9 @@ Use these to understand system boundaries.
 - [Production Foundation And Project Boundary Design](superpowers/specs/2026-07-11-production-foundation-design.md):
   production boundaries, reliability requirements, engineering standards, and
   phased branch delivery plan.
+- [AI Application Product Boundary And Long-Term Roadmap](superpowers/specs/2026-07-11-ai-application-product-roadmap-design.md):
+  authoritative product scope, review workflow, long-term phases, and portfolio
+  acceptance criteria.
 - [Model Integration Framework](model-integration-framework.md): Java-to-Python
   model-service contract, model runtime configuration, and weight handling.
 - [Async Detection Jobs](async-detection-jobs.md): Redis-backed asynchronous
