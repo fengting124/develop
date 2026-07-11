@@ -61,6 +61,7 @@ These documents are useful for understanding how the project evolved.
 - [AIGC Forensics Platform Plan](superpowers/plans/2026-07-07-aigc-forensics-platform.md)
 - [Frontend API Integration Plan](superpowers/plans/2026-07-07-frontend-api-integration.md)
 - [Real Nonescape Runtime Plan](superpowers/plans/2026-07-08-real-nonescape-runtime.md)
+- [Real Evaluation Execution Plan](superpowers/plans/2026-07-11-evaluation-real-execution.md)
 - [Platform Design Spec](superpowers/specs/2026-07-07-image-authenticity-platform-design.md)
 - [Production Foundation Design](superpowers/specs/2026-07-11-production-foundation-design.md)
 
