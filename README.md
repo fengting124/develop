@@ -15,7 +15,8 @@ MVP supports image-only detection:
 - Upload one JPG, PNG, or WebP image.
 - Store the file and image metadata.
 - Create a detection task in a Java backend.
-- Call a Python model service for real inference.
+- Call a versioned Python model-service contract. Local development uses the
+  heuristic runtime; real weights and CUDA verification are server-pending.
 - Store model output, threshold, version, latency, and image hash.
 - Generate a report and detection history.
 - Show model health and registry information.
@@ -27,6 +28,10 @@ Out of scope for MVP:
 - Legal-grade forensic certification.
 - User billing, tenants, RBAC, or complex audit workflows.
 - Custom model training or stacking meta-learners.
+
+Video and expert-ensemble visuals are development showcases, not formal
+product capabilities. See the [product capability matrix](docs/capability-matrix.md)
+for implementation evidence and deferred boundaries.
 
 ## Architecture
 

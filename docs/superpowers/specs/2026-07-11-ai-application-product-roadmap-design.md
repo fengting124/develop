@@ -1,5 +1,9 @@
 # AI Application Product Boundary And Long-Term Roadmap
 
+- Status: Active
+- Owners: Project maintainers
+- Last reviewed: 2026-07-11
+
 ## 1. Purpose
 
 This specification defines the durable product boundary and delivery order for

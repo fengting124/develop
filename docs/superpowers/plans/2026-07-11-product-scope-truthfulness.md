@@ -249,14 +249,14 @@ Commit: `refactor: remove fabricated report evidence`
 - Consumes: the capability ids and statuses from Task 1.
 - Produces: the reviewer-facing source of capability truth.
 
-- [ ] **Step 1: Write the matrix**
+- [x] **Step 1: Write the matrix**
 
 For each registry entry, record status, user entry point, implementation
 evidence, verification command, and next phase. Include a maintenance rule:
 changing a status requires registry tests, this matrix, README, and worklog in
 the same PR.
 
-- [ ] **Step 2: Reconcile overview claims**
+- [x] **Step 2: Reconcile overview claims**
 
 - Replace “call a Python model service for real inference” with wording that
   distinguishes implemented service integration from server-pending weights.
@@ -264,7 +264,7 @@ the same PR.
 - State that video visuals are showcases and not a product capability.
 - Add the completed branch entry and exact verification evidence to worklog.
 
-- [ ] **Step 3: Complete plan checkboxes and verify docs**
+- [x] **Step 3: Complete plan checkboxes and verify docs**
 
 Run:
 
