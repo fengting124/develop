@@ -281,12 +281,12 @@ Commit: `docs: publish product capability matrix`
 
 **Files:** No new production files.
 
-- [ ] **Step 1: Run complete local verification**
+- [x] **Step 1: Run complete local verification**
 
 Run frontend tests, lint, build, Java tests, model-service tests, smoke tests,
 `npm audit --audit-level=low`, and `git diff --check`.
 
-- [ ] **Step 2: Review the branch as an interviewer**
+- [x] **Step 2: Review the branch as an interviewer**
 
 Confirm formal navigation exposes no mock-only capability, formal report code
 does not import mocks, and the matrix links every implemented claim to code or
