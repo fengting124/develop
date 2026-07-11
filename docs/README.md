@@ -9,6 +9,8 @@ Workbench.
   commands.
 - [Documentation Standards](documentation-standards.md): how this repository
   writes and maintains technical documentation.
+- [Architecture Decision Records](adr/README.md): durable cross-cutting
+  decisions, alternatives, and consequences.
 - [Project Worklog](project-worklog.md): what has been built, why it was built,
   how it was verified, and what is deferred.
 - [Improvement Roadmap](project-improvement-roadmap.md): strict interviewer-style

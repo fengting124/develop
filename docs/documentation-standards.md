@@ -40,6 +40,34 @@ Use one primary purpose per document.
 Do not mix a tutorial, API reference, and design essay in the same document.
 If a document starts doing two jobs, split it or link to another page.
 
+## Document Lifecycle
+
+Durable specifications and explanation documents must include this metadata
+immediately below the title:
+
+```markdown
+- Status: Draft | Active | Superseded | Historical
+- Owners: Project maintainers
+- Last reviewed: YYYY-MM-DD
+- Superseded by: `path/to/replacement.md` (only when applicable)
+```
+
+Lifecycle meanings:
+
+| Status | Meaning |
+| --- | --- |
+| `Draft` | Proposed content that is not yet the implementation baseline. |
+| `Active` | Current source of truth for implementation and review. |
+| `Superseded` | Replaced by a named newer document and retained for history. |
+| `Historical` | Records completed research or evolution but is not prescriptive. |
+
+Plans use checkboxes instead of lifecycle metadata. Worklog entries use
+chronology. Runbooks are active unless their heading explicitly says otherwise.
+
+When a document becomes superseded, update both documents and `docs/README.md`
+in the same pull request. Never silently delete an architectural decision that
+explains committed code.
+
 ## File Naming
 
 - Use lowercase kebab-case: `project-worklog.md`.
@@ -160,6 +188,33 @@ Should work now.
 For documentation-only branches, `git diff --check` is the minimum verification.
 For code branches, run the relevant test or build command.
 
+## Maintenance Triggers
+
+The same pull request must update durable documentation when code changes any
+of these contracts:
+
+- public API request, response, status, or error behavior;
+- environment variable, default, deployment requirement, or health behavior;
+- formal capability status or user-facing workflow;
+- database or queue state machine and recovery procedure;
+- architecture boundary or dependency ownership;
+- model, dataset, metric, threshold, or performance claim.
+
+A review fails when code and its active durable documentation disagree. Small
+internal refactors that preserve every contract need only a worklog entry when
+they are architecturally meaningful.
+
+## Architecture Decision Records
+
+Use `docs/adr/` for concise cross-cutting decisions whose consequences outlive
+one feature branch. Use a specification for full product or feature design.
+
+- Number ADRs sequentially with four digits.
+- Accepted ADRs are immutable except for factual corrections.
+- Replace a decision by adding a new ADR and marking the old one superseded.
+- Link relevant ADRs from specifications and runbooks.
+- Record alternatives and consequences, not meeting history.
+
 ## Update Checklist
 
 Before committing documentation changes:
@@ -169,6 +224,9 @@ Before committing documentation changes:
 - [ ] Commands are copyable.
 - [ ] Claims are backed by links, code references, or verification commands.
 - [ ] Deferred work is explicit.
+- [ ] Lifecycle metadata and supersession links are correct where required.
+- [ ] API, configuration, capability, and state-machine changes updated their active docs.
+- [ ] A cross-cutting architecture decision has an ADR when needed.
 - [ ] No model weights, uploads, generated reports, or local database files are
       referenced as committed artifacts.
 - [ ] `git diff --check` passes.

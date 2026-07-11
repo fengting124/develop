@@ -31,21 +31,21 @@
 - Produces: required document lifecycle values, supersession rules, ADR format,
   and branch documentation checklist used by every later task.
 
-- [ ] **Step 1: Define document lifecycle**
+- [x] **Step 1: Define document lifecycle**
 
 Add `Draft`, `Active`, `Superseded`, and `Historical` definitions. Require each
 durable spec and explanation document to declare status, owner, last reviewed
 date, and `Superseded by` when applicable. Plans and worklog entries are exempt
 because their state is represented by checkboxes and chronology.
 
-- [ ] **Step 2: Define maintenance triggers**
+- [x] **Step 2: Define maintenance triggers**
 
 Require the same PR to update documentation when it changes a public API,
 configuration variable, capability status, state machine, operational recovery
 procedure, architecture decision, or model claim. Define review failure when
 code and durable documentation disagree.
 
-- [ ] **Step 3: Add the ADR index and first ADR**
+- [x] **Step 3: Add the ADR index and first ADR**
 
 Use this exact ADR shape:
 
@@ -66,7 +66,7 @@ Use this exact ADR shape:
 ADR-0001 records the decision to use short, immutable decision records for
 cross-cutting architecture choices while specs retain full product design.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `git diff --check` and scan the new files for `TBD` or incomplete headings.
 
