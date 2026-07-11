@@ -14,7 +14,6 @@ const AdminDetections = lazy(() => import('@/pages/AdminDetections').then((modul
 const AdminEvaluations = lazy(() => import('@/pages/AdminEvaluations').then((module) => ({ default: module.AdminEvaluations })));
 const AdminModels = lazy(() => import('@/pages/AdminModels').then((module) => ({ default: module.AdminModels })));
 const AdminReview = lazy(() => import('@/pages/AdminReview').then((module) => ({ default: module.AdminReview })));
-const VideoShowcase = lazy(() => import('@/pages/AdminPipeline/VideoShowcase').then((module) => ({ default: module.VideoShowcase })));
 const ImageShowcase = lazy(() => import('@/pages/AdminPipeline/ImageShowcase').then((module) => ({ default: module.ImageShowcase })));
 const Dev = lazy(() => import('@/pages/Dev').then((module) => ({ default: module.Dev })));
 const NotFound = lazy(() => import('@/pages/NotFound/NotFound').then((module) => ({ default: module.NotFound })));
@@ -36,7 +35,7 @@ function AnimatedRoutes() {
             <Route path="/" element={<Home />} />
             <Route path="/detect" element={<DetectChoice />} />
             <Route path="/detect/image" element={<DetectImage />} />
-            <Route path="/detect/video" element={<DetectVideo />} />
+            <Route path="/detect/video" element={<Navigate to="/detect" replace />} />
             <Route path="/detect/report/:id" element={<Report />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminOverview />} />
@@ -45,12 +44,12 @@ function AnimatedRoutes() {
               <Route path="models" element={<AdminModels />} />
               <Route path="review" element={<AdminReview />} />
               <Route path="pipeline" element={<Navigate to="/admin/detections" replace />} />
-              <Route path="pipeline/showcase/video" element={<VideoShowcase />} />
-              <Route path="pipeline/showcase/image" element={<ImageShowcase />} />
               <Route path="experts" element={<Navigate to="/admin/models" replace />} />
               <Route path="anomaly" element={<Navigate to="/admin/review" replace />} />
             </Route>
             <Route path="/dev" element={<Dev />} />
+            <Route path="/dev/showcase/video-detection" element={<DetectVideo />} />
+            <Route path="/dev/showcase/image-pipeline" element={<ImageShowcase />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

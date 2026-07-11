@@ -9,10 +9,15 @@ Workbench.
   commands.
 - [Documentation Standards](documentation-standards.md): how this repository
   writes and maintains technical documentation.
+- [Architecture Decision Records](adr/README.md): durable cross-cutting
+  decisions, alternatives, and consequences.
 - [Project Worklog](project-worklog.md): what has been built, why it was built,
   how it was verified, and what is deferred.
-- [Improvement Roadmap](project-improvement-roadmap.md): strict interviewer-style
-  gap analysis and the recommended next phases.
+- [Product Capability Matrix](capability-matrix.md): implemented, server-pending,
+  showcase, and non-goal capabilities with verification evidence.
+- [Historical Improvement Roadmap](project-improvement-roadmap.md): superseded
+  early gap analysis retained for development history; use the active long-term
+  roadmap below for current decisions.
 
 ## Runbooks
 

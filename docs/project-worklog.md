@@ -737,27 +737,46 @@ Verification:
 
 ---
 
-## Next Recommended Work
-
-Add interview-visible operational observability:
+### 2026-07-11: Product Scope Truthfulness
 
 ```text
-feature/observability-correlation
+refactor/product-scope-truthfulness
 ```
 
-Scope:
+What changed:
 
-- Propagate a correlation id across HTTP requests, outbox events, Redis jobs,
-  model calls, and persisted execution records.
-- Add Micrometer counters and timers for dispatch, retries, queue outcomes,
-  inference latency, and upload rejection reasons.
-- Define structured logging fields without logging image bytes or model raw
-  payloads.
-- Document local metrics endpoints and production exposure boundaries.
+- Established document lifecycle governance and architecture decision records.
+- Added a tested capability registry and reviewer-facing capability matrix.
+- Removed video detection from formal product navigation and moved retained
+  concepts under development showcase routes.
+- Removed fabricated confidence, evidence marks, timelines, and export success
+  behavior from the formal report page.
+- Corrected README model-runtime wording to distinguish implemented integration
+  from server-pending weights and CUDA evidence.
 
-Reason:
+Why:
 
-The project now handles failure and recovery, but operators cannot yet answer
-which request produced a task, where latency accumulated, or how often retries
-and security rejections occur. Correlated traces and bounded metrics turn the
-reliability features into an operable system.
+- Every formal product claim must map to persisted behavior and tests.
+- Showcase quality is useful, but it cannot substitute for backend capability.
+- Reviewers need one maintained place to distinguish current, deferred, and
+  deliberately excluded work.
+
+Verification:
+
+- Frontend policy and report-presentation tests increased the suite from 8 to
+  18 passing tests before final cross-project verification.
+- Frontend lint and production build passed after route and report changes.
+
+---
+
+## Next Recommended Work
+
+Continue with the real evaluation execution boundary:
+
+```text
+feature/evaluation-real-execution-boundary
+```
+
+Replace the default CRC evaluation client, split model calls out of database
+transactions, and add durable evaluation execution ownership without requiring
+real model weights.
